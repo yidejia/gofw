@@ -1,0 +1,11 @@
+// Package sms 短信工具包
+// @author 余海坚 haijianyu10@qq.com
+// @created 2022-04-22 18:02
+// @copyright © 2010-2022 广州伊的家网络科技有限公司
+package sms
+
+// Driver 短信接口
+type Driver interface {
+	// Send 发送短信
+	Send(phone string, message Message, config map[string]string) bool
+}
