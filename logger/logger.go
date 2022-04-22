@@ -5,6 +5,7 @@
 package logger
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/yidejia/gofw/app"
 	"os"
