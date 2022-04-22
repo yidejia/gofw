@@ -1,4 +1,4 @@
-// Package sms 短信工具包
+// Package sms 短信包
 // @author 余海坚 haijianyu10@qq.com
 // @created 2022-04-22 18:02
 // @copyright © 2010-2022 广州伊的家网络科技有限公司
