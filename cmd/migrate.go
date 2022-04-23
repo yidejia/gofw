@@ -26,6 +26,7 @@ func init() {
 		CmdMigrateRollback,
 		CmdMigrateRefresh,
 		CmdMigrateReset,
+		CmdMigrateFresh,
 	)
 }
 
@@ -73,4 +74,15 @@ var CmdMigrateRefresh = &cobra.Command{
 
 func runRefresh(cmd *cobra.Command, args []string) {
 	migrator().Refresh()
+}
+
+// CmdMigrateFresh 删除所有的表并重新运行所有迁移命令
+var CmdMigrateFresh = &cobra.Command{
+	Use:   "fresh",
+	Short: "Drop all tables and re-run all migrations",
+	Run:   runFresh,
+}
+
+func runFresh(cmd *cobra.Command, args []string) {
+	migrator().Fresh()
 }
