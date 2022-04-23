@@ -7,6 +7,8 @@ package file
 import (
 	"io/ioutil"
 	"os"
+	"path/filepath"
+	"strings"
 )
 
 // Put 将数据存入文件
@@ -24,4 +26,9 @@ func Exists(fileToCheck string) bool {
 		return false
 	}
 	return true
+}
+
+// FileNameWithoutExtension 返回不包含类型的文件名
+func FileNameWithoutExtension(fileName string) string {
+	return strings.TrimSuffix(fileName, filepath.Ext(fileName))
 }
