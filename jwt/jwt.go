@@ -17,12 +17,13 @@ import (
 )
 
 var (
+	ErrTokenMissing           error = errors.New("请求缺少令牌")
 	ErrTokenExpired           error = errors.New("令牌已过期")
 	ErrTokenExpiredMaxRefresh error = errors.New("令牌已过最大刷新时间")
 	ErrTokenMalformed         error = errors.New("请求令牌格式有误")
 	ErrTokenInvalid           error = errors.New("请求令牌无效")
 	ErrHeaderEmpty            error = errors.New("需要认证才能访问！")
-	ErrHeaderMalformed        error = errors.New("请求头中 Authorization 格式有误")
+	ErrHeaderMalformed        error = errors.New("请求头中令牌格式有误")
 )
 
 // JWT 定义一个jwt对象
@@ -63,7 +64,7 @@ func NewJWT() *JWT {
 // ParserToken 解析 Token，中间件中调用
 func (jwt *JWT) ParserToken(c *gin.Context) (*JWTCustomClaims, error) {
 
-	tokenString, parseErr := jwt.getTokenFromHeader(c)
+	tokenString, parseErr := jwt.getTokenFromRequest(c)
 	if parseErr != nil {
 		return nil, parseErr
 	}
@@ -96,7 +97,7 @@ func (jwt *JWT) ParserToken(c *gin.Context) (*JWTCustomClaims, error) {
 func (jwt *JWT) RefreshToken(c *gin.Context) (string, error) {
 
 	// 1. 从 Header 里获取 token
-	tokenString, parseErr := jwt.getTokenFromHeader(c)
+	tokenString, parseErr := jwt.getTokenFromRequest(c)
 	if parseErr != nil {
 		return "", parseErr
 	}
@@ -184,16 +185,35 @@ func (jwt *JWT) parseTokenString(tokenString string) (*jwtpkg.Token, error) {
 }
 
 // getTokenFromHeader 使用 jwtpkg.ParseWithClaims 解析 Token
-// Authorization:Bearer xxxxx
+// 优先提取 token
+// 其次提取 Authorization:Bearer xxxxx
 func (jwt *JWT) getTokenFromHeader(c *gin.Context) (string, error) {
-	authHeader := c.Request.Header.Get("Authorization")
+	authHeader := c.Request.Header.Get("token")
 	if authHeader == "" {
-		return "", ErrHeaderEmpty
+		authHeader = c.Request.Header.Get("Authorization")
+		if authHeader == "" {
+			return "", ErrHeaderEmpty
+		}
+		// 按空格分割
+		parts := strings.SplitN(authHeader, " ", 2)
+		if !(len(parts) == 2 && parts[0] == "Bearer") {
+			return "", ErrHeaderMalformed
+		}
+		return parts[1], nil
 	}
-	// 按空格分割
-	parts := strings.SplitN(authHeader, " ", 2)
-	if !(len(parts) == 2 && parts[0] == "Bearer") {
-		return "", ErrHeaderMalformed
+	return authHeader, nil
+}
+
+// getTokenFromRequest 从请求中提取 token
+// 优先从请求查询参数中提取，其次才人请求头部中提取
+func (jwt *JWT) getTokenFromRequest(c *gin.Context) (string, error) {
+	tokenStr := c.Query("token")
+	if tokenStr == "" {
+		authHeader, _ := jwt.getTokenFromHeader(c)
+		if authHeader == "" {
+			return "", ErrTokenMissing
+		}
+		return authHeader, nil
 	}
-	return parts[1], nil
+	return tokenStr, nil
 }
