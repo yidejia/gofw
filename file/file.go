@@ -6,8 +6,10 @@ package file
 
 import (
 	"fmt"
+	"github.com/disintegration/imaging"
 	"github.com/gin-gonic/gin"
 	"github.com/yidejia/gofw/app"
+	"github.com/yidejia/gofw/auth"
 	"github.com/yidejia/gofw/helpers"
 	"io/ioutil"
 	"mime/multipart"
@@ -54,7 +56,26 @@ func SaveUploadAvatar(c *gin.Context, file *multipart.FileHeader) (string, error
 		return avatar, err
 	}
 
-	return avatarPath, nil
+	// 裁切图片
+	img, err := imaging.Open(avatarPath, imaging.AutoOrientation(true))
+	if err != nil {
+		return avatar, err
+	}
+	resizeAvatar := imaging.Thumbnail(img, 256, 256, imaging.Lanczos)
+	resizeAvatarName := randomNameFromUploadFile(file)
+	resizeAvatarPath := publicPath + dirName + resizeAvatarName
+	err = imaging.Save(resizeAvatar, resizeAvatarPath)
+	if err != nil {
+		return avatar, err
+	}
+
+	// 删除老文件
+	err = os.Remove(avatarPath)
+	if err != nil {
+		return avatar, err
+	}
+
+	return dirName + resizeAvatarName, nil
 }
 
 func randomNameFromUploadFile(file *multipart.FileHeader) string {
