@@ -3,6 +3,7 @@ package middlewares
 
 import (
 	"fmt"
+	"github.com/yidejia/gofw/auth"
 	"github.com/yidejia/gofw/config"
 	"github.com/yidejia/gofw/jwt"
 	"github.com/yidejia/gofw/response"
@@ -10,30 +11,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// Authenticate 可认证接口
-type Authenticate interface {
-	// Get 根据 id 获取模型
-	Get(id string) Authenticate
-	// Id 获取模型 id
-	Id() int
-}
-
-// UserResolver 获取用户模型的函数类型
-type UserResolver func(userId string) (user Authenticate)
-
-// userResolver 获取用户模型的函数
-var userResolver UserResolver
-
-// SetUserResolver 设置获取用户模型的函数
-func SetUserResolver(_userResolver UserResolver)  {
-	userResolver = _userResolver
-}
-
 // AuthJWT 授权中间件
 // @author 余海坚 haijianyu10@qq.com
 // @created 2022-04-23 14:17
 // @copyright © 2010-2022 广州伊的家网络科技有限公司
 func AuthJWT() gin.HandlerFunc {
+
 	return func(c *gin.Context) {
 
 		// 从标头 Authorization:Bearer xxxxx 中获取信息，并验证 JWT 的准确性
@@ -46,17 +29,15 @@ func AuthJWT() gin.HandlerFunc {
 		}
 
 		// JWT 解析成功，设置用户信息
-		if userResolver != nil {
-			user := userResolver(claims.UserID)
-			if user.Id() == 0 {
-				response.Unauthorized(c, "找不到对应用户，用户可能已删除")
-				return
-			}
-			// 将用户信息存入 gin.context 里，后续 auth 包将从这里拿到当前用户数据
-			c.Set("current_user_id", claims.UserID)
-			c.Set("current_user_name", claims.UserName)
-			c.Set("current_user", user)
+		user := auth.ResolveUser(claims.UserID)
+		if user.AuthId() == 0 {
+			response.Unauthorized(c, "找不到对应用户，用户可能已删除")
+			return
 		}
+		// 将用户信息存入 gin.context 里，后续 auth 包将从这里拿到当前用户数据
+		c.Set("current_user_id", claims.UserID)
+		c.Set("current_user_name", claims.UserName)
+		c.Set("current_user", user)
 
 		c.Next()
 	}
