@@ -7,6 +7,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// CmdMakeCMD 生成命令文件的命令
+// @author 余海坚 haijianyu10@qq.com
+// @created 2022-04-23 17:07
+// @copyright © 2010-2022 广州伊的家网络科技有限公司
 var CmdMakeCMD = &cobra.Command{
 	Use:   "cmd",
 	Short: "Create a command, should be snake_case, exmaple: make cmd buckup_database",

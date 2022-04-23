@@ -1,0 +1,62 @@
+//Package {{PackageName}} 模型
+package {{PackageName}}
+
+import (
+
+    "gohub/pkg/logger"
+    "gohub/pkg/database"
+)
+
+type {{StructName}} struct {
+    models.BaseModel
+
+    // TODO Put fields in here
+
+    models.CommonTimestampsField
+}
+
+// TODO 注释模型钩子方法
+// func ({{VariableName}} *{{StructName}}) BeforeSave(tx *gorm.DB) (err error) {}
+// func ({{VariableName}} *{{StructName}}) BeforeCreate(tx *gorm.DB) (err error) {}
+// func ({{VariableName}} *{{StructName}}) AfterCreate(tx *gorm.DB) (err error) {}
+// func ({{VariableName}} *{{StructName}}) BeforeUpdate(tx *gorm.DB) (err error) {}
+// func ({{VariableName}} *{{StructName}}) AfterUpdate(tx *gorm.DB) (err error) {}
+// func ({{VariableName}} *{{StructName}}) AfterSave(tx *gorm.DB) (err error) {}
+// func ({{VariableName}} *{{StructName}}) BeforeDelete(tx *gorm.DB) (err error) {}
+// func ({{VariableName}} *{{StructName}}) AfterDelete(tx *gorm.DB) (err error) {}
+// func ({{VariableName}} *{{StructName}}) AfterFind(tx *gorm.DB) (err error) {}
+
+func ({{VariableName}} *{{StructName}}) Create() {
+    database.DB.Create(&{{VariableName}})
+}
+
+func ({{VariableName}} *{{StructName}}) Save() (rowsAffected int64) {
+    result := database.DB.Save(&{{VariableName}})
+    return result.RowsAffected
+}
+
+func ({{VariableName}} *{{StructName}}) Delete() (rowsAffected int64) {
+    result := database.DB.Delete(&{{VariableName}})
+    return result.RowsAffected
+}
+
+func Get(idstr string) ({{VariableName}} {{StructName}}) {
+    database.DB.Where("id", idstr).First(&{{VariableName}})
+    return
+}
+
+func GetBy(field, value string) ({{VariableName}} {{StructName}}) {
+    database.DB.Where("? = ?", field, value).First(&{{VariableName}})
+    return
+}
+
+func All() ({{VariableNamePlural}} []{{StructName}}) {
+    database.DB.Find(&{{VariableNamePlural}})
+    return
+}
+
+func IsExist(field, value string) bool {
+    var count int64
+    database.DB.Model({{StructName}}{}).Where(" = ?", field, value).Count(&count)
+    return count > 0
+}
