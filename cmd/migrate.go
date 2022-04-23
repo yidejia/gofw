@@ -13,6 +13,7 @@ var CmdMigrate = &cobra.Command{
 	// 所有 migrate 下的子命令都会执行以下代码
 }
 
+// CmdMigrateUp 执行迁移命令
 var CmdMigrateUp = &cobra.Command{
 	Use:   "up",
 	Short: "Run unmigrated migrations",
@@ -22,6 +23,7 @@ var CmdMigrateUp = &cobra.Command{
 func init() {
 	CmdMigrate.AddCommand(
 		CmdMigrateUp,
+		CmdMigrateRollback,
 	)
 }
 
@@ -34,4 +36,17 @@ func migrator() *migrate.Migrator {
 
 func runUp(cmd *cobra.Command, args []string) {
 	migrator().Up()
+}
+
+// CmdMigrateRollback 回滚迁移命令
+var CmdMigrateRollback = &cobra.Command{
+	Use: "down",
+	// 设置别名 migrate down == migrate rollback
+	Aliases: []string{"rollback"},
+	Short:   "Reverse the up command",
+	Run:     runDown,
+}
+
+func runDown(cmd *cobra.Command, args []string) {
+	migrator().Rollback()
 }
