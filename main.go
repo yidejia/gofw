@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"github.com/yidejia/gofw/cmd"
-	"github.com/yidejia/gofw/console"
+	"github.com/yidejia/gofw/pkg/cmd"
+	"github.com/yidejia/gofw/pkg/console"
 	"os"
 
 	"github.com/spf13/cobra"
