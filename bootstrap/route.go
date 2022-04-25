@@ -2,7 +2,7 @@
 package bootstrap
 
 import (
-	gfmiddlewares "github.com/yidejia/gofw/pkg/http/middlewares"
+	gfMiddlewares "github.com/yidejia/gofw/pkg/http/middlewares"
 	"github.com/yidejia/gofw/routes"
 	"net/http"
 	"strings"
@@ -25,9 +25,9 @@ func SetupRoute(router *gin.Engine) {
 
 func registerGlobalMiddleWare(router *gin.Engine) {
 	router.Use(
-		gfmiddlewares.Logger(),
-		gfmiddlewares.Recovery(),
-		gfmiddlewares.ForceUA(),
+		gfMiddlewares.Logger(),
+		gfMiddlewares.Recovery(),
+		gfMiddlewares.ForceUA(),
 	)
 }
 
