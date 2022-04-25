@@ -2,12 +2,18 @@ package main
 
 import (
 	"fmt"
+	btsConfig "github.com/yidejia/gofw/config"
 	"github.com/yidejia/gofw/pkg/cmd"
 	"github.com/yidejia/gofw/pkg/console"
 	"os"
 
 	"github.com/spf13/cobra"
 )
+
+func init() {
+	// 应用初始化时触发加载 config 目录下的配置信息
+	btsConfig.Initialize()
+}
 
 func main() {
 
