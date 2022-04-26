@@ -2,6 +2,7 @@ package config
 
 import "github.com/yidejia/gofw/pkg/config"
 
+// 添加日志配置
 func init() {
 	config.Add("log", func() map[string]interface{} {
 		return map[string]interface{}{

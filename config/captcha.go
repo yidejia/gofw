@@ -2,6 +2,7 @@ package config
 
 import "github.com/yidejia/gofw/pkg/config"
 
+// 添加验证码配置
 func init() {
 	config.Add("captcha", func() map[string]interface{} {
 		return map[string]interface{}{

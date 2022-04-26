@@ -4,6 +4,7 @@ import (
 	"github.com/yidejia/gofw/pkg/config"
 )
 
+// 添加 redis 配置
 func init() {
 
 	config.Add("redis", func() map[string]interface{} {

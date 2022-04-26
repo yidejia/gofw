@@ -1,8 +1,8 @@
-// Package config 站点配置信息
 package config
 
 import "github.com/yidejia/gofw/pkg/config"
 
+// 添加应用配置
 func init() {
 	config.Add("app", func() map[string]interface{} {
 		return map[string]interface{}{

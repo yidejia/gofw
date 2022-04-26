@@ -4,6 +4,7 @@ import (
 	"github.com/yidejia/gofw/pkg/config"
 )
 
+// 添加数据库配置
 func init() {
 
 	config.Add("database", func() map[string]interface{} {
