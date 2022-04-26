@@ -4,7 +4,7 @@ package routes
 import (
 	"github.com/yidejia/gofw/pkg/config"
 
-	//controllers "gohub/app/http/controllers/api/v1"
+	"github.com/yidejia/gofw/app/http/controllers/api/v1/user"
 	gfMiddlewares "github.com/yidejia/gofw/pkg/http/middlewares"
 
 	"github.com/gin-gonic/gin"
@@ -27,13 +27,16 @@ func RegisterAPIRoutes(r *gin.Engine) {
 	// 测试时，可以调高一点。
 	v1.Use(gfMiddlewares.LimitIP("200-H"))
 	{
-		// 用户模块路由组
-		userGroup := v1.Group("/user")
+		// 用户路由组
+		usersGroup := v1.Group("/users")
 		// 限流中间件：每小时限流，作为参考 Github API 每小时最多 60 个请求（根据 IP）
 		// 测试时，可以调高一点
-		userGroup.Use(gfMiddlewares.LimitIP("1000-H"))
+		usersGroup.Use(gfMiddlewares.LimitIP("1000-H"))
 		{
-			// TODO 注册用户模块的路由，就按照示例注册其他模块的路由，一般一个模块对应一个路由组
+			// TODO 注册用户路由，就按照示例注册其他模块的路由，一般一个模块对应一个路由组
+			uc := new(user.UsersController)
+			// 用户列表
+			usersGroup.GET("", uc.Index)
 		}
 	}
 }

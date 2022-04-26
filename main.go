@@ -2,8 +2,11 @@ package main
 
 import (
 	"fmt"
-	btsConfig "github.com/yidejia/gofw/config"
+	"github.com/yidejia/gofw/bootstrap"
+	btsConig "github.com/yidejia/gofw/config"
 	"github.com/yidejia/gofw/pkg/cmd"
+	"github.com/yidejia/gofw/pkg/cmd/make"
+	"github.com/yidejia/gofw/pkg/config"
 	"github.com/yidejia/gofw/pkg/console"
 	"os"
 
@@ -11,23 +14,52 @@ import (
 )
 
 func init() {
-	// 应用初始化时触发加载 config 目录下的配置信息
-	btsConfig.Initialize()
+	// 加载 config 目录下的配置信息
+	btsConig.Initialize()
 }
 
 func main() {
 
 	// 应用的主入口，默认调用 cmd.CmdServe 命令
 	var rootCmd = &cobra.Command{
-		Use:   "gofw",
+		Use:   config.Get("app.name"),
 		Short: "A simple forum project",
 		Long:  `Default will run "serve" command, you can use "-h" flag to see all subcommands`,
+
+		// rootCmd 的所有子命令都会执行以下代码
+		PersistentPreRun: func(command *cobra.Command, args []string) {
+
+			// 配置初始化，依赖命令行 --env 参数
+			config.InitConfig(cmd.Env)
+
+			// 初始化 Logger
+			bootstrap.SetupLogger()
+
+			// 初始化数据库，配置后取消注释
+			//bootstrap.SetupDB()
+
+			// 初始化 Redis，配置后取消注释
+			//bootstrap.SetupRedis()
+
+			// 初始化缓存，配置后取消注释
+			//bootstrap.SetupCache()
+		},
 	}
 
 	// 注册子命令
 	rootCmd.AddCommand(
 		//cmd.CmdServe,
+		cmd.CmdKey,
+		cmd.CmdPlay,
+		make.CmdMake,
+		cmd.CmdMigrate,
+		cmd.CmdDBSeed,
+		cmd.CmdCache,
+		// TODO 在这里注册应用其它自定义命令
 	)
+
+	// 配置默认运行 Web 服务
+	cmd.RegisterDefaultCmd(rootCmd, cmd.CmdPlay)
 
 	// 注册全局参数，--env
 	cmd.RegisterGlobalFlags(rootCmd)

@@ -19,18 +19,28 @@ func SetupRoute(router *gin.Engine) {
 	//  注册 API 路由
 	routes.RegisterAPIRoutes(router)
 
+	// TODO 如果注册了其它路由，请在这里调用注册函数，注册函数统一放在 routes 包，如果分模块注册路由，请在 routes 包下创建 api 包存放路由文件
+	// 示例：
+	// routes.RegisterUserAPIRoutes(router)
+	// routes.RegisterWebRoutes(router)
+	// routes.RegisterUserWebRoutes(router)
+	// routes.RegisterAdminRoutes(router)
+
 	//  配置 404 路由
 	setup404Handler(router)
 }
 
+// registerGlobalMiddleWare 注册全局中间件
 func registerGlobalMiddleWare(router *gin.Engine) {
 	router.Use(
 		gfMiddlewares.Logger(),
 		gfMiddlewares.Recovery(),
 		gfMiddlewares.ForceUA(),
+		// TODO 在这里注册其它中间件
 	)
 }
 
+// setup404Handler 配置 404 路由
 func setup404Handler(router *gin.Engine) {
 	// 处理 404 请求
 	router.NoRoute(func(c *gin.Context) {
