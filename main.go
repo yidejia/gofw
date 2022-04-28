@@ -23,7 +23,7 @@ func main() {
 	// 应用的主入口，默认调用 cmd.CmdServe 命令
 	var rootCmd = &cobra.Command{
 		Use:   config.Get("app.name"),
-		Short: "A simple forum project",
+		Short: "A simple Gofw demo project",
 		Long:  `Default will run "serve" command, you can use "-h" flag to see all subcommands`,
 
 		// rootCmd 的所有子命令都会执行以下代码
@@ -38,8 +38,8 @@ func main() {
 			// 初始化数据库，配置后取消注释
 			//bootstrap.SetupDB()
 
-			// 初始化 Redis，配置后取消注释
-			//bootstrap.SetupRedis()
+			// 初始化 Redis，配置后取消注释，未配置 redis 将影响限流中间件的使用
+			bootstrap.SetupRedis()
 
 			// 初始化缓存，配置后取消注释
 			//bootstrap.SetupCache()
@@ -48,18 +48,18 @@ func main() {
 
 	// 注册子命令
 	rootCmd.AddCommand(
-		//cmd.CmdServe,
+		cmd.CmdServe,
 		cmd.CmdKey,
 		cmd.CmdPlay,
 		make.CmdMake,
 		cmd.CmdMigrate,
 		cmd.CmdDBSeed,
 		cmd.CmdCache,
-		// TODO 在这里注册应用其它自定义命令
+		// TODO 在这里注册其它自定义命令
 	)
 
 	// 配置默认运行 Web 服务
-	cmd.RegisterDefaultCmd(rootCmd, cmd.CmdPlay)
+	cmd.RegisterDefaultCmd(rootCmd, cmd.CmdServe)
 
 	// 注册全局参数，--env
 	cmd.RegisterGlobalFlags(rootCmd)

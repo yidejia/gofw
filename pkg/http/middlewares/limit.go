@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/cast"
 )
 
-// LimitIP 全局限流中间件，针对 IP 进行限流
+// LimitIP 全局限流中间件，针对 IP 进行限流，需要配置 redis 才能使用
 // limit 为格式化字符串，如 "5-S" ，示例:
 //
 // * 5 reqs/second: "5-S"
