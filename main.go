@@ -38,7 +38,7 @@ func main() {
 			// 初始化数据库，配置后取消注释
 			//bootstrap.SetupDB()
 
-			// 初始化 Redis，配置后取消注释，未配置 redis 将影响限流中间件的使用
+			// 初始化 Redis，配置后取消注释，未配置 redis 将影响框架自带限流中间件的使用
 			bootstrap.SetupRedis()
 
 			// 初始化缓存，配置后取消注释
