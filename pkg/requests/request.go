@@ -2,7 +2,7 @@
 // @author 余海坚 haijianyu10@qq.com
 // @created 2022-04-22 16:54
 // @copyright © 2010-2022 广州伊的家网络科技有限公司
-package request
+package requests
 
 import (
 	"github.com/gin-gonic/gin"
