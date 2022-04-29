@@ -1,4 +1,7 @@
-// Package paginator 处理分页逻辑
+// Package paginator 分页工具包
+// @author 余海坚 haijianyu10@qq.com
+// @created 2022-04-29 18:07
+// @copyright © 2010-2022 广州伊的家网络科技有限公司
 package paginator
 
 import (
