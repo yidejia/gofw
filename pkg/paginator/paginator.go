@@ -12,10 +12,10 @@ import (
 
 // Paging 分页数据
 type Paging struct {
-	CurrentPage int    // 当前页
-	PerPage     int    // 每页条数
-	TotalPage   int    // 总页数
-	TotalCount  int64  // 总条数
+	CurrentPage int  `json:"current_page"` // 当前页
+	PerPage     int  `json:"per_page"`     // 每页条数
+	TotalPage   int   `json:"total_page"`  // 总页数
+	TotalCount  int64 `json:"total_count"` // 总条数
 }
 
 // Paginator 分页操作类
