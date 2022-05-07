@@ -15,7 +15,7 @@ type {{StructName}} struct {
     models.CommonTimestampsField
 }
 
-// TODO 注释模型钩子方法
+// TODO 注册模型钩子方法
 // func ({{VariableName}} *{{StructName}}) BeforeSave(tx *gorm.DB) (err error) {}
 // func ({{VariableName}} *{{StructName}}) BeforeCreate(tx *gorm.DB) (err error) {}
 // func ({{VariableName}} *{{StructName}}) AfterCreate(tx *gorm.DB) (err error) {}
