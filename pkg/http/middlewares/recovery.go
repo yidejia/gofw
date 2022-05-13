@@ -43,7 +43,7 @@ func Recovery() gin.HandlerFunc {
 						zap.Any("error", err),
 						zap.String("request", string(httpRequest)),
 					)
-					c.Error(err.(error))
+					_ = c.Error(err.(error))
 					c.Abort()
 					// 链接已断开，无法写状态码
 					return
@@ -58,7 +58,7 @@ func Recovery() gin.HandlerFunc {
 				)
 
 				// 中断处理并返回内部系统错误
-				response.InternalError(c, "系统错误，请稍候再试")
+				response.InternalError(c, nil, "系统错误，请稍候再试")
 			}
 		}()
 		c.Next()
