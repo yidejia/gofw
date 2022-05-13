@@ -5,13 +5,14 @@ import "net/http"
 // errorBadRequest 请求资源格式错误
 type errorBadRequest struct {
 	message string
+	err error
 }
 
-func NewErrorBadRequest(message ...string) ResponsiveError {
+func NewErrorBadRequest(err error, message ...string) ResponsiveError {
 	if len(message) > 0 {
-		return &errorBadRequest{message[0]}
+		return &errorBadRequest{message[0], err}
 	} else {
-		return &errorBadRequest{"请求资源格式不正确"}
+		return &errorBadRequest{"请求资源格式不正确", err}
 	}
 }
 
@@ -19,8 +20,16 @@ func (err *errorBadRequest) HttpStatus() int {
 	return http.StatusBadRequest
 }
 
-func (err *errorBadRequest) Error() string {
+func (err *errorBadRequest) Message() string {
 	return err.message
+}
+
+func (err *errorBadRequest) Error() error {
+	return err.err
+}
+
+func (err *errorBadRequest) Errors() map[string][]string  {
+	return nil
 }
 
 // errorUnauthorized 用户未授权错误
@@ -40,8 +49,16 @@ func (err *errorUnauthorized) HttpStatus() int {
 	return http.StatusUnauthorized
 }
 
-func (err *errorUnauthorized) Error() string {
+func (err *errorUnauthorized) Message() string {
 	return err.message
+}
+
+func (err *errorUnauthorized) Error() error {
+	return nil
+}
+
+func (err *errorUnauthorized) Errors() map[string][]string  {
+	return nil
 }
 
 // errorForbidden 无权请求错误
@@ -61,8 +78,16 @@ func (err *errorForbidden) HttpStatus() int {
 	return http.StatusForbidden
 }
 
-func (err *errorForbidden) Error() string {
+func (err *errorForbidden) Message() string {
 	return err.message
+}
+
+func (err *errorForbidden) Error() error {
+	return nil
+}
+
+func (err *errorForbidden) Errors() map[string][]string  {
+	return nil
 }
 
 // errorNotFound 请求资源不存在错误
@@ -82,8 +107,16 @@ func (err *errorNotFound) HttpStatus() int {
 	return http.StatusNotFound
 }
 
-func (err *errorNotFound) Error() string {
+func (err *errorNotFound) Message() string {
 	return err.message
+}
+
+func (err *errorNotFound) Error() error {
+	return nil
+}
+
+func (err *errorNotFound) Errors() map[string][]string  {
+	return nil
 }
 
 // errorMethodNotAllowed 请求方法不允许错误
@@ -103,20 +136,29 @@ func (err *errorMethodNotAllowed) HttpStatus() int {
 	return http.StatusMethodNotAllowed
 }
 
-func (err *errorMethodNotAllowed) Error() string {
+func (err *errorMethodNotAllowed) Message() string {
 	return err.message
+}
+
+func (err *errorMethodNotAllowed) Error() error {
+	return nil
+}
+
+func (err *errorMethodNotAllowed) Errors() map[string][]string  {
+	return nil
 }
 
 // errorUnprocessableEntity 资源无法处理错误
 type errorUnprocessableEntity struct {
 	message string
+	errors map[string][]string
 }
 
-func NewErrorUnprocessableEntity(message ...string) ResponsiveError {
+func NewErrorUnprocessableEntity(errors map[string][]string, message ...string) ResponsiveError {
 	if len(message) > 0 {
-		return &errorUnprocessableEntity{message[0]}
+		return &errorUnprocessableEntity{message[0], errors}
 	} else {
-		return &errorUnprocessableEntity{"资源无法处理"}
+		return &errorUnprocessableEntity{"资源无法处理", errors}
 	}
 }
 
@@ -124,8 +166,16 @@ func (err *errorUnprocessableEntity) HttpStatus() int {
 	return http.StatusUnprocessableEntity
 }
 
-func (err *errorUnprocessableEntity) Error() string {
+func (err *errorUnprocessableEntity) Message() string {
 	return err.message
+}
+
+func (err *errorUnprocessableEntity) Error() error {
+	return nil
+}
+
+func (err *errorUnprocessableEntity) Errors() map[string][]string  {
+	return nil
 }
 
 // errorLocked 资源已锁定错误
@@ -145,20 +195,29 @@ func (err *errorLocked) HttpStatus() int {
 	return http.StatusLocked
 }
 
-func (err *errorLocked) Error() string {
+func (err *errorLocked) Message() string {
 	return err.message
+}
+
+func (err *errorLocked) Error() error {
+	return nil
+}
+
+func (err *errorLocked) Errors() map[string][]string  {
+	return nil
 }
 
 // errorInternal 内部错误
 type errorInternal struct {
 	message string
+	err error
 }
 
-func NewErrorInternal(message ...string) ResponsiveError {
+func NewErrorInternal(err error, message ...string) ResponsiveError {
 	if len(message) > 0 {
-		return &errorInternal{message[0]}
+		return &errorInternal{message[0], err}
 	} else {
-		return &errorInternal{"资源已锁定"}
+		return &errorInternal{"请求资源时发生系统错误", err}
 	}
 }
 
@@ -166,6 +225,14 @@ func (err *errorInternal) HttpStatus() int {
 	return http.StatusInternalServerError
 }
 
-func (err *errorInternal) Error() string {
+func (err *errorInternal) Message() string {
 	return err.message
+}
+
+func (err *errorInternal) Error() error {
+	return err.err
+}
+
+func (err *errorInternal) Errors() map[string][]string  {
+	return nil
 }

@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"github.com/yidejia/gofw/pkg/config"
 	"gorm.io/gorm"
-	gormlogger "gorm.io/gorm/logger"
+	gormLogger "gorm.io/gorm/logger"
 )
 
 // DB 对象
@@ -18,7 +18,7 @@ var DB *gorm.DB
 var SQLDB *sql.DB
 
 // Connect 连接数据库
-func Connect(dbConfig gorm.Dialector, _logger gormlogger.Interface) {
+func Connect(dbConfig gorm.Dialector, _logger gormLogger.Interface) {
 
 	// 使用 gorm.Open 连接数据库
 	var err error

@@ -60,7 +60,7 @@ func limitHandler(c *gin.Context, key string, limit string) bool {
 	rate, err := limiter.CheckRate(c, key, limit)
 	if err != nil {
 		logger.LogIf(err)
-		response.Abort500(c)
+		response.InternalError(c)
 		return false
 	}
 

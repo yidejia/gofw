@@ -8,6 +8,10 @@ package errors
 type ResponsiveError interface {
 	// HttpStatus 返回 http 状态码
 	HttpStatus() int
-	// Error 返回错误信息
-	Error() string
+	// Message 返回错误信息
+	Message() string
+	// Error 返回内部错误对象
+	Error() error
+	// Errors 返回多个错误信息的映射
+	Errors() map[string][]string
 }

@@ -1,18 +1,11 @@
-// Package models 存放模型的包
+// Package models 应用模型包，封装业务实体定义相关代码
 package models
 
 import (
 	gfModels "github.com/yidejia/gofw/pkg/models"
-	"time"
 )
 
-// Model 应用模型基类，内嵌了框架的模型基类，可以根据应用的需要进行扩展
+// Model 应用模型基类，内嵌了框架模型基类，可以根据应用需要进行扩展
 type Model struct {
 	gfModels.Model
-}
-
-// CommonTimestampsField 时间戳
-type CommonTimestampsField struct {
-	CreatedAt time.Time `gorm:"column:created_at;index;" json:"created_at,omitempty"`
-	UpdatedAt time.Time `gorm:"column:updated_at;index;" json:"updated_at,omitempty"`
 }

@@ -12,81 +12,101 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+type response struct {
+	c *gin.Context
+	meta gin.H
+}
+
 // Created 响应 201 和带 data 键的 JSON 数据
 // 执行『新增操作』成功后调用，例如新增资源后返回新增的资源
-// @param item 一个资源对象
+// @param model 模型实例
 // @param meta 附加的元数据
-func Created(c *gin.Context, item interface{}, meta ...gin.H) {
+func Created(c *gin.Context, model interface{}, meta ...gin.H) {
 	if len(meta) > 0 {
 		c.JSON(http.StatusCreated, gin.H{
 			"success": true,
-			"data":    item,
+			"data":    model,
 			"meta":    meta[0],
 		})
 	} else {
 		c.JSON(http.StatusCreated, gin.H{
 			"success": true,
-			"data":    item,
+			"data":    model,
+		})
+	}
+}
+
+func (resp *response) Created(model interface{}, meta ...gin.H) {
+	if len(meta) > 0 {
+		resp.c.JSON(http.StatusCreated, gin.H{
+			"success": true,
+			"data":    model,
+			"meta":    meta[0],
+		})
+	} else {
+		resp.c.JSON(http.StatusCreated, gin.H{
+			"success": true,
+			"data":    model,
 		})
 	}
 }
 
 // Item 响应 200 和带 data 键的 JSON 数据
 // 执行『查询或更新操作』后返回查询到或已更新的一个资源对象
-// @param item 一个资源对象
+// @param model 模型实例
 // @param meta 附加的元数据
-func Item(c *gin.Context, item interface{}, meta ...gin.H) {
+func Item(c *gin.Context, model interface{}, meta ...gin.H) {
 	if len(meta) > 0 {
 		JSON(c, gin.H{
 			"success": true,
-			"data":    item,
+			"data":    model,
 			"meta":    meta[0],
 		})
 	} else {
 		JSON(c, gin.H{
 			"success": true,
-			"data":    item,
+			"data":    model,
 		})
 	}
 }
 
 // Collection 响应 200 和带 data 键的 JSON 数据
 // 执行『查询操作』后返回一个资源集合
-// @param collection 一个资源集合
+// @param modelSlice 模型切片
 // @param meta 附加的元数据
-func Collection(c *gin.Context, collection []interface{}, meta ...gin.H) {
+func Collection(c *gin.Context, modelSlice interface{}, meta ...gin.H) {
 	if len(meta) > 0 {
 		JSON(c, gin.H{
 			"success": true,
-			"data":    collection,
+			"data":    modelSlice,
 			"meta":    meta[0],
 		})
 	} else {
 		JSON(c, gin.H{
 			"success": true,
-			"data":    collection,
+			"data":    modelSlice,
 		})
 	}
 }
 
 // Paginate 响应 200 和带 data 键的 JSON 数据
 // 执行『查询操作』后返回一个资源集合的分页，适用于资源集合比较大的场景
-// @param collection 一个资源集合
+// @param modelSlice 模型切片
 // @param paging 分页对象
 // @param meta 附加的元数据
-func Paginate(c *gin.Context, collection []interface{}, paging paginator.Paging, meta ...gin.H) {
+func Paginate(c *gin.Context, modelSlice interface{}, paging paginator.Paging, meta ...gin.H) {
 	if len(meta) > 0 {
 		metaData := meta[0]
 		metaData["pagination"] = paging
 		JSON(c, gin.H{
 			"success": true,
-			"data":    collection,
+			"data":    modelSlice,
 			"meta":    metaData,
 		})
 	} else {
 		JSON(c, gin.H{
 			"success": true,
-			"data":    collection,
+			"data":    modelSlice,
 			"meta":    gin.H{
 				"pagination": paging,
 			},
@@ -135,10 +155,45 @@ func JSON(c *gin.Context, data interface{}) {
 
 // AbortWithError 中断处理并返回错误
 func AbortWithError(c *gin.Context, err gfErrors.ResponsiveError)  {
-	c.AbortWithStatusJSON(err.HttpStatus(), gin.H{
+	jsonData := gin.H{
 		"success": false,
-		"message": err.Error(),
-	})
+		"message": err.Message(),
+	}
+	// 存在内部错误对象
+	if internalErr := err.Error(); internalErr != nil {
+		jsonData["error"] = internalErr.Error()
+	}
+	// 存在多个错误信息映射
+	if errors := err.Errors(); errors != nil {
+		jsonData["errors"] = errors
+	}
+	c.AbortWithStatusJSON(err.HttpStatus(), jsonData)
+}
+
+// BadRequest 中断处理并返回请求格式不正确错误
+// 一般用于请求还未到达业务层，例如在中间件处理过程中遇到请求格式不正确错误
+// 没有内部错误对象需要返回时，err 可以设置为 nil
+func BadRequest(c *gin.Context, err error, message ...string) {
+	AbortWithError(c, gfErrors.NewErrorBadRequest(err, message...))
+}
+
+// Unauthorized 中断处理并返回用户未授权错误
+// 一般用于请求还未到达业务层，例如在中间件处理过程中遇到用户未授权错误
+func Unauthorized(c *gin.Context, message ...string) {
+	AbortWithError(c, gfErrors.NewErrorUnauthorized(message...))
+}
+
+// Forbidden 中断处理并返回无权访问错误
+// 一般用于请求还未到达业务层，例如在中间件处理过程中遇到无权访问错误
+func Forbidden(c *gin.Context, message ...string) {
+	AbortWithError(c, gfErrors.NewErrorForbidden(message...))
+}
+
+// InternalError 中断处理并返回系统内部错误
+// 一般用于请求还未到达业务层，例如在中间件处理过程中遇到系统内部错误
+// 没有内部错误对象需要返回时，err 可以设置为 nil
+func InternalError(c *gin.Context, err error, message ...string) {
+	AbortWithError(c, gfErrors.NewErrorInternal(err, message...))
 }
 
 // ValidationError 处理表单验证不通过的错误，返回的 JSON 示例：

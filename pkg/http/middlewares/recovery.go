@@ -57,8 +57,8 @@ func Recovery() gin.HandlerFunc {
 					zap.Stack("stacktrace"),                    // 调用堆栈信息
 				)
 
-				// 返回 500 状态码
-				response.Abort500(c)
+				// 中断处理并返回内部系统错误
+				response.InternalError(c, "系统错误，请稍候再试")
 			}
 		}()
 		c.Next()
