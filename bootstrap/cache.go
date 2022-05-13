@@ -7,7 +7,7 @@ import (
 	"github.com/yidejia/gofw/pkg/config"
 )
 
-// SetupCache 缓存
+// SetupCache 初始化缓存
 func SetupCache() {
 
 	// 初始化缓存专用的 redis client, 使用专属缓存 DB

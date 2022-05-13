@@ -166,6 +166,13 @@ func AbortWithError(c *gin.Context, err gfErrors.ResponsiveError)  {
 	// 存在多个错误信息映射
 	if errors := err.Errors(); errors != nil {
 		jsonData["errors"] = errors
+		// 默认信息返回第1个错误信息
+		for _, errs := range errors {
+			if len(errs) > 0 {
+				jsonData["message"] = errs[0]
+				break
+			}
+		}
 	}
 	c.AbortWithStatusJSON(err.HttpStatus(), jsonData)
 }
@@ -207,8 +214,17 @@ func InternalError(c *gin.Context, err error, message ...string) {
 //             "message": "请求验证不通过，具体请查看 errors"
 //         }
 func ValidationError(c *gin.Context, errors map[string][]string) {
-	c.AbortWithStatusJSON(http.StatusUnprocessableEntity, gin.H{
-		"message": "请求验证不通过，具体请查看 errors",
+	jsonData := gin.H{
+		"success": false,
+		"message": "请求验证不通过",
 		"errors":  errors,
-	})
+	}
+	// 默认信息返回第1个错误信息
+	for _, errs := range errors {
+		if len(errs) > 0 {
+			jsonData["message"] = errs[0]
+			break
+		}
+	}
+	c.AbortWithStatusJSON(http.StatusUnprocessableEntity, jsonData)
 }

@@ -7,6 +7,7 @@ package auth
 import (
 	"errors"
 	"github.com/gin-gonic/gin"
+	gfErrors "github.com/yidejia/gofw/pkg/errors"
 	"github.com/yidejia/gofw/pkg/logger"
 )
 
@@ -19,11 +20,11 @@ func SetUserResolver(_userResolver UserResolver)  {
 }
 
 // ResolveUser 获取用户模型
-func ResolveUser(id string) (user Authenticate) {
+func ResolveUser(id string) (user Authenticate, err gfErrors.ResponsiveError) {
 	if userResolver != nil {
 		return userResolver(id)
 	}
-	return user
+	return user, nil
 }
 
 // CurrentUID 从 gin.context 中获取当前登录用户 ID

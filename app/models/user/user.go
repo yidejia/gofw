@@ -28,3 +28,11 @@ func (user *User) BeforeSave(tx *gorm.DB) (err error) {
 	}
 	return
 }
+
+func (user *User) AuthId() uint64 {
+	return user.ID
+}
+
+func (user *User) AuthName() string {
+	return user.Name
+}

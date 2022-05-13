@@ -5,7 +5,7 @@ import (
 	"github.com/yidejia/gofw/pkg/logger"
 )
 
-// SetupLogger 初始化 Logger
+// SetupLogger 初始化日志
 func SetupLogger() {
 
 	logger.InitLogger(

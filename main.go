@@ -43,6 +43,9 @@ func main() {
 
 			// 初始化缓存，配置后取消注释
 			//bootstrap.SetupCache()
+
+			// 初始化授权
+			bootstrap.SetupAuth()
 		},
 	}
 
