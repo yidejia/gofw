@@ -203,28 +203,18 @@ func InternalError(c *gin.Context, err error, message ...string) {
 	AbortWithError(c, gfErrors.NewErrorInternal(err, message...))
 }
 
-// ValidationError 处理表单验证不通过的错误，返回的 JSON 示例：
-//         {
-//             "errors": {
-//                 "phone": [
-//                     "手机号为必填项，参数名称 phone",
-//                     "手机号长度必须为 11 位的数字"
-//                 ]
-//             },
-//             "message": "请求验证不通过，具体请查看 errors"
-//         }
+// ValidationError 处理表单验证不通过的错误，
+// 一般用于请求还未到达业务层，例如在中间件处理过程中遇到验证错误
+// 返回的 JSON 示例：
+// {
+//     "errors": {
+//         "phone": [
+//             "手机号为必填项，参数名称 phone",
+//             "手机号长度必须为 11 位的数字"
+//         ]
+//     },
+//     "message": "请求验证不通过，具体请查看 errors"
+// }
 func ValidationError(c *gin.Context, errors map[string][]string) {
-	jsonData := gin.H{
-		"success": false,
-		"message": "请求验证不通过",
-		"errors":  errors,
-	}
-	// 默认信息返回第1个错误信息
-	for _, errs := range errors {
-		if len(errs) > 0 {
-			jsonData["message"] = errs[0]
-			break
-		}
-	}
-	c.AbortWithStatusJSON(http.StatusUnprocessableEntity, jsonData)
+	AbortWithError(c, gfErrors.NewErrorUnprocessableEntity(errors, "请求验证不通过，具体请查看 errors"))
 }
