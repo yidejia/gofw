@@ -24,7 +24,7 @@ func ResolveUser(id string) (user Authenticate, err gfErrors.ResponsiveError) {
 	if userResolver != nil {
 		return userResolver(id)
 	}
-	return user, nil
+	return nil, gfErrors.NewErrorNotFound("用户不存在")
 }
 
 // CurrentUID 从 gin.context 中获取当前登录用户 ID
