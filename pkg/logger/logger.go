@@ -38,7 +38,7 @@ func InitLogger(filename string, maxSize, maxBackup, maxAge int, compress bool, 
 	// 初始化 Logger
 	Logger = zap.New(core,
 		zap.AddCaller(),                   // 调用文件和行号，内部使用 runtime.Caller
-		zap.AddCallerSkip(1),              // 封装了一层，调用文件去除一层(runtime.Caller(1))
+		zap.AddCallerSkip(1),         // 封装了一层，调用文件去除一层(runtime.Caller(1))
 		zap.AddStacktrace(zap.ErrorLevel), // Error 时才会显示 stacktrace
 	)
 
@@ -112,8 +112,8 @@ func getLogWriter(filename string, maxSize, maxBackup, maxAge int, compress bool
 
 // Dump 调试专用，不会中断程序，会在终端打印出 warning 消息。
 // 第一个参数会使用 json.Marshal 进行渲染，第二个参数消息（可选）
-//         logger.Dump(user.User{Name:"test"})
-//         logger.Dump(user.User{Name:"test"}, "用户信息")
+// logger.Dump(user.User{Name:"test"})
+// logger.Dump(user.User{Name:"test"}, "用户信息")
 func Dump(value interface{}, msg ...string) {
 	valueString := jsonString(value)
 	// 判断第二个参数是否传参 msg
@@ -147,7 +147,7 @@ func LogInfoIf(err error) {
 
 // Debug 调试日志，详尽的程序日志
 // 调用示例：
-//        logger.Debug("Database", zap.String("sql", sql))
+// logger.Debug("Database", zap.String("sql", sql))
 func Debug(moduleName string, fields ...zap.Field) {
 	Logger.Debug(moduleName, fields...)
 }
@@ -173,7 +173,7 @@ func Fatal(moduleName string, fields ...zap.Field) {
 }
 
 // DebugString 记录一条字符串类型的 debug 日志，调用示例：
-//         logger.DebugString("SMS", "短信内容", string(result.RawResponse))
+// logger.DebugString("SMS", "短信内容", string(result.RawResponse))
 func DebugString(moduleName, name, msg string) {
 	Logger.Debug(moduleName, zap.String(name, msg))
 }
@@ -195,7 +195,7 @@ func FatalString(moduleName, name, msg string) {
 }
 
 // DebugJSON 记录对象类型的 debug 日志，使用 json.Marshal 进行编码。调用示例：
-//         logger.DebugJSON("Auth", "读取登录用户", auth.CurrentUser())
+// logger.DebugJSON("Auth", "读取登录用户", auth.CurrentUser())
 func DebugJSON(moduleName, name string, value interface{}) {
 	Logger.Debug(moduleName, zap.String(name, jsonString(value)))
 }
