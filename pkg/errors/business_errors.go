@@ -175,7 +175,7 @@ func (err *errorUnprocessableEntity) Error() error {
 }
 
 func (err *errorUnprocessableEntity) Errors() map[string][]string  {
-	return nil
+	return err.errors
 }
 
 // errorLocked 资源已锁定错误

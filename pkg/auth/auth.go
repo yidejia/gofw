@@ -34,10 +34,10 @@ func CurrentUID(c *gin.Context) string {
 
 // CurrentUser 获取当前登录用户
 func CurrentUser(c *gin.Context) (user Authenticate) {
-	_user, ok := c.MustGet("current_user").(Authenticate)
+	user, ok := c.MustGet("current_user").(Authenticate)
 	if !ok {
 		logger.LogIf(errors.New("无法获取用户"))
 		return user
 	}
-	return _user
+	return user
 }

@@ -3,8 +3,10 @@ package user
 import (
 	"github.com/yidejia/gofw/app/models/user"
 	userRepos "github.com/yidejia/gofw/app/repositories/user"
+	userReqs "github.com/yidejia/gofw/app/requests/user"
 	svcs "github.com/yidejia/gofw/app/services"
 	gfErrors "github.com/yidejia/gofw/pkg/errors"
+	"github.com/yidejia/gofw/pkg/jwt"
 	"strconv"
 )
 
@@ -20,9 +22,11 @@ func NewUserService() *UserService {
 	}
 }
 
-func (svc *UserService) Create() (user.User, gfErrors.ResponsiveError)  {
+func (svc *UserService) Create(req *userReqs.CreateUserRequest) (user.User, gfErrors.ResponsiveError)  {
 
-	_user := user.User{}
+	_user := user.User{
+		Name: req.Name,
+	}
 
 	if err := svc.repo.Create(&_user); err != nil {
 		return _user, err
@@ -42,4 +46,12 @@ func (svc *UserService) Get(id string) (user.User, gfErrors.ResponsiveError) {
 	_user.ID, _ = strconv.ParseUint(id, 10, 64)
 	_user.Name = "余海坚"
 	return _user, nil
+}
+
+func (svc *UserService) Login() (user.User, string, gfErrors.ResponsiveError) {
+	_user := user.User{}
+	_user.ID = 10
+	_user.Name = "余海坚"
+	token := jwt.NewJWT().IssueToken(strconv.FormatUint(_user.ID, 10), _user.Name)
+	return _user, token, nil
 }

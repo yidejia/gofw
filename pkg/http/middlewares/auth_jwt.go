@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/yidejia/gofw/pkg/auth"
-	"github.com/yidejia/gofw/pkg/config"
 	"github.com/yidejia/gofw/pkg/jwt"
 	"github.com/yidejia/gofw/pkg/response"
 )
@@ -22,11 +21,11 @@ func AuthJWT() gin.HandlerFunc {
 		claims, err := jwt.NewJWT().ParserToken(c)
 		// JWT 解析失败，有错误发生
 		if err != nil {
-			response.Unauthorized(c, fmt.Sprintf("请查看 %v 相关的接口认证文档", config.GetString("app.name")))
+			response.Unauthorized(c, fmt.Sprintf("无权访问：%v", err.Error()))
 			return
 		}
 
-		// JWT 解析成功，设置用户信息
+		// JWT 解析成功，设置用err
 		user, gfErr := auth.ResolveUser(claims.UserID)
 		if gfErr != nil {
 			response.Unauthorized(c, "用户不存在，鉴权失败")

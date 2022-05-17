@@ -36,9 +36,11 @@ func RegisterAPIRoutes(r *gin.Engine) {
 			// TODO 注册用户路由，就按照示例注册其他模块的路由，一般一个模块对应一个路由组
 			uc := new(user.UsersController)
 			// 创建用户
-			usersGroup.POST("", uc.Store)
+			usersGroup.POST("", gfMiddlewares.AuthJWT(), uc.Store)
 			// 用户列表
 			usersGroup.GET("", uc.Index)
+			// 用户登录
+			usersGroup.POST("/tokens", uc.TokenStore)
 		}
 	}
 }

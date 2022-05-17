@@ -29,5 +29,5 @@ func Pagination(data interface{}, c *gin.Context) map[string][]string {
 			"numeric_between:每页条数的值介于 2~100 之间",
 		},
 	}
-	return validate(data, rules, messages)
+	return ValidateStruct(data, rules, messages)
 }

@@ -7,37 +7,84 @@ package requests
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/thedevsaddam/govalidator"
+	"github.com/yidejia/gofw/pkg/auth"
 	"github.com/yidejia/gofw/pkg/response"
 )
 
-// ValidatorFunc 验证函数类型
-type ValidatorFunc func(interface{}, *gin.Context) map[string][]string
+// Validatable 可验证接口
+// 实现这个接口的对象可调用自身方法验证自己的数据
+type Validatable interface {
+	// Validate 对数据进行验证
+	Validate(data interface{}, extra ...interface{}) map[string][]string
+}
 
-// Validate 控制器里调用示例：
-//        if ok := requests.Validate(c, &requests.UserSaveRequest{}, requests.UserSave); !ok {
-//            return
-//        }
-func Validate(c *gin.Context, obj interface{}, handler ValidatorFunc) bool {
+// Request 请求基类
+type Request struct {
+}
 
-	// 1. 解析请求，支持 JSON 数据、表单请求和 URL Query
-	if err := c.ShouldBind(obj); err != nil {
+// CurrentUID 从 gin.context 中获取当前登录用户 ID
+func (req *Request) CurrentUID(c *gin.Context) string {
+	return auth.CurrentUID(c)
+}
+
+// CurrentUser 获取当前登录用户
+func (req *Request) CurrentUser(c *gin.Context) (user auth.Authenticate) {
+	return auth.CurrentUser(c)
+}
+
+// Bind 绑定请求数据到结构体
+func Bind(c *gin.Context, data interface{}) bool {
+	// 解析请求，支持 JSON 数据、表单请求和 URL Query
+	if err := c.ShouldBind(data); err != nil {
 		response.BadRequest(c, err, "请求解析错误，请确认请求格式是否正确。上传文件请使用 multipart 标头，参数请使用 JSON 格式。")
 		return false
 	}
+	return true
+}
 
-	// 2. 表单验证
-	errs := handler(obj, c)
+// Validate 数据验证
+// 通过传入 extra 可变参数而不是直接传入 gin.Context 这个使用起来更方便的上下文参数进行辅助验证，是为了避免验证函数跟 gin.Context 上下文强绑定了，
+// 这样将导致验证函数只能用于 http 请求的验证，无法复用到其他场景例如命令行或者 rpc 远程调用的数据验证
+// @param data 待验证数据
+// @param handler 验证函数
+// @param extra 辅助验证的附加数据
+// @return 映射 map，key 为请求参数名，value 为该参数多个错误信息组成的切片
+func Validate(data Validatable, extra ...interface{}) map[string][]string {
+	// 返回数据验证结果
+	return data.Validate(data, extra...)
+}
 
-	// 3. 判断验证是否通过
+// BindAndValidate 绑定请求数据到结构体并进行数据验证
+// 控制器里调用示例：
+// request := requests.UserSaveRequest{}
+// if ok := requests.BindAndValidate(c, &request); !ok {
+//     return
+// }
+// 需要辅助验证的附加数据时，控制器里调用示例：
+// request := requests.UserSaveRequest{}
+// currentUser := auth.CurrentUser(c)
+// if ok := requests.BindAndValidate(c, &request, currentUser); !ok {
+//     return
+// }
+func BindAndValidate(c *gin.Context, data Validatable, extra ...interface{}) bool {
+
+	if ok := Bind(c, data); !ok {
+		return false
+	}
+
+	// 数据验证
+	errs := Validate(data, extra...)
+
+	// 判断验证是否通过
 	if len(errs) > 0 {
-		response.ValidationError(c, errs)
+		response.ValidationError(c, errs, "")
 		return false
 	}
 
 	return true
 }
 
-func validate(data interface{}, rules govalidator.MapData, messages govalidator.MapData) map[string][]string {
+func ValidateStruct(data interface{}, rules govalidator.MapData, messages govalidator.MapData) map[string][]string {
 	// 配置选项
 	opts := govalidator.Options{
 		Data:          data,
