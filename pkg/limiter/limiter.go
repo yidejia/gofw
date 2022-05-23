@@ -36,8 +36,8 @@ func CheckRate(c *gin.Context, key string, formatted string) (limiterpkg.Context
 		return context, err
 	}
 
-	// 初始化存储，使用我们程序里共用的 redis.Redis 对象
-	store, err := sredis.NewStoreWithOptions(redis.Redis.Client, limiterpkg.StoreOptions{
+	// 初始化存储，使用我们程序里共用的 redis对象
+	store, err := sredis.NewStoreWithOptions(redis.Connection().Client, limiterpkg.StoreOptions{
 		// 为 limiter 设置前缀，保持 redis 里数据的整洁
 		Prefix: config.GetString("app.name") + ":limiter",
 	})

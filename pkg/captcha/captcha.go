@@ -31,7 +31,7 @@ func NewCaptcha() *Captcha {
 
 		// 使用全局 Redis 对象，并配置存储 Key 的前缀
 		store := RedisStore{
-			RedisClient: redis.Redis,
+			RedisClient: redis.Connection(),
 			KeyPrefix:   config.GetString("app.name") + ":captcha:",
 		}
 

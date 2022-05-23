@@ -6,6 +6,8 @@ package redis
 
 import (
 	"context"
+	"fmt"
+	"github.com/yidejia/gofw/pkg/config"
 	"github.com/yidejia/gofw/pkg/logger"
 	"sync"
 	"time"
@@ -19,17 +21,21 @@ type RedisClient struct {
 	Context context.Context
 }
 
-// once 确保全局的 Redis 对象只实例一次
-var once sync.Once
+// connections 数据库连接映射表
+var connections sync.Map
 
-// Redis 全局 Redis，使用 db 1
-var Redis *RedisClient
-
-// ConnectRedis 连接 redis 数据库，设置全局的 Redis 对象
-func ConnectRedis(address string, username string, password string, db int) {
-	once.Do(func() {
-		Redis = NewClient(address, username, password, db)
-	})
+// InitWithConfig 加载配置初始化 Redis 连接
+func InitWithConfig() {
+	// 遍历 redis 连接配置建立数连接池
+	for name, _ := range config.GetStringMap("redis") {
+		rds := NewClient(
+			fmt.Sprintf("%v:%v", config.GetString(fmt.Sprintf("redis.%v.host", name)), config.GetString(fmt.Sprintf("redis.%v.port", name))),
+			config.GetString(fmt.Sprintf("redis.%v.username", name)),
+			config.GetString(fmt.Sprintf("redis.%v.password", name)),
+			config.GetInt(fmt.Sprintf("redis.%v.database", name)))
+		// 缓存 redis 连接
+		connections.Store(name, rds)
+	}
 }
 
 // NewClient 创建一个新的 redis 连接
@@ -53,6 +59,21 @@ func NewClient(address string, username string, password string, db int) *RedisC
 	logger.LogIf(err)
 
 	return rds
+}
+
+// Connection 通过连接名获取 redis 连接实例
+func Connection(name ...string) *RedisClient {
+	var _name string
+	if len(name) > 0 {
+		_name = name[0]
+	} else {
+		_name = "default"
+	}
+	redisClient, ok := connections.Load(_name)
+	if !ok {
+		panic(fmt.Sprintf("Redis Connection %v not exists", _name))
+	}
+	return redisClient.(*RedisClient)
 }
 
 // Ping 用以测试 redis 连接是否正常

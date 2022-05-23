@@ -30,7 +30,7 @@ func NewVerifyCode() *VerifyCode {
 	once.Do(func() {
 		internalVerifyCode = &VerifyCode{
 			Store: &RedisStore{
-				RedisClient: redis.Redis,
+				RedisClient: redis.Connection(),
 				// 增加前缀保持数据库整洁，出问题调试时也方便
 				KeyPrefix: config.GetString("app.name") + ":verifycode:",
 			},
