@@ -1,4 +1,4 @@
-// Package response 响应处理工具
+// Package response http 响应包
 // @author 余海坚 haijianyu10@qq.com
 // @created 2022-04-22 17:55
 // @copyright © 2010-2022 广州伊的家网络科技有限公司
@@ -11,11 +11,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 )
-
-type response struct {
-	c *gin.Context
-	meta gin.H
-}
 
 // Created 响应 201 和带 data 键的 JSON 数据
 // 执行『新增操作』成功后调用，例如新增资源后返回新增的资源
@@ -30,21 +25,6 @@ func Created(c *gin.Context, model interface{}, meta ...gin.H) {
 		})
 	} else {
 		c.JSON(http.StatusCreated, gin.H{
-			"success": true,
-			"data":    model,
-		})
-	}
-}
-
-func (resp *response) Created(model interface{}, meta ...gin.H) {
-	if len(meta) > 0 {
-		resp.c.JSON(http.StatusCreated, gin.H{
-			"success": true,
-			"data":    model,
-			"meta":    meta[0],
-		})
-	} else {
-		resp.c.JSON(http.StatusCreated, gin.H{
 			"success": true,
 			"data":    model,
 		})
@@ -114,14 +94,7 @@ func Paginate(c *gin.Context, modelSlice interface{}, paging paginator.Paging, m
 	}
 }
 
-// NoContent 返回一个无实体内容响应
-// 执行某个『没有具体返回数据』的『变更』操作成功后调用，例如删除资源、变更资源状态，只需通过响应头判断操作是否成功
-func NoContent(c *gin.Context)  {
-	c.Status(http.StatusNoContent)
-}
-
 // Success 响应 200 和预设『操作成功！』的 JSON 数据
-// 优先使用 NoContent 方法，对接方不方便处理响应头或单纯需要返回元数据时才折衷考虑使用此方法
 // 执行某个『没有具体返回数据』的『变更』操作成功后调用，例如删除资源、变更资源状态
 // @param meta 附加的元数据
 func Success(c *gin.Context, meta ...gin.H) {
@@ -139,8 +112,14 @@ func Success(c *gin.Context, meta ...gin.H) {
 	}
 }
 
+// NoContent 返回一个无实体内容响应
+// 执行某个『没有具体返回数据』的『变更』操作成功后调用，例如删除资源、变更资源状态，只需通过响应头判断操作是否成功
+func NoContent(c *gin.Context) {
+	c.Status(http.StatusNoContent)
+}
+
 // Data 响应 200 和带 data 键的 JSON 数据
-// 执行『更新操作』成功后调用，例如更新话题，成功后返回已更新的话题
+// 返回的不是 model 时才考虑使用，一般使用上面标准的响应方法即可
 func Data(c *gin.Context, data interface{}) {
 	JSON(c, gin.H{
 		"success": true,
@@ -149,12 +128,13 @@ func Data(c *gin.Context, data interface{}) {
 }
 
 // JSON 响应 200 和 JSON 数据
+// 需要自定义 JSON 数据结构时才使用，尽量使用上面已经统一的响应结构
 func JSON(c *gin.Context, data interface{}) {
 	c.JSON(http.StatusOK, data)
 }
 
 // AbortWithError 中断处理并返回错误
-func AbortWithError(c *gin.Context, err gfErrors.ResponsiveError)  {
+func AbortWithError(c *gin.Context, err gfErrors.ResponsiveError) {
 	jsonData := gin.H{
 		"success": false,
 		"message": err.Message(),
@@ -198,6 +178,12 @@ func Forbidden(c *gin.Context, message ...string) {
 	AbortWithError(c, gfErrors.NewErrorForbidden(message...))
 }
 
+// NotFound 中断处理并返回不存在错误
+// 一般用于请求还未到达业务层，例如在中间件处理过程中遇到不存在错误
+func NotFound(c *gin.Context, message ...string) {
+	AbortWithError(c, gfErrors.NewErrorNotFound(message...))
+}
+
 // InternalError 中断处理并返回系统内部错误
 // 一般用于请求还未到达业务层，例如在中间件处理过程中遇到系统内部错误
 // 没有内部错误对象需要返回时，err 可以设置为 nil
@@ -219,4 +205,16 @@ func InternalError(c *gin.Context, err error, message ...string) {
 // }
 func ValidationError(c *gin.Context, errors map[string][]string, message ...string) {
 	AbortWithError(c, gfErrors.NewErrorUnprocessableEntity(errors, message...))
+}
+
+// Error 中断处理并返回自定义错误
+// 一般用于请求还未到达业务层，例如在中间件处理过程中遇到错误
+// 没有错误对象需要返回时，err 可以设置为 nil
+func Error(c *gin.Context, httpStatus int, err error, message ...string) {
+	AbortWithError(c, gfErrors.NewErrorCustom(httpStatus, err, message...))
+}
+
+// String 返回字符串
+func String(c *gin.Context, httpStatus int, format string, values ...interface{}) {
+	c.String(httpStatus, format, values...)
 }

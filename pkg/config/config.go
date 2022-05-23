@@ -139,3 +139,13 @@ func GetBool(path string, defaultValue ...interface{}) bool {
 func GetStringMapString(path string) map[string]string {
 	return viper.GetStringMapString(path)
 }
+
+// GetStringMap 获取内嵌的结构数据
+func GetStringMap(path string) map[string]interface{} {
+	return viper.GetStringMap(path)
+}
+
+// GetStringSlice 获取字符串切片
+func GetStringSlice(path string) []string {
+	return viper.GetStringSlice(path)
+}

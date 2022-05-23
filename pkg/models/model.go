@@ -3,6 +3,7 @@ package models
 
 import (
 	"github.com/spf13/cast"
+	"github.com/yidejia/gofw/pkg/config"
 	"time"
 )
 
@@ -20,4 +21,10 @@ type CommonTimestampsField struct {
 // GetStringID 获取 ID 的字符串格式
 func (m Model) GetStringID() string {
 	return cast.ToString(m.ID)
+}
+
+// Connection 获取模型对应的数据库连接
+func (m Model) Connection() string {
+	// 返回默认的数据库连接
+	return config.Get("database.default")
 }

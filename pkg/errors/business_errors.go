@@ -236,3 +236,34 @@ func (err *errorInternal) Error() error {
 func (err *errorInternal) Errors() map[string][]string  {
 	return nil
 }
+
+// errorCustom 自定义错误
+type errorCustom struct {
+	httpStatus int
+	message string
+	err error
+}
+
+func NewErrorCustom(httpStatus int, err error, message ...string) ResponsiveError {
+	if len(message) > 0 {
+		return &errorCustom{httpStatus,message[0], err}
+	} else {
+		return &errorCustom{httpStatus,err.Error(), err}
+	}
+}
+
+func (err *errorCustom) HttpStatus() int {
+	return err.httpStatus
+}
+
+func (err *errorCustom) Message() string {
+	return err.message
+}
+
+func (err *errorCustom) Error() error {
+	return err.err
+}
+
+func (err *errorCustom) Errors() map[string][]string  {
+	return nil
+}

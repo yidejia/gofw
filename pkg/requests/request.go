@@ -84,6 +84,7 @@ func BindAndValidate(c *gin.Context, data Validatable, extra ...interface{}) boo
 	return true
 }
 
+// ValidateStruct 验证结构体
 func ValidateStruct(data interface{}, rules govalidator.MapData, messages govalidator.MapData) map[string][]string {
 	// 配置选项
 	opts := govalidator.Options{
@@ -96,7 +97,8 @@ func ValidateStruct(data interface{}, rules govalidator.MapData, messages govali
 	return govalidator.New(opts).ValidateStruct()
 }
 
-func validateFile(c *gin.Context, data interface{}, rules govalidator.MapData, messages govalidator.MapData) map[string][]string {
+// ValidateFile 验证文件
+func ValidateFile(c *gin.Context, data interface{}, rules govalidator.MapData, messages govalidator.MapData) map[string][]string {
 	opts := govalidator.Options{
 		Request:       c.Request,
 		Rules:         rules,

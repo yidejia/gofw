@@ -20,13 +20,10 @@ type UsersController struct {
 func (ctrl *UsersController) Store(c *gin.Context) {
 
 	req := &userReqs.CreateUserRequest{}
-	user := req.CurrentUser(c)
-	response.Item(c, user)
-	return
+
 	if ok := requests.BindAndValidate(c, req); !ok {
 		return
 	}
-
 
 	userSvc := userSvcs.NewUserService()
 
