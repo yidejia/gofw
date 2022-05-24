@@ -163,3 +163,10 @@ func DeleteAllTables(connection ...string) error {
 		return nil
 	}
 }
+
+// TableName 模型对应的数据表名
+func TableName(connector Connector) string {
+	stmt := &gorm.Statement{DB: DB(connector)}
+	_ = stmt.Parse(connector)
+	return stmt.Schema.Table
+}
