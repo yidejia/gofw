@@ -36,3 +36,31 @@ func (s *Sqlite) ConnectToSlave(name string, host string) gorm.Dialector {
 	dbConfig := sqlite.Open(host)
 	return dbConfig
 }
+
+func (s *Sqlite) DeleteAllTables(connection string) error {
+
+	dbFile := config.Get(fmt.Sprintf("database.connections.%v.database", connection))
+	// 数据库文件不存在，直接返回
+	if !file.Exists(dbFile) {
+		return nil
+	}
+
+	var tables []string
+
+	_db := Connection(connection)
+
+	// 读取所有数据表
+	err := _db.Select(&tables, "SELECT name FROM sqlite_master WHERE type='table'").Error
+	if err != nil {
+		return err
+	}
+
+	// 删除所有表
+	for _, table := range tables {
+		err = _db.Migrator().DropTable(table)
+		if err != nil {
+			return err
+		}
+	}
+	return err
+}

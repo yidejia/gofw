@@ -149,3 +149,9 @@ func GetStringMap(path string) map[string]interface{} {
 func GetStringSlice(path string) []string {
 	return viper.GetStringSlice(path)
 }
+
+// GetInterface 获取接口类型的配置项
+// 常用于获取函数来动态执行
+func GetInterface(path string) interface{} {
+	return internalGet(path)
+}

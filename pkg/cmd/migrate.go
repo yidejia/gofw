@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	//"gohub/database/migrations"
+	"github.com/yidejia/gofw/pkg/config"
 	"github.com/yidejia/gofw/pkg/migrate"
 
 	"github.com/spf13/cobra"
@@ -16,7 +16,7 @@ var CmdMigrate = &cobra.Command{
 // CmdMigrateUp 执行迁移命令
 var CmdMigrateUp = &cobra.Command{
 	Use:   "up",
-	Short: "Run unmigrated migrations",
+	Short: "Run migrations not migrated",
 	Run:   runUp,
 }
 
@@ -31,8 +31,10 @@ func init() {
 }
 
 func migrator() *migrate.Migrator {
-	// 注册 database/migrations 下的所有迁移文件
-	//migrations.Initialize()
+	// 注册应用 database/migrations 下的所有迁移文件
+	init := config.GetInterface("database.migration_init_func")
+	initFunc := init.(func())
+	initFunc()
 	// 初始化 migrator
 	return migrate.NewMigrator()
 }

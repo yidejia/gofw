@@ -20,6 +20,19 @@ type Connector interface {
 // connections 数据库连接映射表
 var connections sync.Map
 
+// NewDriver 根据数据库连接名和驱动名生成驱动实例
+func NewDriver(connection string, driverName string) (driver Driver) {
+	switch driverName {
+	case "mysql":
+		driver = NewMysql()
+	case "sqlite":
+		driver = NewSqlite()
+	default:
+		panic(errors.New(fmt.Sprintf("database connection %v not supported %v driver", connection, driverName)))
+	}
+	return
+}
+
 // InitWithConfig 加载配置初始化数据库连接
 func InitWithConfig() {
 
@@ -30,19 +43,12 @@ func InitWithConfig() {
 	var driver Driver
 
 	// 遍历数据库连接配置建立数据库连接池
-	for name, _ := range config.GetStringMap("database.connections") {
+	for connection, _ := range config.GetStringMap("database.connections") {
 
-		driverName = config.Get(fmt.Sprintf("database.connections.%v.driver", name))
-		switch driverName {
-		case "mysql":
-			driver = NewMysql()
-		case "sqlite":
-			driver = NewSqlite()
-		default:
-			panic(errors.New(fmt.Sprintf("database connection %v not supported %v driver", name, driverName)))
-		}
+		driverName = config.Get(fmt.Sprintf("database.connections.%v.driver", connection))
+		driver = NewDriver(connection, driverName)
 
-		dbConfig = driver.Connect(name)
+		dbConfig = driver.Connect(connection)
 		// 生成的配置无效，继续处理下一个连接
 		if dbConfig == nil {
 			continue
@@ -53,16 +59,16 @@ func InitWithConfig() {
 		})
 		// 处理错误
 		if err != nil {
-			panic(fmt.Sprintf("open database %v error: %v", name, err.Error()))
+			panic(fmt.Sprintf("open database %v error: %v", connection, err.Error()))
 		}
 
 		// 设置了只读从库
-		if read := config.GetStringSlice(fmt.Sprintf("database.connections.%v.read", name)); len(read) > 0 {
+		if read := config.GetStringSlice(fmt.Sprintf("database.connections.%v.read", connection)); len(read) > 0 {
 
 			var replicas []gorm.Dialector
 			var readDBConfig gorm.Dialector
 			for _, host := range read {
-				readDBConfig = driver.ConnectToSlave(name, host)
+				readDBConfig = driver.ConnectToSlave(connection, host)
 				if readDBConfig == nil {
 					continue
 				}
@@ -75,39 +81,50 @@ func InitWithConfig() {
 				Policy: dbresolver.RandomPolicy{},
 			}))
 			if err != nil {
-				panic(fmt.Sprintf("settup database %v slave error: %v", name, err.Error()))
+				panic(fmt.Sprintf("settup database %v slave error: %v", connection, err.Error()))
 			}
 		}
 
 		// 获取底层的 sqlDB
 		sqlDB, err := db.DB()
 		if err != nil {
-			panic(fmt.Sprintf("get sqlDB %v error: %v", name, err.Error()))
+			panic(fmt.Sprintf("get sqlDB %v error: %v", connection, err.Error()))
 		}
 		// 测试数据库连接
 		if err = sqlDB.Ping(); err != nil {
-			panic(fmt.Sprintf("failed to connect to DB %v, error: %v", name, err.Error()))
+			panic(fmt.Sprintf("failed to connect to DB %v, error: %v", connection, err.Error()))
 		}
 
 		// 设置最大连接数
-		sqlDB.SetMaxOpenConns(config.GetInt(fmt.Sprintf("database.connections.%v.max_open_connections", name)))
+		sqlDB.SetMaxOpenConns(config.GetInt(fmt.Sprintf("database.connections.%v.max_open_connections", connection)))
 		// 设置最大空闲连接数
-		sqlDB.SetMaxIdleConns(config.GetInt(fmt.Sprintf("database.connections.%v.max_idle_connections", name)))
+		sqlDB.SetMaxIdleConns(config.GetInt(fmt.Sprintf("database.connections.%v.max_idle_connections", connection)))
 		// 设置每个连接的过期时间
-		sqlDB.SetConnMaxLifetime(time.Duration(config.GetInt(fmt.Sprintf("database.connections.%v.max_life_seconds", name))) * time.Second)
+		sqlDB.SetConnMaxLifetime(time.Duration(config.GetInt(fmt.Sprintf("database.connections.%v.max_life_seconds", connection))) * time.Second)
 
 		// 缓存数据库连接
-		connections.Store(name, db)
+		connections.Store(connection, db)
 	}
 }
 
 // Connection 通过连接名获取数据库连接实例
 // 基于 Model 进行数据库操作时，优先使用下面的 DB 方法，只有需要显式使用特定数据库连接时才使用这个方法
-func Connection(name string) *gorm.DB {
-	db, ok := connections.Load(name)
-	if !ok {
-		panic(fmt.Sprintf("DB Connection %v not exists", name))
+func Connection(name ...string) *gorm.DB {
+
+	var _name string
+
+	if len(name) > 0 {
+		_name = name[0]
+	} else {
+		_name = config.GetString("database.default")
 	}
+
+	db, ok := connections.Load(_name)
+
+	if !ok {
+		panic(fmt.Sprintf("DB Connection %v not exists", _name))
+	}
+
 	return db.(*gorm.DB)
 }
 
@@ -115,4 +132,34 @@ func Connection(name string) *gorm.DB {
 // Model 基类已经默认实现了接口，可以直接使用，不使用默认数据库连接的 Model 需要重新实现连接器接口
 func DB(connector Connector) *gorm.DB {
 	return Connection(connector.Connection())
+}
+
+// CurrentDatabase 获取当前数据库名称
+// @param connection 数据库连接名
+func CurrentDatabase(connection ...string) (dbname string) {
+	dbname = Connection(connection...).Migrator().CurrentDatabase()
+	return
+}
+
+// DeleteAllTables 删除所有表
+func DeleteAllTables(connection ...string) error {
+	var driverName string
+	var driver Driver
+	var err error
+	// 指定了数据库连接时，只删除这个数据库的所有表
+	if len(connection) > 0 {
+		driverName = config.Get(fmt.Sprintf("database.connections.%v.driver", connection))
+		driver = NewDriver(connection[0], driverName)
+		return driver.DeleteAllTables(connection[0])
+	} else {
+		// 默认删除所有数据库连接对应的数据表
+		for _connection, _ := range config.GetStringMap("database.connections") {
+			driverName = config.Get(fmt.Sprintf("database.connections.%v.driver", _connection))
+			driver = NewDriver(_connection, driverName)
+			if err = driver.DeleteAllTables(_connection); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
 }
