@@ -113,9 +113,11 @@ func Connection(name ...string) *gorm.DB {
 
 	var _name string
 
+	// 返回指定数据库连接
 	if len(name) > 0 {
 		_name = name[0]
 	} else {
+		// 返回默认数据库连接
 		_name = config.GetString("database.default")
 	}
 
