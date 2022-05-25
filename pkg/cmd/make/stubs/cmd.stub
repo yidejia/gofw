@@ -2,12 +2,12 @@ package cmd
 
 import (
     "errors"
-    "gohub/pkg/console"
+    "github.com/yidejia/gofw/pkg/console"
 
     "github.com/spf13/cobra"
 )
 
-// Cmd{{StructName}}
+// Cmd{{StructName}} {{Comment}}命令
 var Cmd{{StructName}} = &cobra.Command{
     Use:   "{{PackageName}}",
     Short:  "HERE PUTS THE COMMAND DESCRIPTION",

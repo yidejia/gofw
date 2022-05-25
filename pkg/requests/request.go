@@ -75,7 +75,7 @@ func BindAndValidate(c *gin.Context, data Validatable, extra ...interface{}) boo
 	// 数据验证
 	errs := Validate(data, extra...)
 
-	// 判断验证是否通过
+	// 验证不通过
 	if len(errs) > 0 {
 		response.ValidationError(c, errs, "")
 		return false
