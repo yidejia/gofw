@@ -63,7 +63,6 @@ func runMakeCMD(cmd *cobra.Command, args []string) {
 
 	// 友好提示
 	console.Success("command name:" + model.PackageName)
-	//console.Success("command variable name: cmd.Cmd" + model.StructName)
 	console.Success(fmt.Sprintf("command variable name: %s.Cmd%s", model.CustomPackageName, model.StructName))
 	console.Warning("please edit main.go's app.Commands slice to register command")
 }
