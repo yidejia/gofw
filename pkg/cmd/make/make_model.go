@@ -13,15 +13,18 @@ import (
 // @copyright © 2010-2022 广州伊的家网络科技有限公司
 var CmdMakeModel = &cobra.Command{
 	Use:   "model",
-	Short: "Crate model file, example: make model user",
+	Short: "Crate model file",
+	Example: "go run main.go make model user -c user",
 	Run:   runMakeModel,
 	Args:  cobra.ExactArgs(1), // 只允许且必须传 1 个参数
 }
 
 func runMakeModel(cmd *cobra.Command, args []string) {
 
+	// 获取注释
+	comment, _ := cmd.Flags().GetString("comment")
 	// 格式化模型名称，返回一个 Model 对象
-	model := makeModelFromString(args[0])
+	model := makeModelFromString(args[0], comment)
 
 	// 确保模型的目录存在，例如 `app/models/user`
 	dir := fmt.Sprintf("app/models/%s/", model.PackageName)

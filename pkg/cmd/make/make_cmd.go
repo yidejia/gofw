@@ -14,38 +14,31 @@ import (
 // @copyright © 2010-2022 广州伊的家网络科技有限公司
 var CmdMakeCMD = &cobra.Command{
 	Use:   "cmd",
-	Short: "Create a command, should be snake_case, exmaple: make cmd buckup_database -n \"backup database\"",
+	Short: "Create a command, should be snake_case",
+	Example: "go run main.go make cmd backup_database -c backup_database",
+	Run:   runMakeCMD,
 	Args:  cobra.ExactArgs(1), // 只允许且必须传 1 个参数
-}
-
-func init() {
-	CmdMakeCMD.Flags().StringP("comment" ,"c", "", "add comment for cmd struct")
-	CmdMakeCMD.Run = runMakeCMD
 }
 
 func runMakeCMD(cmd *cobra.Command, args []string) {
 
-	// 格式化模型名称，返回一个 Model 对象
-	model := makeModelFromString(args[0])
 	// 获取注释
-	comment, err := CmdMakeCMD.Flags().GetString("comment")
-	if err != nil {
-		console.Exit(err.Error())
-	}
-	if len(comment) == 0 {
-		console.Exit("missing comments for cmd struct")
-	}
+	comment := parseCmdComment(cmd, args)
+	// 格式化模型名称，返回一个 Model 对象
+	model := makeModelFromString(args[0], comment)
 
-	// 目标目录不存在
+	// 命令目录不存在
 	if !file.Exists("app/cmd") {
-		_ = os.Mkdir("app/cmd", 0644)
+		if err := os.Mkdir("app/cmd", 0644); err != nil {
+			panic(fmt.Sprintf("failed to create cmd folder: %s", err.Error()))
+		}
 	}
 
 	// 拼接目标文件路径
 	filePath := fmt.Sprintf("app/cmd/%s.go", model.PackageName)
 
-	// 从模板中创建文件（做好变量替换）
-	createFileFromStub(filePath, "cmd", model, map[string]string{"{{Comment}}":comment})
+	// 从模板中创建文件并进行变量替换
+	createFileFromStub(filePath, "cmd", model)
 
 	// 友好提示
 	console.Success("command name:" + model.PackageName)

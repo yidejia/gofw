@@ -8,15 +8,18 @@ import (
 
 var CmdMakeSeeder = &cobra.Command{
 	Use:   "seeder",
-	Short: "Create seeder file, example:  make seeder user",
+	Short: "Create seeder file",
+	Example: "go run main.go make seeder user -c user",
 	Run:   runMakeSeeder,
 	Args:  cobra.ExactArgs(1), // 只允许且必须传 1 个参数
 }
 
 func runMakeSeeder(cmd *cobra.Command, args []string) {
 
+	// 获取注释
+	comment, _ := cmd.Flags().GetString("comment")
 	// 格式化模型名称，返回一个 Model 对象
-	model := makeModelFromString(args[0])
+	model := makeModelFromString(args[0], comment)
 
 	// 拼接目标文件路径
 	filePath := fmt.Sprintf("database/seeders/%s_seeder.go", model.TableName)

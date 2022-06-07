@@ -2,12 +2,14 @@ package cmd
 
 import (
     "errors"
-    "github.com/yidejia/gofw/pkg/console"
-
     "github.com/spf13/cobra"
+    "github.com/yidejia/gofw/pkg/console"
 )
 
 // Cmd{{StructName}} {{Comment}}命令
+// @author {{Author}} {{AuthorEmail}}
+// @created {{CreatedDataTime}}
+// @copyright © 2010-{{CopyrightToYear}} 广州伊的家网络科技有限公司
 var Cmd{{StructName}} = &cobra.Command{
     Use:   "{{PackageName}}",
     Short:  "HERE PUTS THE COMMAND DESCRIPTION",
@@ -16,7 +18,6 @@ var Cmd{{StructName}} = &cobra.Command{
 }
 
 func run{{StructName}}(cmd *cobra.Command, args []string) {
-
     console.Success("这是一条成功的提示")
     console.Warning("这是一条提示")
     console.Error("这是一条错误信息")

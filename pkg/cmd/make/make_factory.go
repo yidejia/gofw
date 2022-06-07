@@ -9,15 +9,18 @@ import (
 // CmdMakeFactory 生成模型工厂文件命令
 var CmdMakeFactory = &cobra.Command{
 	Use:   "factory",
-	Short: "Create model's factory file, exmaple: make factory user",
+	Short: "Create model's factory file",
+	Example: "go run main.go make factory user -c user",
 	Run:   runMakeFactory,
 	Args:  cobra.ExactArgs(1), // 只允许且必须传 1 个参数
 }
 
 func runMakeFactory(cmd *cobra.Command, args []string) {
 
+	// 获取注释
+	comment, _ := cmd.Flags().GetString("comment")
 	// 格式化模型名称，返回一个 Model 对象
-	model := makeModelFromString(args[0])
+	model := makeModelFromString(args[0], comment)
 
 	// 拼接目标文件路径
 	filePath := fmt.Sprintf("database/factories/%s_factory.go", model.PackageName)
