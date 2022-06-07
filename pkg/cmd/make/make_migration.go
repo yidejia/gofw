@@ -25,7 +25,7 @@ func runMakeMigration(cmd *cobra.Command, args []string) {
 	// 获取注释
 	comment, _ := cmd.Flags().GetString("comment")
 	// 格式化模型名称，返回一个 Model 对象
-	model := makeModelFromString(args[0], comment)
+	model := makeModelFromString(args[0], comment, "")
 
 	// 日期格式化
 	timeStr := app.TimenowInTimezone().Format("2006_01_02_150405")

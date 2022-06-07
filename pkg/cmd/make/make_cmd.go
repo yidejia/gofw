@@ -23,9 +23,12 @@ var CmdMakeCMD = &cobra.Command{
 func runMakeCMD(cmd *cobra.Command, args []string) {
 
 	// 获取注释
-	comment := parseCmdComment(cmd, args)
-	// 格式化模型名称，返回一个 Model 对象
-	model := makeModelFromString(args[0], comment)
+	comment := parseCommentFlag(cmd, args)
+	// 获取名称
+	path, name, pkgName := parseNameParam(cmd, args)
+	if len(pkgName) == 0 {
+		pkgName = "cmd"
+	}
 
 	// 命令目录不存在
 	if !file.Exists("app/cmd") {
@@ -34,14 +37,33 @@ func runMakeCMD(cmd *cobra.Command, args []string) {
 		}
 	}
 
+	// 完整目标文件目录
+	var fullPath string
+	if len(path) > 0 {
+		fullPath = fmt.Sprintf("app/cmd/%s", path)
+	} else {
+		fullPath = "app/cmd"
+	}
+
+	// 目标目录不存在
+	if !file.Exists(fullPath) {
+		if err := os.MkdirAll(fullPath, 0644); err != nil {
+			panic(fmt.Sprintf("failed to create cmd parent folder: %s", err.Error()))
+		}
+	}
+
+	// 格式化模型名称，返回一个 Model 对象
+	model := makeModelFromString(name, comment, pkgName)
+
 	// 拼接目标文件路径
-	filePath := fmt.Sprintf("app/cmd/%s.go", model.PackageName)
+	filePath := fmt.Sprintf("%s/%s.go", fullPath, model.PackageName)
 
 	// 从模板中创建文件并进行变量替换
 	createFileFromStub(filePath, "cmd", model)
 
 	// 友好提示
 	console.Success("command name:" + model.PackageName)
-	console.Success("command variable name: cmd.Cmd" + model.StructName)
+	//console.Success("command variable name: cmd.Cmd" + model.StructName)
+	console.Success(fmt.Sprintf("command variable name: %s.Cmd%s", model.CustomPackageName, model.StructName))
 	console.Warning("please edit main.go's app.Commands slice to register command")
 }

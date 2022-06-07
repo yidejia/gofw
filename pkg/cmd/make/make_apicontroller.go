@@ -34,7 +34,7 @@ func runMakeAPIController(cmd *cobra.Command, args []string) {
 	// 获取注释
 	comment, _ := cmd.Flags().GetString("comment")
 	// 格式化模型名称，返回一个 Model 对象
-	model := makeModelFromString(name, comment)
+	model := makeModelFromString(name, comment, "")
 
 	// 组建目标目录
 	filePath := fmt.Sprintf("app/http/controllers/api/%s/%s_controller.go", apiVersion, model.TableName)

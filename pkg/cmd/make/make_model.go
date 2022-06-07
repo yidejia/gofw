@@ -24,7 +24,7 @@ func runMakeModel(cmd *cobra.Command, args []string) {
 	// 获取注释
 	comment, _ := cmd.Flags().GetString("comment")
 	// 格式化模型名称，返回一个 Model 对象
-	model := makeModelFromString(args[0], comment)
+	model := makeModelFromString(args[0], comment, "")
 
 	// 确保模型的目录存在，例如 `app/models/user`
 	dir := fmt.Sprintf("app/models/%s/", model.PackageName)

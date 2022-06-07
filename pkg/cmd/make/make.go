@@ -56,6 +56,7 @@ type Model struct {
 	VariableNamePlural string // 结构体变量名复数形式
 	PackageName        string // 结构体所属包名
 	Comment            string // 结构体注释
+	CustomPackageName  string // 自定义包名，设置后模板填充数据时优先使用自定义包名
 }
 
 // stubsFS 方便我们后面打包这些 .stub 为后缀名的文件
@@ -86,8 +87,8 @@ func init() {
 	}
 }
 
-// parseCmdComment 解析并提取命令注释
-func parseCmdComment(cmd *cobra.Command, args []string) string {
+// parseCmdComment 解析命令注释选项
+func parseCommentFlag(cmd *cobra.Command, args []string) string {
 	// 检查是否设置了注释
 	comment, err := cmd.Flags().GetString("comment")
 	if err != nil {
@@ -99,8 +100,24 @@ func parseCmdComment(cmd *cobra.Command, args []string) string {
 	return comment
 }
 
+// parseNameParam 解析命令名称参数
+func parseNameParam(cmd *cobra.Command, args []string) (path string, name string, pkgName string) {
+	names := strings.Split(args[0], "/")
+	namesLen := len(names)
+	if namesLen == 1 {
+		path = ""
+		pkgName = ""
+		name = names[0]
+	} else {
+		name = names[namesLen-1]
+		pkgName = names[namesLen-2]
+		path = strings.Join(names[0:namesLen-1], "/")
+	}
+	return
+}
+
 // makeModelFromString 格式化用户输入的内容并设置好模板文件的填充数据
-func makeModelFromString(name string, comment string) Model {
+func makeModelFromString(name string, comment string, pkgName string) Model {
 	model := Model{}
 	// 结构体名为驼峰单数形式
 	model.StructName = str.Singular(strcase.ToCamel(name))
@@ -115,6 +132,7 @@ func makeModelFromString(name string, comment string) Model {
 	model.PackageName = str.Snake(model.StructName)
 	// 注释一般为中文，开发环境未安装中文语言包时可以设置为英文
 	model.Comment = comment
+	model.CustomPackageName = pkgName
 	return model
 }
 
@@ -148,6 +166,7 @@ func createFileFromStub(filePath string, stubName string, model Model, variables
 	replaces["{{PackageName}}"] = model.PackageName
 	replaces["{{TableName}}"] = model.TableName
 	replaces["{{Comment}}"] = model.Comment
+	replaces["{{CustomPackageName}}"] = model.CustomPackageName
 	replaces["{{Author}}"] = config.Get("app.developer", "")
 	replaces["{{AuthorEmail}}"] = config.Get("app.developer_email", "")
 	replaces["{{CreatedDataTime}}"] = app.TimenowInTimezone().Format("2006-01-02 15:04")
