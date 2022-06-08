@@ -8,12 +8,17 @@ import (
 	"errors"
 	"fmt"
 	"github.com/yidejia/gofw/pkg/database"
+	"regexp"
 	"strconv"
 	"strings"
 	"unicode/utf8"
 
 	"github.com/thedevsaddam/govalidator"
 )
+
+// Initialize 手动初始化验证包时调用
+func Initialize() {
+}
 
 // 此方法会在初始化时执行，注册自定义表单验证规则
 func init() {
@@ -24,6 +29,7 @@ func init() {
 	// not_exists:users,email 检查数据库表里是否存在同一条信息
 	// not_exists:users,email,32 排除用户掉 id 为 32 的用户
 	govalidator.AddCustomRule("not_exists", func(field string, rule string, message string, value interface{}) error {
+
 		rng := strings.Split(strings.TrimPrefix(rule, "not_exists:"), ",")
 
 		// 第一个参数，表名称，如 users
@@ -98,6 +104,7 @@ func init() {
 	// category_id 的值在数据库中存在，即可使用：
 	// exists:categories,id
 	govalidator.AddCustomRule("exists", func(field string, rule string, message string, value interface{}) error {
+
 		rng := strings.Split(strings.TrimPrefix(rule, "exists:"), ",")
 
 		// 第一个参数，表名称，如 categories
@@ -119,6 +126,23 @@ func init() {
 			}
 			return fmt.Errorf("%v 不存在", requestValue)
 		}
+		return nil
+	})
+
+	// 验证是否是手机号
+	govalidator.AddCustomRule("mobile", func(field string, rule string, message string, value interface{}) error {
+
+		// 用户请求过来的数据
+		requestValue := value.(string)
+
+		if ok, _ := regexp.MatchString("^1[345789]\\d{9}$", requestValue); !ok {
+			// 如果有自定义错误消息的话，使用自定义消息
+			if message != "" {
+				return errors.New(message)
+			}
+			return fmt.Errorf("%v 不是手机号", requestValue)
+		}
+
 		return nil
 	})
 }
