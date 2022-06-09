@@ -56,9 +56,9 @@ func (repo *{{StructName}}Repository) All() ({{VariableNamePlural}} []{{CustomPa
     return
 }
 
-// IsExist {{Comment}}是否存在
+// IsExist 根据字段判断{{Comment}}是否存在
 func (repo *{{StructName}}Repository) IsExist(field, value string) bool {
     var count int64
-    db.Model({{CustomPackageName}}.{{StructName}}{}).Where(" = ?", field, value).Count(&count)
+    db.Model({{CustomPackageName}}.{{StructName}}{}).Where("? = ?", field, value).Count(&count)
     return count > 0
 }
