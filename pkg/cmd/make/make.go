@@ -87,17 +87,27 @@ func init() {
 	}
 }
 
-// parseCmdComment 解析命令注释选项
+// parseCommentFlag 解析命令注释选项
 func parseCommentFlag(cmd *cobra.Command, args []string) string {
 	// 检查是否设置了注释
 	comment, err := cmd.Flags().GetString("comment")
 	if err != nil {
-		console.Exit(err.Error())
+		console.Exit(fmt.Sprintf("Get comment flag error: %s", err.Error()))
 	}
 	if len(comment) == 0 {
 		console.Exit("Missing comment for struct or file, please use \"-c\" to set comment flag")
 	}
 	return comment
+}
+
+// parseForceFlag 解析强制执行选项
+func parseForceFlag(cmd *cobra.Command, args []string) bool {
+	// 检查是否设置了强制执行选项
+	force, err := cmd.Flags().GetBool("force")
+	if err != nil {
+		console.Exit(fmt.Sprintf("Get force flage error: %s", err.Error()))
+	}
+	return force
 }
 
 // parseNameParam 解析命令名称参数
@@ -171,6 +181,7 @@ func createFileFromStub(filePath string, stubName string, model Model, variables
 	replaces["{{AuthorEmail}}"] = config.Get("app.developer_email", "")
 	replaces["{{CreatedDataTime}}"] = app.TimenowInTimezone().Format("2006-01-02 15:04")
 	replaces["{{CopyrightToYear}}"] = app.TimenowInTimezone().Format("2006")
+	replaces["{{AppName}}"] = config.Get("app.name")
 
 	if len(replaces["{{Author}}"]) == 0 {
 		console.Exit("Please set the developer name in the .env file DEVELOPER=")

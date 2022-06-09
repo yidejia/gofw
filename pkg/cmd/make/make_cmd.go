@@ -32,8 +32,8 @@ func runMakeCMD(cmd *cobra.Command, args []string) {
 
 	// 命令目录不存在
 	if !file.Exists("app/cmd") {
-		if err := os.Mkdir("app/cmd", 0644); err != nil {
-			panic(fmt.Sprintf("failed to create cmd folder: %s", err.Error()))
+		if err := os.Mkdir("app/cmd", os.ModePerm); err != nil {
+			console.Exit(fmt.Sprintf("failed to create cmd folder: %s", err.Error()))
 		}
 	}
 
@@ -47,8 +47,8 @@ func runMakeCMD(cmd *cobra.Command, args []string) {
 
 	// 目标目录不存在
 	if !file.Exists(fullPath) {
-		if err := os.MkdirAll(fullPath, 0644); err != nil {
-			panic(fmt.Sprintf("failed to create cmd parent folder: %s", err.Error()))
+		if err := os.MkdirAll(fullPath, os.ModePerm); err != nil {
+			console.Exit(fmt.Sprintf("failed to create cmd parent folder: %s", err.Error()))
 		}
 	}
 
