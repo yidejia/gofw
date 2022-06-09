@@ -8,11 +8,11 @@ import (
 
 // CmdMakeFactory 生成模型工厂文件命令
 var CmdMakeFactory = &cobra.Command{
-	Use:   "factory",
-	Short: "Create model's factory file",
+	Use:     "factory",
+	Short:   "Create model's factory file",
 	Example: "go run main.go make factory user -c user",
-	Run:   runMakeFactory,
-	Args:  cobra.ExactArgs(1), // 只允许且必须传 1 个参数
+	Run:     runMakeFactory,
+	Args:    cobra.ExactArgs(1), // 只允许且必须传 1 个参数
 }
 
 func runMakeFactory(cmd *cobra.Command, args []string) {

@@ -63,7 +63,10 @@ type Model struct {
 //go:embed stubs
 var stubsFS embed.FS
 
-// CmdMake 说明 cobra 命令
+// CmdMake 生成模板文件命令
+// @author 余海坚 haijianyu10@qq.com
+// @created 2022-04-23 17:00
+// @copyright © 2010-2022 广州伊的家网络科技有限公司
 var CmdMake = &cobra.Command{
 	Use:   "make",
 	Short: "Generate file and code",
@@ -74,6 +77,7 @@ func init() {
 	CmdMake.AddCommand(
 		CmdMakeCMD,
 		CmdMakeModel,
+		CmdMakeRepository,
 		CmdMakeAPIController,
 		CmdMakeRequest,
 		CmdMakeMigration,

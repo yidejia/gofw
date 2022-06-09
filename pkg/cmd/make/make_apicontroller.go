@@ -8,16 +8,16 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// CmdMakeAPIController 生成 api 控制器文件的命令
+// CmdMakeAPIController 生成 api 控制器文件命令
 // @author 余海坚 haijianyu10@qq.com
 // @created 2022-04-23 17:17
 // @copyright © 2010-2022 广州伊的家网络科技有限公司
 var CmdMakeAPIController = &cobra.Command{
-	Use:   "api-ctr",
-	Short: "Create api controller",
+	Use:     "api-ctr",
+	Short:   "Create api controller",
 	Example: "go run main.go make api-ctr v1/user -c user",
-	Run:   runMakeAPIController,
-	Args:  cobra.ExactArgs(1), // 只允许且必须传 1 个参数
+	Run:     runMakeAPIController,
+	Args:    cobra.MinimumNArgs(1), // 至少传 1 个参数
 }
 
 func runMakeAPIController(cmd *cobra.Command, args []string) {

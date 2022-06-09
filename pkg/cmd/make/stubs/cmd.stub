@@ -11,10 +11,11 @@ import (
 // @created {{CreatedDataTime}}
 // @copyright © 2010-{{CopyrightToYear}} 广州伊的家网络科技有限公司
 var Cmd{{StructName}} = &cobra.Command{
-    Use:   "{{PackageName}}",
-    Short:  "HERE PUTS THE COMMAND DESCRIPTION",
-    Run: run{{StructName}},
-    Args:  cobra.ExactArgs(0), // 只允许且必须传 0 个参数
+    Use:     "{{PackageName}}",
+    Short:   "Here puts the command description",
+    Example: "Here puts the command example",
+    Run:     run{{StructName}},
+    Args:    cobra.MinimumNArgs(1), // 至少传 1 个参数
 }
 
 func run{{StructName}}(cmd *cobra.Command, args []string) {

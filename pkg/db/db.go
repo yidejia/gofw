@@ -136,6 +136,11 @@ func DB(connector Connector) *gorm.DB {
 	return Connection(connector.Connection())
 }
 
+// Model 通过实现数据库连接器接口的对象获取数据库会话对象
+func Model(connector Connector) *gorm.DB {
+	return DB(connector).Model(connector)
+}
+
 // CurrentDatabase 获取当前数据库名称
 // @param connection 数据库连接名
 func CurrentDatabase(connection ...string) (dbname string) {

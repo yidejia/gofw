@@ -8,16 +8,16 @@ import (
 	"os"
 )
 
-// CmdMakeCMD 生成命令文件的命令
+// CmdMakeCMD 生成命令文件命令
 // @author 余海坚 haijianyu10@qq.com
 // @created 2022-04-23 17:07
 // @copyright © 2010-2022 广州伊的家网络科技有限公司
 var CmdMakeCMD = &cobra.Command{
-	Use:   "cmd",
-	Short: "Create a command, should be snake_case",
+	Use:     "cmd",
+	Short:   "Create a command, should be snake_case",
 	Example: "go run main.go make cmd backup_database -c backup_database",
-	Run:   runMakeCMD,
-	Args:  cobra.ExactArgs(1), // 只允许且必须传 1 个参数
+	Run:     runMakeCMD,
+	Args:    cobra.MinimumNArgs(1), // 至少传 1 个参数
 }
 
 func runMakeCMD(cmd *cobra.Command, args []string) {

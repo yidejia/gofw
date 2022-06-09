@@ -8,7 +8,7 @@ import (
 	"os"
 )
 
-// CmdMakeModel 生成模型文件的命令
+// CmdMakeModel 生成模型文件命令
 // @author 余海坚 haijianyu10@qq.com
 // @created 2022-04-23 17:08
 // @copyright © 2010-2022 广州伊的家网络科技有限公司

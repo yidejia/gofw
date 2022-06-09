@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// CmdMakeRequest 生成 请求文件的命令
+// CmdMakeRequest 生成请求文件命令
 // @author 余海坚 haijianyu10@qq.com
 // @created 2022-04-23 17:25
 // @copyright © 2010-2022 广州伊的家网络科技有限公司

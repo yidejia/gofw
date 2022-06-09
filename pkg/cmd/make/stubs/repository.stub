@@ -1,0 +1,46 @@
+// Package {{CustomPackageName}} XX(将请XX代替成实际的包名)模块包
+package {{CustomPackageName}}
+
+import (
+	"github.com/yidejia/gofw/pkg/db"
+	// gfErrors "github.com/yidejia/gofw/pkg/errors"
+	"{{AppName}}/app/models/{{CustomPackageName}}"
+	repos "{{AppName}}/app/repositories"
+)
+
+// {{StructName}}Repository {{Comment}}数据仓库
+// @author {{Author}} {{AuthorEmail}}
+// @created {{CreatedDataTime}}
+// @copyright © 2010-{{CopyrightToYear}} 广州伊的家网络科技有限公司
+type {{StructName}}Repository struct {
+	repos.Repository
+}
+
+func New{{StructName}}Repository() *{{StructName}}Repository {
+	return &{{StructName}}Repository{}
+}
+
+// Get 通过 ID 获取{{Comment}}
+func Get(idstr string) ({{VariableName}} {{CustomPackageName}}.{{StructName}}) {
+    db.DB({{VariableName}}).Where("id", idstr).First(&{{VariableName}})
+    return
+}
+
+// GetBy 通过指定字段获取{{Comment}}
+func GetBy(field, value string) ({{VariableName}} {{CustomPackageName}}.{{StructName}}) {
+    db.DB({{VariableName}}).Where("? = ?", field, value).First(&{{VariableName}})
+    return
+}
+
+// All 获取所有{{Comment}}
+func All() ({{VariableNamePlural}} []{{CustomPackageName}}.{{StructName}}) {
+    db.DB({{CustomPackageName}}.{{StructName}}{}).Find(&{{VariableNamePlural}})
+    return
+}
+
+// IsExist {{Comment}}是否存在
+func IsExist(field, value string) bool {
+    var count int64
+    db.Model({{CustomPackageName}}.{{StructName}}{}).Where(" = ?", field, value).Count(&count)
+    return count > 0
+}

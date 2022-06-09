@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// CmdMakeMigration 生成数据库迁移文件的命令
+// CmdMakeMigration 生成数据库迁移文件命令
 // @author 余海坚 haijianyu10@qq.com
 // @created 2022-04-23 17:57
 // @copyright © 2010-2022 广州伊的家网络科技有限公司
