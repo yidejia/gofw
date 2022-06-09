@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/thedevsaddam/govalidator"
 	"github.com/yidejia/gofw/pkg/auth"
+	"github.com/yidejia/gofw/pkg/db"
 	"github.com/yidejia/gofw/pkg/response"
 )
 
@@ -15,7 +16,13 @@ import (
 // 实现这个接口的对象可调用自身方法验证自己的数据
 type Validatable interface {
 	// Validate 对数据进行验证
-	Validate(data interface{}, extra ...interface{}) map[string][]string
+	Validate(extra ...interface{}) map[string][]string
+}
+
+// ModelConverter 模型转换器接口
+type ModelConverter interface {
+	// ToModel 从请求中提取数据生成模型
+	ToModel() db.Connector
 }
 
 // Request 请求基类
@@ -51,7 +58,7 @@ func Bind(c *gin.Context, data interface{}) bool {
 // @return 映射 map，key 为请求参数名，value 为该参数多个错误信息组成的切片
 func Validate(data Validatable, extra ...interface{}) map[string][]string {
 	// 返回数据验证结果
-	return data.Validate(data, extra...)
+	return data.Validate(extra...)
 }
 
 // BindAndValidate 绑定请求数据到结构体并进行数据验证

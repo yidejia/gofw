@@ -8,7 +8,7 @@ import (
 	repos "{{AppName}}/app/repositories"
 )
 
-// {{StructName}}Repository {{Comment}}数据仓库
+// {{StructName}}Repository {{Comment}}仓库
 // @author {{Author}} {{AuthorEmail}}
 // @created {{CreatedDataTime}}
 // @copyright © 2010-{{CopyrightToYear}} 广州伊的家网络科技有限公司
@@ -16,7 +16,7 @@ type {{StructName}}Repository struct {
 	repos.Repository
 }
 
-// New{{StructName}}Repository 生成{{Comment}}数据仓库实例
+// New{{StructName}}Repository 生成{{Comment}}仓库实例
 func New{{StructName}}Repository() *{{StructName}}Repository {
 	return &{{StructName}}Repository{}
 }

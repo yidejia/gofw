@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/yidejia/gofw/bootstrap"
+	// "github.com/yidejia/gofw/bootstrap"
 	"github.com/yidejia/gofw/pkg/config"
 	"github.com/yidejia/gofw/pkg/console"
 	"github.com/yidejia/gofw/pkg/logger"
@@ -30,7 +30,7 @@ func runWeb(cmd *cobra.Command, args []string) {
 	router := gin.New()
 
 	// 初始化路由绑定
-	bootstrap.SetupRoute(router)
+	// bootstrap.SetupRoute(router)
 
 	// 运行服务器
 	err := router.Run(":" + config.Get("app.port"))
