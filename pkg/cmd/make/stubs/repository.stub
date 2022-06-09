@@ -16,30 +16,48 @@ type {{StructName}}Repository struct {
 	repos.Repository
 }
 
+// New{{StructName}}Repository 生成{{Comment}}数据仓库实例
 func New{{StructName}}Repository() *{{StructName}}Repository {
 	return &{{StructName}}Repository{}
 }
 
+// Create 创建{{Comment}}
+func (repo *{{StructName}}Repository) Create({{VariableName}} *{{CustomPackageName}}.{{StructName}}) {
+    db.DB({{VariableName}}).Create({{VariableName}})
+}
+
+// Save 保存{{Comment}}
+func (repo *{{StructName}}Repository) Save({{VariableName}} *{{CustomPackageName}}.{{StructName}}) (rowsAffected int64) {
+    result := db.DB({{VariableName}}).Save({{VariableName}})
+    return result.RowsAffected
+}
+
+// Delete 删除{{Comment}}
+func (repo *{{StructName}}Repository) Delete({{VariableName}} *{{CustomPackageName}}.{{StructName}}) (rowsAffected int64) {
+    result := db.DB({{VariableName}}).Delete({{VariableName}})
+    return result.RowsAffected
+}
+
 // Get 通过 ID 获取{{Comment}}
-func Get(idstr string) ({{VariableName}} {{CustomPackageName}}.{{StructName}}) {
-    db.DB({{VariableName}}).Where("id", idstr).First(&{{VariableName}})
+func (repo *{{StructName}}Repository) Get(id string) ({{VariableName}} {{CustomPackageName}}.{{StructName}}) {
+    db.DB({{VariableName}}).Where("id", id).First(&{{VariableName}})
     return
 }
 
 // GetBy 通过指定字段获取{{Comment}}
-func GetBy(field, value string) ({{VariableName}} {{CustomPackageName}}.{{StructName}}) {
+func (repo *{{StructName}}Repository) GetBy(field, value string) ({{VariableName}} {{CustomPackageName}}.{{StructName}}) {
     db.DB({{VariableName}}).Where("? = ?", field, value).First(&{{VariableName}})
     return
 }
 
 // All 获取所有{{Comment}}
-func All() ({{VariableNamePlural}} []{{CustomPackageName}}.{{StructName}}) {
+func (repo *{{StructName}}Repository) All() ({{VariableNamePlural}} []{{CustomPackageName}}.{{StructName}}) {
     db.DB({{CustomPackageName}}.{{StructName}}{}).Find(&{{VariableNamePlural}})
     return
 }
 
 // IsExist {{Comment}}是否存在
-func IsExist(field, value string) bool {
+func (repo *{{StructName}}Repository) IsExist(field, value string) bool {
     var count int64
     db.Model({{CustomPackageName}}.{{StructName}}{}).Where(" = ?", field, value).Count(&count)
     return count > 0
