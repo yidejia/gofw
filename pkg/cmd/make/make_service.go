@@ -13,9 +13,9 @@ import (
 // @created 2022-06-09 15:15
 // @copyright © 2010-2022 广州伊的家网络科技有限公司
 var CmdMakeService = &cobra.Command{
-    Use:     "service",
+    Use:     "svc",
     Short:   "Create service file",
-    Example: "go run main.go make service user -c user",
+    Example: "go run main.go make svc user -c user/user",
     Run:     runMakeService,
     Args:    cobra.MinimumNArgs(1), // 至少传 1 个参数
 }

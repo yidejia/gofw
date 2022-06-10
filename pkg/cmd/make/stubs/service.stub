@@ -1,8 +1,8 @@
-// Package {{CustomPackageName}} XX(将请XX代替成实际的包名)模块包
+// Package {{CustomPackageName}} {{ModuleComment}}模块包
 package {{CustomPackageName}}
 
 import (
-	// gfErrors "github.com/yidejia/gofw/pkg/errors"
+	gfErrors "github.com/yidejia/gofw/pkg/errors"
     "{{AppName}}/app/models/{{CustomPackageName}}"
     {{CustomPackageName}}Repos "{{AppName}}/app/repositories/{{CustomPackageName}}"
     svcs "{{AppName}}/app/services"
@@ -25,41 +25,42 @@ func New{{StructName}}Service() *{{StructName}}Service {
 }
 
 // Create 创建{{Comment}}
-func (svs *{{StructName}}Service) Create({{VariableName}} *{{CustomPackageName}}.{{StructName}}) {
-    svs.repo.Create({{VariableName}})
+func (svc *{{StructName}}Service) Create({{VariableName}} *{{CustomPackageName}}.{{StructName}}) (err gfErrors.ResponsiveError) {
+    err = svc.repo.Create({{VariableName}})
+    return
 }
 
 // Save 保存{{Comment}}
-func (svs *{{StructName}}Service) Save({{VariableName}} *{{CustomPackageName}}.{{StructName}}) (rowsAffected int64) {
-    rowsAffected = svs.repo.Save({{VariableName}})
+func (svc *{{StructName}}Service) Save({{VariableName}} *{{CustomPackageName}}.{{StructName}}) (rowsAffected int64, err gfErrors.ResponsiveError) {
+    rowsAffected, err = svc.repo.Save({{VariableName}})
     return
 }
 
 // Delete 删除{{Comment}}
-func (svs *{{StructName}}Service) Delete({{VariableName}} *{{CustomPackageName}}.{{StructName}}) (rowsAffected int64) {
-    rowsAffected = svs.repo.Delete({{VariableName}})
+func (svc *{{StructName}}Service) Delete({{VariableName}} *{{CustomPackageName}}.{{StructName}}) (rowsAffected int64, err gfErrors.ResponsiveError) {
+    rowsAffected, err = svc.repo.Delete({{VariableName}})
     return
 }
 
 // Get 通过 ID 获取{{Comment}}
-func (svs *{{StructName}}Service) Get(id string) ({{VariableName}} {{CustomPackageName}}.{{StructName}}) {
-    {{VariableName}} = svs.repo.Get(id)
+func (svc *{{StructName}}Service) Get(id string) ({{VariableName}} {{CustomPackageName}}.{{StructName}}, err gfErrors.ResponsiveError) {
+    {{VariableName}}, err = svc.repo.Get(id)
     return
 }
 
 // GetBy 通过指定字段获取{{Comment}}
-func (svs *{{StructName}}Service) GetBy(field, value string) ({{VariableName}} {{CustomPackageName}}.{{StructName}}) {
-    {{VariableName}} = svs.repo.GetBy(field, value)
+func (svc *{{StructName}}Service) GetBy(field, value string) ({{VariableName}} {{CustomPackageName}}.{{StructName}}, err gfErrors.ResponsiveError) {
+    {{VariableName}}, err = svc.repo.GetBy(field, value)
     return
 }
 
 // All 获取所有{{Comment}}
-func (svs *{{StructName}}Service) All() ({{VariableNamePlural}} []{{CustomPackageName}}.{{StructName}}) {
-    {{VariableNamePlural}} = svs.repo.All()
+func (svc *{{StructName}}Service) All() ({{VariableNamePlural}} []{{CustomPackageName}}.{{StructName}}, err gfErrors.ResponsiveError) {
+    {{VariableNamePlural}}, err = svc.repo.All()
     return
 }
 
 // IsExist 根据字段判断{{Comment}}是否存在
-func (svs *{{StructName}}Service) IsExist(field, value string) bool {
-    return svs.repo.IsExist(field, value)
+func (svc *{{StructName}}Service) IsExist(field, value string) (bool, gfErrors.ResponsiveError) {
+    return svc.repo.IsExist(field, value)
 }
