@@ -7,15 +7,14 @@ package make
 import (
 	"embed"
 	"fmt"
+	"github.com/iancoleman/strcase"
+	"github.com/spf13/cobra"
 	"github.com/yidejia/gofw/pkg/app"
 	"github.com/yidejia/gofw/pkg/config"
 	"github.com/yidejia/gofw/pkg/console"
 	"github.com/yidejia/gofw/pkg/file"
 	"github.com/yidejia/gofw/pkg/str"
 	"strings"
-
-	"github.com/iancoleman/strcase"
-	"github.com/spf13/cobra"
 )
 
 // Model 模板文件填充模型，参数解释
@@ -56,6 +55,7 @@ type Model struct {
 	VariableNamePlural string // 结构体变量名复数形式
 	PackageName        string // 结构体所属包名
 	Comment            string // 结构体注释
+	ModuleComment      string // 模块注释
 	CustomPackageName  string // 自定义包名，设置后模板填充数据时优先使用自定义包名
 }
 
@@ -93,15 +93,23 @@ func init() {
 }
 
 // parseCommentFlag 解析命令注释选项
-func parseCommentFlag(cmd *cobra.Command, args []string) string {
+func parseCommentFlag(cmd *cobra.Command, args []string, force bool) string {
+
 	// 检查是否设置了注释
 	comment, err := cmd.Flags().GetString("comment")
 	if err != nil {
 		console.Exit(fmt.Sprintf("Get comment flag error: %s", err.Error()))
 	}
+
 	if len(comment) == 0 {
 		console.Exit("Missing comment for struct or file, please use \"-c\" to set comment flag")
 	}
+
+	comments := strings.Split(comment, "/")
+	if len(comments) < 2 && !force {
+		console.Exit("Comments should contain the module name, like -c user/user")
+	}
+
 	return comment
 }
 
@@ -146,7 +154,15 @@ func makeModelFromString(name string, comment string, pkgName string) Model {
 	model.VariableNamePlural = str.LowerCamel(model.StructNamePlural)
 	model.PackageName = str.Snake(model.StructName)
 	// 注释一般为中文，开发环境未安装中文语言包时可以设置为英文
-	model.Comment = comment
+	comments := strings.Split(comment, "/")
+	// 包含模块注释
+	if len(comments) > 1 {
+		model.ModuleComment = comments[0]
+		model.Comment = comments[1]
+	} else {
+		// 只包含结构体和文件注释
+		model.Comment = comment
+	}
 	model.CustomPackageName = pkgName
 	return model
 }
@@ -181,6 +197,7 @@ func createFileFromStub(filePath string, stubName string, model Model, variables
 	replaces["{{PackageName}}"] = model.PackageName
 	replaces["{{TableName}}"] = model.TableName
 	replaces["{{Comment}}"] = model.Comment
+	replaces["{{ModuleComment}}"] = model.ModuleComment
 	replaces["{{CustomPackageName}}"] = model.CustomPackageName
 	replaces["{{Author}}"] = config.Get("app.developer", "")
 	replaces["{{AuthorEmail}}"] = config.Get("app.developer_email", "")

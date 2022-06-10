@@ -28,3 +28,8 @@ func (m Model) Connection() string {
 	// 返回默认的数据库连接
 	return config.Get("database.default")
 }
+
+// ModelName 模型名称
+func (m Model) ModelName() string {
+	return "模型"
+}

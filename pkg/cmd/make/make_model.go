@@ -15,7 +15,7 @@ import (
 var CmdMakeModel = &cobra.Command{
 	Use:   "model",
 	Short: "Crate model file",
-	Example: "go run main.go make model user -c user",
+	Example: "go run main.go make model user -c user/user",
 	Run:   runMakeModel,
 	Args:  cobra.MinimumNArgs(1), // 至少传 1 个参数
 }
@@ -26,15 +26,15 @@ func init() {
 
 func runMakeModel(cmd *cobra.Command, args []string) {
 
+	// 获取是否强制执行选项
+	force := parseForceFlag(cmd, args)
 	// 获取注释
-	comment := parseCommentFlag(cmd, args)
+	comment := parseCommentFlag(cmd, args, force)
 	// 获取名称
 	path, name, pkgName := parseNameParam(cmd, args)
 	if len(pkgName) == 0 {
 		pkgName = "models"
 	}
-	// 获取是否强制执行选项
-	force := parseForceFlag(cmd, args)
 
 	// 模型目录不存在
 	if !file.Exists("app/models") {

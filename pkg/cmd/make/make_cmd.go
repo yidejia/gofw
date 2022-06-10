@@ -15,15 +15,17 @@ import (
 var CmdMakeCMD = &cobra.Command{
 	Use:     "cmd",
 	Short:   "Create a command, should be snake_case",
-	Example: "go run main.go make cmd backup_database -c backup_database",
+	Example: "go run main.go make cmd backup_database -c tools/backup_database",
 	Run:     runMakeCMD,
 	Args:    cobra.MinimumNArgs(1), // 至少传 1 个参数
 }
 
 func runMakeCMD(cmd *cobra.Command, args []string) {
 
+	// 获取是否强制执行选项
+	force := parseForceFlag(cmd, args)
 	// 获取注释
-	comment := parseCommentFlag(cmd, args)
+	comment := parseCommentFlag(cmd, args, force)
 	// 获取名称
 	path, name, pkgName := parseNameParam(cmd, args)
 	if len(pkgName) == 0 {

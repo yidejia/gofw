@@ -1,3 +1,4 @@
+// Package {{CustomPackageName}} {{ModuleComment}}模块包
 package {{CustomPackageName}}
 
 import (
@@ -16,6 +17,11 @@ type {{StructName}} struct {
     // TODO 在这里添加模型字段
 
     gfModels.CommonTimestampsField // 时间戳，不需要的可以删除这个嵌入
+}
+
+// ModelName 模型名称
+func (m {{StructName}}) ModelName() string {
+	return "{{Comment}}"
 }
 
 // TODO 注册模型钩子方法

@@ -5,20 +5,49 @@
 package repositories
 
 import (
+	"errors"
+	"fmt"
+	"github.com/yidejia/gofw/pkg/db"
 	gfErrors "github.com/yidejia/gofw/pkg/errors"
+	"gorm.io/gorm"
 )
 
 // Repository 数据仓库基类
 type Repository struct {
 }
 
-// ErrorNotFound 返回资源不存在错误
-func (repo *Repository) ErrorNotFound(message ...string) gfErrors.ResponsiveError {
+// NewErrorNotFound 生成资源不存在错误
+func (repo *Repository) NewErrorNotFound(message ...string) gfErrors.ResponsiveError {
 	return gfErrors.NewErrorNotFound(message...)
 }
 
-// ErrorInternal 返回系统内部错误
+// NewErrorInternal 生成系统内部错误
 // 没有内部错误对象需要返回时，err 可以设置为 nil
-func (repo *Repository) ErrorInternal(err error, message ...string) gfErrors.ResponsiveError {
+func (repo *Repository) NewErrorInternal(err error, message ...string) gfErrors.ResponsiveError {
 	return gfErrors.NewErrorInternal(err, message...)
+}
+
+// NewError 自动生成合适的错误
+// 一般用于获取单个模块的场景，自动判断是模型不存在还是查询出错
+func (repo *Repository) NewError(err error, iModel db.IModel, message ...string) gfErrors.ResponsiveError {
+	// 模型不存在
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		if iModel != nil {
+			return repo.NewErrorNotFound(iModel.ModelName() + "不存在")
+		} else {
+			return repo.NewErrorNotFound(message...)
+		}
+	} else {
+		// 查询出错
+		if iModel != nil {
+			// 设置了日志消息
+			if len(message) > 1 {
+				return repo.NewErrorInternal(err, fmt.Sprintf("获取%s失败", iModel.ModelName()), message[0], message[1])
+			} else {
+				return repo.NewErrorInternal(err, fmt.Sprintf("获取%s失败", iModel.ModelName()))
+			}
+		} else {
+			return repo.NewErrorInternal(err, message...)
+		}
+	}
 }

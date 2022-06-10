@@ -134,14 +134,14 @@ func LogIf(err error) {
 // LogWarnIf 当 err != nil 时记录 warning 等级的日志
 func LogWarnIf(err error) {
 	if err != nil {
-		Logger.Warn("Error Occurred:", zap.Error(err))
+		Logger.Warn("Warn Occurred:", zap.Error(err))
 	}
 }
 
 // LogInfoIf 当 err != nil 时记录 info 等级的日志
 func LogInfoIf(err error) {
 	if err != nil {
-		Logger.Info("Error Occurred:", zap.Error(err))
+		Logger.Info("Info Occurred:", zap.Error(err))
 	}
 }
 
@@ -172,7 +172,11 @@ func Fatal(moduleName string, fields ...zap.Field) {
 	Logger.Fatal(moduleName, fields...)
 }
 
-// DebugString 记录一条字符串类型的 debug 日志，调用示例：
+// DebugString 记录一条字符串类型的 debug 日志，
+// @param moduleName 模块名称
+// @param name 事件名称
+// @param msg 详细信息
+// 调用示例：
 // logger.DebugString("SMS", "短信内容", string(result.RawResponse))
 func DebugString(moduleName, name, msg string) {
 	Logger.Debug(moduleName, zap.String(name, msg))

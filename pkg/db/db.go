@@ -17,6 +17,15 @@ type Connector interface {
 	Connection() string
 }
 
+// IModel 模型接口
+type IModel interface {
+	Connector
+	// GetStringID 获取 ID 的字符串格式
+	GetStringID() string
+	// ModelName 模型名称
+	ModelName() string
+}
+
 // connections 数据库连接映射表
 var connections sync.Map
 
@@ -136,9 +145,9 @@ func DB(connector Connector) *gorm.DB {
 	return Connection(connector.Connection())
 }
 
-// Model 通过实现数据库连接器接口的对象获取数据库会话对象
-func Model(connector Connector) *gorm.DB {
-	return DB(connector).Model(connector)
+// Model 通过实现模型接口的对象获取数据库会话对象
+func Model(iModel IModel) *gorm.DB {
+	return DB(iModel).Model(iModel)
 }
 
 // CurrentDatabase 获取当前数据库名称
@@ -172,8 +181,8 @@ func DeleteAllTables(connection ...string) error {
 }
 
 // TableName 模型对应的数据表名
-func TableName(connector Connector) string {
-	stmt := &gorm.Statement{DB: DB(connector)}
-	_ = stmt.Parse(connector)
+func TableName(iModel IModel) string {
+	stmt := &gorm.Statement{DB: DB(iModel)}
+	_ = stmt.Parse(iModel)
 	return stmt.Schema.Table
 }

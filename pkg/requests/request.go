@@ -22,7 +22,7 @@ type Validatable interface {
 // ModelConverter 模型转换器接口
 type ModelConverter interface {
 	// ToModel 从请求中提取数据生成模型
-	ToModel() db.Connector
+	ToModel() db.IModel
 }
 
 // Request 请求基类

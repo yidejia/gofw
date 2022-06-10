@@ -1,6 +1,9 @@
 package errors
 
-import "net/http"
+import (
+	"github.com/yidejia/gofw/pkg/logger"
+	"net/http"
+)
 
 // errorBadRequest 请求资源格式错误
 type errorBadRequest struct {
@@ -9,6 +12,13 @@ type errorBadRequest struct {
 }
 
 func NewErrorBadRequest(err error, message ...string) ResponsiveError {
+
+	if len(message) > 2 && err != nil {
+		logger.ErrorString(message[1], message[2], err.Error())
+	} else {
+		logger.LogIf(err)
+	}
+
 	if len(message) > 0 {
 		return &errorBadRequest{message[0], err}
 	} else {
@@ -214,6 +224,13 @@ type errorInternal struct {
 }
 
 func NewErrorInternal(err error, message ...string) ResponsiveError {
+
+	if len(message) > 2 && err != nil {
+		logger.ErrorString(message[1], message[2], err.Error())
+	} else {
+		logger.LogIf(err)
+	}
+
 	if len(message) > 0 {
 		return &errorInternal{message[0], err}
 	} else {

@@ -6,54 +6,51 @@ package services
 
 import (
 	gfErrors "github.com/yidejia/gofw/pkg/errors"
-	"github.com/yidejia/gofw/pkg/logger"
 )
 
 // Service 业务服务基类
 type Service struct {
 }
 
-// ErrorBadRequest 返回请求格式不正确错误
+// NewErrorBadRequest 生成请求格式不正确错误
 // 没有内部错误对象需要返回时，err 可以设置为 nil
-func (svc *Service) ErrorBadRequest(err error, message ...string) gfErrors.ResponsiveError {
-	logger.LogIf(err)
+func (svc *Service) NewErrorBadRequest(err error, message ...string) gfErrors.ResponsiveError {
 	return gfErrors.NewErrorBadRequest(err, message...)
 }
 
-// ErrorUnauthorized 返回用户未授权错误
-func (svc *Service) ErrorUnauthorized(message ...string) gfErrors.ResponsiveError {
+// NewErrorUnauthorized 生成用户未授权错误
+func (svc *Service) NewErrorUnauthorized(message ...string) gfErrors.ResponsiveError {
 	return gfErrors.NewErrorUnauthorized(message...)
 }
 
-// ErrorForbidden 返回无权访问错误
-func (svc *Service) ErrorForbidden(message ...string) gfErrors.ResponsiveError {
+// NewErrorForbidden 生成无权访问错误
+func (svc *Service) NewErrorForbidden(message ...string) gfErrors.ResponsiveError {
 	return gfErrors.NewErrorForbidden(message...)
 }
 
-// ErrorNotFound 返回资源不存在错误
-func (svc *Service) ErrorNotFound(message ...string) gfErrors.ResponsiveError {
+// NewErrorNotFound 生成资源不存在错误
+func (svc *Service) NewErrorNotFound(message ...string) gfErrors.ResponsiveError {
 	return gfErrors.NewErrorNotFound(message...)
 }
 
-// ErrorMethodNotAllowed 返回请求方法不允许错误
-func (svc *Service) ErrorMethodNotAllowed(message ...string) gfErrors.ResponsiveError {
+// NewErrorMethodNotAllowed 生成请求方法不允许错误
+func (svc *Service) NewErrorMethodNotAllowed(message ...string) gfErrors.ResponsiveError {
 	return gfErrors.NewErrorMethodNotAllowed(message...)
 }
 
-// ErrorUnprocessableEntity 返回请求方法不允许错误
+// NewErrorUnprocessableEntity 生成请求方法不允许错误
 // 不需要返回多个错误信息映射时，errors 可以设置为 nil
-func (svc *Service) ErrorUnprocessableEntity(errors map[string][]string, message ...string) gfErrors.ResponsiveError {
+func (svc *Service) NewErrorUnprocessableEntity(errors map[string][]string, message ...string) gfErrors.ResponsiveError {
 	return gfErrors.NewErrorUnprocessableEntity(errors, message...)
 }
 
-// ErrorLocked 返回资源已锁定错误
-func (svc *Service) ErrorLocked(message ...string) gfErrors.ResponsiveError {
+// NewErrorLocked 生成资源已锁定错误
+func (svc *Service) NewErrorLocked(message ...string) gfErrors.ResponsiveError {
 	return gfErrors.NewErrorLocked(message...)
 }
 
-// ErrorInternal 返回系统内部错误
+// NewErrorInternal 生成系统内部错误
 // 没有内部错误对象需要返回时，err 可以设置为 nil
-func (svc *Service) ErrorInternal(err error, message ...string) gfErrors.ResponsiveError {
-	logger.LogIf(err)
+func (svc *Service) NewErrorInternal(err error, message ...string) gfErrors.ResponsiveError {
 	return gfErrors.NewErrorInternal(err, message...)
 }

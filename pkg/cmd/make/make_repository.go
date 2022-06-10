@@ -15,7 +15,7 @@ import (
 var CmdMakeRepository = &cobra.Command{
     Use:   "repo",
     Short:  "Create repository file",
-    Example: "go run main.go make repo user -c user",
+    Example: "go run main.go make repo user -c user/user",
     Run: runMakeRepository,
     Args:  cobra.MinimumNArgs(1), // 至少传 1 个参数
 }
@@ -26,15 +26,15 @@ func init() {
 
 func runMakeRepository(cmd *cobra.Command, args []string) {
 
+    // 获取是否强制执行选项
+    force := parseForceFlag(cmd, args)
     // 获取注释
-    comment := parseCommentFlag(cmd, args)
+    comment := parseCommentFlag(cmd, args, force)
     // 获取名称
     path, name, pkgName := parseNameParam(cmd, args)
     if len(pkgName) == 0 {
         pkgName = "repositories"
     }
-    // 获取是否强制执行选项
-    force := parseForceFlag(cmd, args)
 
     // 模型目录不存在
     if !file.Exists("app/repositories") {
