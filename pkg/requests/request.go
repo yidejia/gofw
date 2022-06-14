@@ -5,10 +5,14 @@
 package requests
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/spf13/cast"
 	"github.com/thedevsaddam/govalidator"
 	"github.com/yidejia/gofw/pkg/auth"
 	"github.com/yidejia/gofw/pkg/db"
+	"github.com/yidejia/gofw/pkg/hash"
+	"github.com/yidejia/gofw/pkg/maptool"
 	"github.com/yidejia/gofw/pkg/response"
 )
 
@@ -139,4 +143,26 @@ func ValidateFile(c *gin.Context, data interface{}, rules govalidator.MapData, m
 	}
 	// 调用 govalidator 的 Validate 方法来验证文件
 	return govalidator.New(opts).Validate()
+}
+
+func MakeSign(params map[string]interface{}) (sign string) {
+	// 对参数名按字典序排序
+	paramNames := maptool.SortIndictOrder(params)
+	// 按顺序拼接参数名和参数值值
+	sign = ""
+	if len(paramNames) > 0 {
+		isFirstParam := true
+		for _, paramName := range paramNames {
+			if isFirstParam {
+				sign = sign + fmt.Sprintf("%s=%s", paramName, cast.ToString(params[paramName]))
+				isFirstParam = false
+			} else {
+				sign = sign + fmt.Sprintf("&%s=%s", paramName, cast.ToString(params[paramName]))
+			}
+		}
+		if sign != "" {
+			sign = hash.BcryptHash(sign)
+		}
+	}
+	return
 }
