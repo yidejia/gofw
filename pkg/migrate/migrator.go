@@ -245,10 +245,16 @@ func (migrator *Migrator) Refresh() {
 }
 
 // Fresh Drop 所有的表并重新运行所有迁移
-func (migrator *Migrator) Fresh() {
+func (migrator *Migrator) Fresh(connection ...string) {
 
-	// 删除所有表
-	err := db.DeleteAllTables()
+	var err error
+	// 删除指定数据库所有表
+	if len(connection) > 0 {
+		err = db.DeleteAllTables(connection...)
+	} else {
+		// 未指定数据库连接时只删除默认数据库的所有数据表
+		err = db.DeleteAllTables(config.Get("database.default"))
+	}
 	console.ExitIf(err)
 	console.Success("clearup database")
 

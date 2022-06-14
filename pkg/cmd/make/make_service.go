@@ -36,7 +36,7 @@ func runMakeService(cmd *cobra.Command, args []string) {
         pkgName = "services"
     }
 
-    // 模型目录不存在
+    // 服务目录不存在
     if !file.Exists("app/services") {
         if err := os.Mkdir("app/services", os.ModePerm); err != nil {
             console.Exit(fmt.Sprintf("failed to create services folder: %s", err.Error()))

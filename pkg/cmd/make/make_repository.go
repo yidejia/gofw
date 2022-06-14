@@ -36,7 +36,7 @@ func runMakeRepository(cmd *cobra.Command, args []string) {
         pkgName = "repositories"
     }
 
-    // 模型目录不存在
+    // 仓库目录不存在
     if !file.Exists("app/repositories") {
         if err := os.Mkdir("app/repositories", os.ModePerm); err != nil {
             console.Exit(fmt.Sprintf("failed to create repositories folder: %s", err.Error()))

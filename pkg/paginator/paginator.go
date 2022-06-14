@@ -5,7 +5,7 @@
 package paginator
 
 import (
-	"github.com/yidejia/gofw/pkg/logger"
+	"github.com/yidejia/gofw/pkg/config"
 	"gorm.io/gorm"
 	"math"
 )
@@ -37,7 +37,15 @@ type Paginator struct {
 //  query := database.DB.Model(Model{}).Where("category_id = ?", modelId)
 //  var models []Model
 //  paging := paginator.Paginate(query, &models, page, perPage)
-func Paginate(db *gorm.DB, models interface{}, page, perPage int) Paging {
+func Paginate(db *gorm.DB, models interface{}, page, perPage int) (Paging, error) {
+
+	if page < 1 {
+		page = 1
+	}
+
+	if perPage < 1 {
+		perPage = config.GetInt("paging.per_page")
+	}
 
 	// 初始化 Paginator 实例
 	p := &Paginator{
@@ -58,8 +66,7 @@ func Paginate(db *gorm.DB, models interface{}, page, perPage int) Paging {
 
 	// 数据库出错
 	if err != nil {
-		logger.LogIf(err)
-		return Paging{}
+		return Paging{}, err
 	}
 
 	return Paging{
@@ -67,7 +74,7 @@ func Paginate(db *gorm.DB, models interface{}, page, perPage int) Paging {
 		PerPage:     p.PerPage,
 		TotalPage:   p.TotalPage,
 		TotalCount:  p.TotalCount,
-	}
+	}, nil
 }
 
 // getTotalCount 返回的是数据库里的条数

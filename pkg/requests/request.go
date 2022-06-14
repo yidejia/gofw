@@ -40,6 +40,31 @@ func (req *Request) CurrentUser(c *gin.Context) (user auth.Authenticate) {
 }
 
 // Bind 绑定请求数据到结构体
+func (req *Request) Bind(c *gin.Context, data interface{}) bool {
+	return Bind(c, data)
+}
+
+// Validate 数据验证
+func (req *Request) Validate(data Validatable, extra ...interface{}) map[string][]string {
+	return Validate(data, extra...)
+}
+
+// BindAndValidate 绑定请求数据到结构体并进行数据验证
+func (req *Request) BindAndValidate(c *gin.Context, data Validatable, extra ...interface{}) bool {
+	return BindAndValidate(c, data, extra...)
+}
+
+// ValidateStruct 验证结构体
+func (req *Request) ValidateStruct(data interface{}, rules govalidator.MapData, messages govalidator.MapData) map[string][]string {
+	return ValidateStruct(data, rules, messages)
+}
+
+// ValidateFile 验证文件
+func (req *Request) ValidateFile(c *gin.Context, data interface{}, rules govalidator.MapData, messages govalidator.MapData) map[string][]string {
+	return ValidateFile(c, data, rules, messages)
+}
+
+// Bind 绑定请求数据到结构体
 func Bind(c *gin.Context, data interface{}) bool {
 	// 解析请求，支持 JSON 数据、表单请求和 URL Query
 	if err := c.ShouldBind(data); err != nil {

@@ -36,7 +36,7 @@ func runMakeRequest(cmd *cobra.Command, args []string) {
 		pkgName = "requests"
 	}
 
-	// 模型目录不存在
+	// 请求目录不存在
 	if !file.Exists("app/requests") {
 		if err := os.Mkdir("app/requests", os.ModePerm); err != nil {
 			console.Exit(fmt.Sprintf("failed to create requests folder: %s", err.Error()))

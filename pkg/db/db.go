@@ -7,6 +7,7 @@ import (
 	"github.com/yidejia/gofw/pkg/logger"
 	"gorm.io/gorm"
 	"gorm.io/plugin/dbresolver"
+	"strings"
 	"sync"
 	"time"
 )
@@ -125,6 +126,12 @@ func Connection(name ...string) *gorm.DB {
 	// 返回指定数据库连接
 	if len(name) > 0 {
 		_name = name[0]
+		// 清除可能存在的空格
+		_name = strings.ReplaceAll(_name, " ", "")
+		if _name == "" {
+			// 数据库连接名为空字符串，只能返回默认数据库连接
+			_name = config.GetString("database.default")
+		}
 	} else {
 		// 返回默认数据库连接
 		_name = config.GetString("database.default")
@@ -164,13 +171,13 @@ func DeleteAllTables(connection ...string) error {
 	var err error
 	// 指定了数据库连接时，只删除这个数据库的所有表
 	if len(connection) > 0 {
-		driverName = config.Get(fmt.Sprintf("database.connections.%v.driver", connection))
+		driverName = config.Get(fmt.Sprintf("database.connections.%s.driver", connection[0]))
 		driver = NewDriver(connection[0], driverName)
 		return driver.DeleteAllTables(connection[0])
 	} else {
 		// 默认删除所有数据库连接对应的数据表
 		for _connection, _ := range config.GetStringMap("database.connections") {
-			driverName = config.Get(fmt.Sprintf("database.connections.%v.driver", _connection))
+			driverName = config.Get(fmt.Sprintf("database.connections.%s.driver", _connection))
 			driver = NewDriver(_connection, driverName)
 			if err = driver.DeleteAllTables(_connection); err != nil {
 				return err

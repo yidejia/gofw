@@ -17,7 +17,7 @@ func AuthJWT() gin.HandlerFunc {
 
 	return func(c *gin.Context) {
 
-		// 从标头 Authorization:Bearer xxxxx 中获取信息，并验证 JWT 的准确性
+		// 从请求头或者请求参数中获取 token，并验证 JWT 的准确性
 		claims, err := jwt.NewJWT().ParserToken(c)
 		// JWT 解析失败，有错误发生
 		if err != nil {

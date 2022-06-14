@@ -7,7 +7,7 @@ package validators
 import (
 	"errors"
 	"fmt"
-	"github.com/yidejia/gofw/pkg/database"
+	"github.com/yidejia/gofw/pkg/db"
 	"regexp"
 	"strconv"
 	"strings"
@@ -34,6 +34,15 @@ func init() {
 
 		// 第一个参数，表名称，如 users
 		tableName := rng[0]
+		// 判断表名是否带了数据库连接名
+		var dbConn string
+		tableNames := strings.Split(tableName, ".")
+		if len(tableNames) > 1 {
+			dbConn = tableNames[0]
+			tableName = tableNames[1]
+		} else {
+			dbConn = ""
+		}
 		// 第二个参数，字段名称，如 email 或者 phone
 		dbFiled := rng[1]
 
@@ -47,7 +56,7 @@ func init() {
 		requestValue := value.(string)
 
 		// 拼接 SQL
-		query := database.DB.Table(tableName).Where(dbFiled+" = ?", requestValue)
+		query := db.Connection(dbConn).Table(tableName).Where(dbFiled+" = ?", requestValue)
 
 		// 如果传参第三个参数，加上 SQL Where 过滤
 		if len(exceptID) > 0 {
@@ -109,6 +118,15 @@ func init() {
 
 		// 第一个参数，表名称，如 categories
 		tableName := rng[0]
+		// 判断表名是否带了数据库连接名
+		var dbConn string
+		tableNames := strings.Split(tableName, ".")
+		if len(tableNames) > 1 {
+			dbConn = tableNames[0]
+			tableName = tableNames[1]
+		} else {
+			dbConn = ""
+		}
 		// 第二个参数，字段名称，如 id
 		dbFiled := rng[1]
 
@@ -117,7 +135,7 @@ func init() {
 
 		// 查询数据库
 		var count int64
-		database.DB.Table(tableName).Where(dbFiled+" = ?", requestValue).Count(&count)
+		db.Connection(dbConn).Table(tableName).Where(dbFiled+" = ?", requestValue).Count(&count)
 		// 验证不通过，数据不存在
 		if count == 0 {
 			// 如果有自定义错误消息的话，使用自定义消息

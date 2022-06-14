@@ -213,6 +213,11 @@ func createFileFromStub(filePath string, stubName string, model Model, variables
 		console.Exit("Please set the developer email in the .env file DEVELOPER_EMAIL=")
 	}
 
+	// 设置默认版本号
+	if len(replaces["{{Version}}"]) == 0 {
+		replaces["{{Version}}"] = "v1"
+	}
+
 	// 对模板内容做变量替换
 	for search, replace := range replaces {
 		modelStub = strings.ReplaceAll(modelStub, search, replace)
