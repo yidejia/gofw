@@ -6,6 +6,7 @@ package migrate
 
 import (
 	"database/sql"
+	"fmt"
 	"github.com/yidejia/gofw/pkg/config"
 	"github.com/yidejia/gofw/pkg/console"
 	"github.com/yidejia/gofw/pkg/db"
@@ -112,6 +113,7 @@ func (migrator *Migrator) rollbackMigrations(migrations []Migration) bool {
 
 	// 标记是否真的有执行了迁移回退的操作
 	ran := false
+	var err error
 
 	for _, _migration := range migrations {
 
@@ -125,7 +127,9 @@ func (migrator *Migrator) rollbackMigrations(migrations []Migration) bool {
 
 			DB, sqlDB := migrator.getDBFromMigrationFile(mFile)
 
-			mFile.Down(DB.Migrator(), sqlDB)
+			if err = mFile.Down(DB.Migrator(), sqlDB); err != nil {
+				console.Exit(fmt.Sprintf("rollback file [%s] error: %s", mFile.FileName, err.Error()))
+			}
 		}
 
 		ran = true
@@ -202,6 +206,8 @@ func (migrator *Migrator) getDBFromMigrationFile(mFile MigrationFile) (*gorm.DB,
 // 执行迁移，执行迁移的 up 方法
 func (migrator *Migrator) runUpMigration(mFile MigrationFile, batch int) {
 
+	var err error
+
 	// 执行 up 函数的 SQL
 	if mFile.Up != nil {
 
@@ -210,13 +216,15 @@ func (migrator *Migrator) runUpMigration(mFile MigrationFile, batch int) {
 		// 友好提示
 		console.Warning("migrating " + mFile.FileName)
 		// 执行 up 函数
-		mFile.Up(DB.Migrator(), sqlDB)
+		if err = mFile.Up(DB.Migrator(), sqlDB); err != nil {
+			console.Exit(fmt.Sprintf("migrating file [%s] error: %s", mFile.FileName, err.Error()))
+		}
 		// 提示已迁移了哪个文件
 		console.Success("migrated " + mFile.FileName)
 	}
 
 	// 入库
-	err := migrator.DB.Create(&Migration{Migration: mFile.FileName, Batch: batch}).Error
+	err = migrator.DB.Create(&Migration{Migration: mFile.FileName, Batch: batch}).Error
 	console.ExitIf(err)
 }
 

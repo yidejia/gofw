@@ -5,14 +5,10 @@
 package requests
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/spf13/cast"
 	"github.com/thedevsaddam/govalidator"
 	"github.com/yidejia/gofw/pkg/auth"
 	"github.com/yidejia/gofw/pkg/db"
-	"github.com/yidejia/gofw/pkg/hash"
-	"github.com/yidejia/gofw/pkg/maptool"
 	"github.com/yidejia/gofw/pkg/response"
 )
 
@@ -27,6 +23,12 @@ type Validatable interface {
 type ModelConverter interface {
 	// ToModel 从请求中提取数据生成模型
 	ToModel() db.IModel
+}
+
+// MapConverter 映射转换器接口
+type MapConverter interface {
+	// ToMap 从请求中提取数据生成映射，一般用于进一步验证
+	ToMap() map[string]interface{}
 }
 
 // Request 请求基类
@@ -66,6 +68,16 @@ func (req *Request) ValidateStruct(data interface{}, rules govalidator.MapData, 
 // ValidateFile 验证文件
 func (req *Request) ValidateFile(c *gin.Context, data interface{}, rules govalidator.MapData, messages govalidator.MapData) map[string][]string {
 	return ValidateFile(c, data, rules, messages)
+}
+
+// MergeValidateErrors 合并验证错误信息
+func (req *Request) MergeValidateErrors(errs map[string][]string, moreErrs ...map[string][]string) map[string][]string {
+	return MergeValidateErrors(errs, moreErrs...)
+}
+
+// MergeMaps 合并映射
+func (req *Request) MergeMaps(_map map[string]interface{}, moreMaps ...map[string]interface{}) map[string]interface{} {
+	return MergeMaps(_map, moreMaps...)
 }
 
 // Bind 绑定请求数据到结构体
@@ -145,24 +157,40 @@ func ValidateFile(c *gin.Context, data interface{}, rules govalidator.MapData, m
 	return govalidator.New(opts).Validate()
 }
 
-func MakeSign(params map[string]interface{}) (sign string) {
-	// 对参数名按字典序排序
-	paramNames := maptool.SortIndictOrder(params)
-	// 按顺序拼接参数名和参数值值
-	sign = ""
-	if len(paramNames) > 0 {
-		isFirstParam := true
-		for _, paramName := range paramNames {
-			if isFirstParam {
-				sign = sign + fmt.Sprintf("%s=%s", paramName, cast.ToString(params[paramName]))
-				isFirstParam = false
-			} else {
-				sign = sign + fmt.Sprintf("&%s=%s", paramName, cast.ToString(params[paramName]))
+// MergeValidateErrors 合并验证错误信息
+func MergeValidateErrors(errs map[string][]string, moreErrs ...map[string][]string) map[string][]string {
+
+	if len(moreErrs) > 0 {
+
+		var moreErr map[string][]string
+		var key string
+		var value []string
+
+		for _, moreErr = range moreErrs {
+			for key, value = range moreErr {
+				errs[key] = value
 			}
 		}
-		if sign != "" {
-			sign = hash.BcryptHash(sign)
+	}
+
+	return errs
+}
+
+// MergeMaps 合并映射
+func MergeMaps(_map map[string]interface{}, moreMaps ...map[string]interface{}) map[string]interface{} {
+
+	if len(moreMaps) > 0 {
+
+		var moreMap map[string]interface{}
+		var key string
+		var value interface{}
+
+		for _, moreMap = range moreMaps {
+			for key, value = range moreMap {
+				_map[key] = value
+			}
 		}
 	}
-	return
+
+	return _map
 }

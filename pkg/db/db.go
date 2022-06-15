@@ -25,6 +25,8 @@ type IModel interface {
 	GetStringID() string
 	// ModelName 模型名称
 	ModelName() string
+	// ToMap 将模型转换成映射
+	ToMap() map[string]interface{}
 }
 
 // connections 数据库连接映射表
