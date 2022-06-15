@@ -1,4 +1,8 @@
-// Package models 模型通用属性和方法
+// Package models 模型包
+// 定义业务实体数据结构，应该重点关注结构定义，对模型的操作应该在数据仓库类为实现
+// @author 余海坚 haijianyu10@qq.com
+// @created 2022-04-23 17:37
+// @copyright © 2010-2022 广州伊的家网络科技有限公司
 package models
 
 import (

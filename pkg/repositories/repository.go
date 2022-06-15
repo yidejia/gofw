@@ -1,4 +1,5 @@
-// Package repositories 数据仓库包，封装数据操作相关代码
+// Package repositories 数据仓库包
+// 封装数据库操作相关代码
 // @author 余海坚 haijianyu10@qq.com
 // @created 2022-05-07 16:17
 // @copyright © 2010-2022 广州伊的家网络科技有限公司

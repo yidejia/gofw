@@ -1,4 +1,5 @@
-// Package seed 处理数据库填充相关逻辑
+// Package seed 数据种子包
+// 处理数据库填充相关逻辑
 // @author 余海坚 haijianyu10@qq.com
 // @created 2022-04-23 18:21
 // @copyright © 2010-2022 广州伊的家网络科技有限公司

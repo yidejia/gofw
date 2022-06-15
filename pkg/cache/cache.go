@@ -1,4 +1,5 @@
-// Package cache 缓存工具类，可以缓存各种类型包括 struct 对象
+// Package cache 缓存包
+// 可以缓存各种类型包括 struct 对象
 // @author 余海坚 haijianyu10@qq.com
 // @created 2022-04-23 18:53
 // @copyright © 2010-2022 广州伊的家网络科技有限公司

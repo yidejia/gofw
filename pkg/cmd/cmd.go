@@ -1,4 +1,4 @@
-// Package cmd 存放程序的所有子命令
+// Package cmd 命令包
 // @author 余海坚 haijianyu10@qq.com
 // @created 2022-04-23 16:29
 // @copyright © 2010-2022 广州伊的家网络科技有限公司

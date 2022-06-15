@@ -1,4 +1,5 @@
-// Package requests 处理请求数据和表单验证
+// Package requests 请求包
+// 处理请求数据和表单验证
 // @author 余海坚 haijianyu10@qq.com
 // @created 2022-04-22 16:54
 // @copyright © 2010-2022 广州伊的家网络科技有限公司

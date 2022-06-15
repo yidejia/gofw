@@ -1,4 +1,4 @@
-// Package app 应用信息
+// Package app 应用包
 // @author 余海坚 haijianyu10@qq.com
 // @created 2022-04-22 16:59
 // @copyright © 2010-2022 广州伊的家网络科技有限公司
@@ -9,14 +9,17 @@ import (
 	"time"
 )
 
+// IsLocal 当前运行在本地开发环境
 func IsLocal() bool {
 	return config.Get("app.env") == "local"
 }
 
+// IsProduction 当前运行在生产环境
 func IsProduction() bool {
 	return config.Get("app.env") == "production"
 }
 
+// IsTesting 当前运行在测试环境
 func IsTesting() bool {
 	return config.Get("app.env") == "testing"
 }

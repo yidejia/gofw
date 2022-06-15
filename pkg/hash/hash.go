@@ -1,4 +1,4 @@
-// Package hash 哈希操作类
+// Package hash 哈希包
 // @author 余海坚 haijianyu10@qq.com
 // @created 2022-04-22 18:27
 // @copyright © 2010-2022 广州伊的家网络科技有限公司

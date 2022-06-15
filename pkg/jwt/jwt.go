@@ -1,4 +1,4 @@
-// Package jwt 处理 JWT 认证
+// Package jwt JWT 认证包
 // @author 余海坚 haijianyu10@qq.com
 // @created 2022-04-22 19:27
 // @copyright © 2010-2022 广州伊的家网络科技有限公司

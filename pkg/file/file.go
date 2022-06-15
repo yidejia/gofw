@@ -1,4 +1,4 @@
-// Package file 文件操作辅助函数
+// Package file 文件包
 // @author 余海坚 haijianyu10@qq.com
 // @created 2022-04-23 16:57
 // @copyright © 2010-2022 广州伊的家网络科技有限公司
@@ -40,6 +40,7 @@ func FileNameWithoutExtension(fileName string) string {
 	return strings.TrimSuffix(fileName, filepath.Ext(fileName))
 }
 
+// SaveUploadAvatar 上传头像
 func SaveUploadAvatar(c *gin.Context, file *multipart.FileHeader) (string, error) {
 
 	var avatar string
@@ -78,6 +79,7 @@ func SaveUploadAvatar(c *gin.Context, file *multipart.FileHeader) (string, error
 	return dirName + resizeAvatarName, nil
 }
 
+// randomNameFromUploadFile 为上传文件取一个随机文件名
 func randomNameFromUploadFile(file *multipart.FileHeader) string {
 	return helpers.RandomString(16) + filepath.Ext(file.Filename)
 }

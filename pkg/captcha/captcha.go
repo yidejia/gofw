@@ -1,4 +1,4 @@
-// Package captcha 处理图片验证码逻辑
+// Package captcha 图片验证码包
 // @author 余海坚 haijianyu10@qq.com
 // @created 2022-04-22 17:52
 // @copyright © 2010-2022 广州伊的家网络科技有限公司

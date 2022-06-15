@@ -1,4 +1,7 @@
-// Package console 命令行辅助方法
+// Package console 控制台包
+// @author 余海坚 haijianyu10@qq.com
+// @created 2022-04-22 16:43
+// @copyright © 2010-2022 广州伊的家网络科技有限公司
 package console
 
 import (
