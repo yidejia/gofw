@@ -29,12 +29,12 @@ func ResolveUser(id string) (user Authenticate, err gfErrors.ResponsiveError) {
 
 // CurrentUID 从 gin.context 中获取当前登录用户 ID
 func CurrentUID(c *gin.Context) string {
-	return c.GetString("current_user_id")
+	return c.GetString("user_id")
 }
 
 // CurrentUser 获取当前登录用户
 func CurrentUser(c *gin.Context) (user Authenticate) {
-	user, ok := c.MustGet("current_user").(Authenticate)
+	user, ok := c.MustGet("user").(Authenticate)
 	if !ok {
 		logger.LogIf(errors.New("无法获取用户"))
 		return user

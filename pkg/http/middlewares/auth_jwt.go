@@ -32,9 +32,9 @@ func AuthJWT() gin.HandlerFunc {
 			return
 		}
 		// 将用户信息存入 gin.context 里，后续 auth 包将从这里拿到当前用户数据
-		c.Set("current_user_id", claims.UserID)
-		c.Set("current_user_name", claims.UserName)
-		c.Set("current_user", user)
+		c.Set("user_id", claims.UserID)
+		c.Set("user_name", claims.UserName)
+		c.Set("user", user)
 
 		c.Next()
 	}

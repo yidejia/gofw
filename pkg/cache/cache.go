@@ -47,13 +47,14 @@ func Has(key string) bool {
 	return Cache.Store.Has(key)
 }
 
-// GetObject 应该传地址，用法如下:
-//     model := user.User{}
-//     cache.GetObject("key", &model)
-func GetObject(key string, wanted interface{}) {
+// GetObject
+// 应该传地址，用法如下:
+// model := user.User{}
+// cache.GetObject("key", &model)
+func GetObject(key string, obj interface{}) {
 	val := Cache.Store.Get(key)
 	if len(val) > 0 {
-		err := json.Unmarshal([]byte(val), &wanted)
+		err := json.Unmarshal([]byte(val), &obj)
 		logger.LogIf(err)
 	}
 }
