@@ -5,6 +5,7 @@ import (
 	"github.com/spf13/cast"
 	"github.com/thedevsaddam/govalidator"
 	"github.com/yidejia/gofw/pkg/app"
+	"github.com/yidejia/gofw/pkg/config"
 	"github.com/yidejia/gofw/pkg/hash"
 	"github.com/yidejia/gofw/pkg/maptool"
 	"time"
@@ -14,7 +15,7 @@ import (
 type SignRequest struct {
 	Request
 	App string `json:"app" form:"app" valid:"app"`
-	Timestamp int `json:"timestamp" form:"timestamp" valid:"timestamp"`
+	Timestamp int64 `json:"timestamp" form:"timestamp" valid:"timestamp"`
 	Sign string `json:"sign" form:"sign" valid:"sign"`
 }
 
@@ -62,17 +63,12 @@ func (req *SignRequest) ValidateSign(params map[string]interface{}, sign string,
 func makeParamString(params map[string]interface{}) (paramString string) {
 	// 对参数名按字典序排序
 	paramNames := maptool.SortIndictOrder(params)
-	// 按顺序拼接参数名和参数值值
+	// 按顺序拼接参数名和参数值
 	paramString = ""
 	if len(paramNames) > 0 {
-		isFirstParam := true
+		paramString = "app_key=" + config.Get("app.key")
 		for _, paramName := range paramNames {
-			if isFirstParam {
-				paramString = paramString + fmt.Sprintf("%s=%s", paramName, cast.ToString(params[paramName]))
-				isFirstParam = false
-			} else {
-				paramString = paramString + fmt.Sprintf("&%s=%s", paramName, cast.ToString(params[paramName]))
-			}
+			paramString = paramString + fmt.Sprintf("&%s=%s", paramName, cast.ToString(params[paramName]))
 		}
 	}
 	return
@@ -94,6 +90,9 @@ func CheckSign(params map[string]interface{}, sign string) bool {
 		return false
 	}
 	paramString := makeParamString(params)
+	if paramString == "" {
+		return false
+	}
 	return hash.BcryptCheck(paramString, sign)
 }
 
@@ -103,7 +102,7 @@ func ValidateSign(params map[string]interface{}, sign string, errs map[string][]
 		errs["sign"] = append(errs["sign"], "请求签名无效")
 	}
 	// 请求签名 15 分钟内有效
-	if (cast.ToInt64(params["timestamp"]) + cast.ToInt64(time.Minute * 15)) < app.TimenowInTimezone().Unix() {
+	if cast.ToInt64(params["timestamp"]) < app.TimenowInTimezone().Add(-(time.Duration(15) * time.Minute)).Unix() {
 		errs["sign"] = append(errs["sign"], "请求签名已过期")
 	}
 	return errs
