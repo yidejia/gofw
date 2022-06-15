@@ -128,8 +128,8 @@ func (jwt *JWT) RefreshToken(c *gin.Context) (string, error) {
 	return "", ErrTokenExpiredMaxRefresh
 }
 
-// IssueToken 生成  Token，在登录成功时调用
-func (jwt *JWT) IssueToken(userID string, userName string) string {
+// MakeToken 生成 Token
+func (jwt *JWT) MakeToken(userID string, userName string) string {
 
 	// 1. 构造用户 claims 信息(负荷)
 	expireAtTime := jwt.expireAtTime()
@@ -155,7 +155,7 @@ func (jwt *JWT) IssueToken(userID string, userName string) string {
 	return token
 }
 
-// createToken 创建 Token，内部使用，外部请调用 IssueToken
+// createToken 创建 Token，内部使用，外部请调用 MakeToken
 func (jwt *JWT) createToken(claims JWTCustomClaims) (string, error) {
 	// 使用HS256算法进行token生成
 	token := jwtpkg.NewWithClaims(jwtpkg.SigningMethodHS256, claims)
