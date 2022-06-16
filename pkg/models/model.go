@@ -10,18 +10,40 @@ import (
 	"fmt"
 	"github.com/spf13/cast"
 	"github.com/yidejia/gofw/pkg/config"
+	"strings"
 	"time"
 )
+
+const TimeFormat = "2006-01-02 15:04:05"
 
 // JSONTime 用于 JSON 数据的时间
 type JSONTime struct {
 	time.Time
 }
 
-// MarshalJSON 定义 JSON 数据中的时间格式
+// MarshalJSON 实现编码 JSON数据接口
 func (t JSONTime) MarshalJSON() ([]byte, error) {
-	formatted := fmt.Sprintf("\"%s\"", t.Format("2006-01-02 15:04:05"))
+	// 自定义 JSON 数据中的时间格式
+	formatted := fmt.Sprintf("\"%v\"", t.Format(TimeFormat))
 	return []byte(formatted), nil
+}
+
+// UnmarshalJSON 实现解码 JSON 数据接口
+func (t *JSONTime) UnmarshalJSON(data []byte) error {
+
+	if string(data) == "null" {
+		return nil
+	}
+
+	var err error
+
+	str := string(data)
+	// 去除接收的str收尾多余的"
+	timeStr := strings.Trim(str, "\"")
+	_time, err := time.Parse(TimeFormat, timeStr)
+	*t = JSONTime{Time: _time}
+
+	return err
 }
 
 // Value 往数据库插入数据时调用
@@ -42,6 +64,11 @@ func (t *JSONTime) Scan(v interface{}) error {
 		return nil
 	}
 	return fmt.Errorf("can not convert %v to timestamp", v)
+}
+
+// String 将时间对象转换成字符串时调用
+func (t *JSONTime) String() string {
+	return fmt.Sprintf("hhh:%v", t.Time.String())
 }
 
 // Model 模型基类

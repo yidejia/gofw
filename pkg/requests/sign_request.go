@@ -149,7 +149,7 @@ func makeParamString(params map[string]interface{}, secretReader ...SignAppSecre
 			}
 		}
 	}
-	
+
 	return
 }
 
