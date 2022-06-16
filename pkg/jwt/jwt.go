@@ -29,7 +29,7 @@ var (
 // JWT 定义一个jwt对象
 type JWT struct {
 
-	// 秘钥，用以加密 JWT，读取配置信息 app.key
+	// 秘钥，用以加密 JWT，读取配置信息 app.secret
 	SignKey []byte
 
 	// 刷新 Token 的最大过期时间
@@ -56,7 +56,7 @@ type JWTCustomClaims struct {
 
 func NewJWT() *JWT {
 	return &JWT{
-		SignKey:    []byte(config.GetString("app.key")),
+		SignKey:    []byte(config.GetString("app.secret")),
 		MaxRefresh: time.Duration(config.GetInt64("jwt.max_refresh_time")) * time.Minute,
 	}
 }

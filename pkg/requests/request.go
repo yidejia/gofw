@@ -26,12 +26,6 @@ type ModelConverter interface {
 	ToModel() db.IModel
 }
 
-// MapConverter 映射转换器接口
-type MapConverter interface {
-	// ToMap 从请求中提取数据生成映射，一般用于进一步验证
-	ToMap() map[string]interface{}
-}
-
 // Request 请求基类
 type Request struct {
 }
@@ -76,9 +70,9 @@ func (req *Request) MergeValidateErrors(errs map[string][]string, moreErrs ...ma
 	return MergeValidateErrors(errs, moreErrs...)
 }
 
-// MergeMaps 合并映射
-func (req *Request) MergeMaps(_map map[string]interface{}, moreMaps ...map[string]interface{}) map[string]interface{} {
-	return MergeMaps(_map, moreMaps...)
+// MergeParams 合并请求参数
+func (req *Request) MergeParams(params map[string]interface{}, moreParams ...map[string]interface{}) map[string]interface{} {
+	return MergeParams(params, moreParams...)
 }
 
 // Bind 绑定请求数据到结构体
@@ -177,21 +171,21 @@ func MergeValidateErrors(errs map[string][]string, moreErrs ...map[string][]stri
 	return errs
 }
 
-// MergeMaps 合并映射
-func MergeMaps(_map map[string]interface{}, moreMaps ...map[string]interface{}) map[string]interface{} {
+// MergeParams 合并请求参数
+func MergeParams(params map[string]interface{}, moreParams ...map[string]interface{}) map[string]interface{} {
 
-	if len(moreMaps) > 0 {
+	if len(moreParams) > 0 {
 
-		var moreMap map[string]interface{}
+		var moreParam map[string]interface{}
 		var key string
 		var value interface{}
 
-		for _, moreMap = range moreMaps {
-			for key, value = range moreMap {
-				_map[key] = value
+		for _, moreParam = range moreParams {
+			for key, value = range moreParam {
+				params[key] = value
 			}
 		}
 	}
 
-	return _map
+	return params
 }

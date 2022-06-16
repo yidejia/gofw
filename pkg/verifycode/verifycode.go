@@ -42,11 +42,11 @@ func NewVerifyCode() *VerifyCode {
 
 // SendSMS 发送短信验证码
 // 调用示例：
-// verifycode.NewVerifyCode().SendSMS(request.Phone)
-func (vc *VerifyCode) SendSMS(phone string) bool {
+// verifycode.NewVerifyCode().SendSMS(request.Phone, request.Scene)
+func (vc *VerifyCode) SendSMS(phone, scene string) bool {
 
 	// 生成验证码
-	code := vc.generateVerifyCode(phone)
+	code := vc.generateVerifyCode(fmt.Sprintf("%s:%s", scene, phone))
 
 	// 方便本地和 API 自动测试
 	if !app.IsProduction() && strings.HasPrefix(phone, config.GetString("verifycode.debug_phone_prefix")) {
