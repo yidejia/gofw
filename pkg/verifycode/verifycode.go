@@ -40,8 +40,9 @@ func NewVerifyCode() *VerifyCode {
 	return internalVerifyCode
 }
 
-// SendSMS 发送短信验证码，调用示例：
-//         verifycode.NewVerifyCode().SendSMS(request.Phone)
+// SendSMS 发送短信验证码
+// 调用示例：
+// verifycode.NewVerifyCode().SendSMS(request.Phone)
 func (vc *VerifyCode) SendSMS(phone string) bool {
 
 	// 生成验证码
