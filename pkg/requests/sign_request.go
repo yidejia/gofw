@@ -10,7 +10,6 @@ import (
 	gfErrors "github.com/yidejia/gofw/pkg/errors"
 	"github.com/yidejia/gofw/pkg/hash"
 	"github.com/yidejia/gofw/pkg/helpers"
-	"github.com/yidejia/gofw/pkg/logger"
 	"github.com/yidejia/gofw/pkg/maptool"
 	"time"
 )
@@ -150,43 +149,50 @@ func makeParamString(params map[string]interface{}, secretReader ...SignAppSecre
 			}
 		}
 	}
+	
 	return
 }
 
 // MakeSign 生成请求签名
 func MakeSign(params map[string]interface{}, secretReader ...SignAppSecretReader) (sign string, newParams map[string]interface{}, err gfErrors.ResponsiveError) {
+
 	sign = ""
+
 	var paramString string
 	paramString, newParams, err = makeParamString(params, secretReader...)
 	if err != nil {
 		return
 	}
+
 	if paramString != "" {
 		sign = hash.Md5(hash.Md5(paramString))
 		newParams["sign"] = sign
 	}
-	logger.Dump(paramString, "MakeSign")
+
 	return
 }
 
 // CheckSign 检查请求签名
 func CheckSign(params map[string]interface{}, sign string, secretReader ...SignAppSecretReader) (ok bool, newParams map[string]interface{}, err gfErrors.ResponsiveError) {
+
 	if len(params) == 0 {
 		ok = false
 		err = gfErrors.NewErrorBadRequest(errors.New("请求参数不能为空"), "请求参数不能为空")
 		return
 	}
+
 	paramString, newParams, err := makeParamString(params, secretReader...)
 	if err != nil {
 		ok = false
 		return
 	}
+
 	if paramString == "" {
 		ok = false
 		err = gfErrors.NewErrorInternal(errors.New("检查请求签名失败"), "检查请求签名失败")
 		return
 	}
-	logger.Dump(paramString, "CheckSign")
+
 	return hash.Md5(hash.Md5(paramString)) == sign, newParams, err
 }
 
