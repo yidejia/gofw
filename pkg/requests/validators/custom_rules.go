@@ -1,4 +1,5 @@
-// Package validators 存放自定义规则和验证器
+// Package validators 数据验证包
+// 这个定义框架自定义验证规则
 // @author 余海坚 haijianyu10@qq.com
 // @created 2022-04-22 18:22
 // @copyright © 2010-2022 广州伊的家网络科技有限公司
@@ -16,11 +17,16 @@ import (
 	"github.com/thedevsaddam/govalidator"
 )
 
-// Initialize 手动初始化验证包时调用
+// Initialize 利用 Go 包加载机制，手动初始化验证包时调用，一般在main入口文件里调用
+// 调用示例：
+//  func init() {
+//	    // 加载验证包并初始化自定义验证规则
+//	    validators.Initialize()
+//  }
 func Initialize() {
 }
 
-// 此方法会在初始化时执行，注册自定义表单验证规则
+// 此方法会在初始化时执行，注册自定义验证规则
 func init() {
 
 	// 自定义规则 not_exists，验证请求数据必须不存在于数据库中。

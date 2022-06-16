@@ -1,4 +1,5 @@
-// Package validators 存放自定义规则和验证器
+// Package validators 数据验证包
+// 这里定义框架自定义验证方法
 package validators
 
 import (
