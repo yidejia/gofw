@@ -2,9 +2,9 @@ package sms
 
 import (
 	"encoding/json"
-	"github.com/yidejia/gofw/pkg/logger"
-
 	aliyunsmsclient "github.com/KenmyZhang/aliyun-communicate"
+	"github.com/yidejia/gofw/pkg/config"
+	"github.com/yidejia/gofw/pkg/logger"
 )
 
 // Aliyun 实现 sms.Driver interface
@@ -12,6 +12,25 @@ import (
 // @created 2022-04-22 18:03
 // @copyright © 2010-2022 广州伊的家网络科技有限公司
 type Aliyun struct{}
+
+func NewAliyun() *Aliyun {
+	return &Aliyun{}
+}
+
+// ReadConfig 读取配置
+func (s *Aliyun) ReadConfig() map[string]string {
+	return config.GetStringMapString("sms.drivers.aliyun")
+}
+
+// GetMessageTemplate 获取消息模板
+func (s *Aliyun) GetMessageTemplate() string {
+	return config.GetString("sms.drivers.aliyun.template_code")
+}
+
+// HandleVerifyCode 处理验证码
+func (s *Aliyun) HandleVerifyCode(code string) map[string]string {
+	return map[string]string{"code": code}
+}
 
 // Send 实现 sms.Driver interface 的 Send 方法
 func (s *Aliyun) Send(phone string, message Message, config map[string]string) bool {

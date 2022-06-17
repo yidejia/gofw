@@ -44,7 +44,7 @@ func NewDriver(connection string, driverName string) (driver Driver) {
 	case "sqlite":
 		driver = NewSqlite()
 	default:
-		panic(errors.New(fmt.Sprintf("database connection %v not supported %v driver", connection, driverName)))
+		panic(errors.New(fmt.Sprintf("database connection %v does not supported %v driver", connection, driverName)))
 	}
 	return
 }

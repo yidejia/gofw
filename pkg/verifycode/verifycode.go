@@ -42,21 +42,31 @@ func NewVerifyCode() *VerifyCode {
 
 // SendSMS 发送短信验证码
 // 调用示例：
-// verifycode.NewVerifyCode().SendSMS(request.Phone, request.Scene)
-func (vc *VerifyCode) SendSMS(phone, scene string) bool {
+// verifycode.NewVerifyCode().SendSMS(request.Phone, request.Content)
+func (vc *VerifyCode) SendSMS(phone, content string, scene ...string) bool {
 
 	// 生成验证码
-	code := vc.generateVerifyCode(fmt.Sprintf("%s:%s", scene, phone))
+	var code string
+	if len(scene) > 0 {
+		code = vc.generateVerifyCode(fmt.Sprintf("%s:%s", scene[0], phone))
+	} else {
+		code = vc.generateVerifyCode(phone)
+	}
 
 	// 方便本地和 API 自动测试
 	if !app.IsProduction() && strings.HasPrefix(phone, config.GetString("verifycode.debug_phone_prefix")) {
 		return true
 	}
 
+	// 将验证码填充到短信内容中
+	content = strings.ReplaceAll(content, "{{code}}", code)
+
 	// 发送短信
-	return sms.NewSMS().Send(phone, sms.Message{
-		Template: config.GetString("sms.aliyun.template_code"),
-		Data:     map[string]string{"code": code},
+	_sms := sms.NewSMS()
+	return _sms.Send(phone, sms.Message{
+		Template: _sms.GetMessageTemplate(),
+		Data:     _sms.HandleVerifyCode(code),
+		Content: content,
 	})
 }
 
