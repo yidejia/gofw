@@ -26,7 +26,7 @@ type SignAppSecretReader interface {
 	ReadAppSecret(appKey string) (appSecret string, err gfErrors.ResponsiveError)
 }
 
-// SignDurationTimeGenerator 签名持续时间生成器接口
+// SignDurationTimeGenerator 签名有效时间生成器接口
 type SignDurationTimeGenerator interface {
 	// GenerateSignDurationTime 生成签名持续时间，单位分钟
 	GenerateSignDurationTime() int64
@@ -41,6 +41,22 @@ type SignRequest struct {
 	Sign      string `json:"sign" form:"sign" valid:"sign"`                   // 签名
 }
 
+// secretReader 签名密钥读取器实例
+var secretReader SignAppSecretReader
+
+// SetSecretReader 设置签名密钥读取器
+func SetSecretReader(_secretReader SignAppSecretReader) {
+	secretReader = _secretReader
+}
+
+// signDurationTimeGenerator 签名有效时间生成器实例
+var signDurationTimeGenerator SignDurationTimeGenerator
+
+// SetSignDurationTimeGenerator 设置签名有效时间生成器
+func SetSignDurationTimeGenerator(_signDurationTimeGenerator SignDurationTimeGenerator) {
+	signDurationTimeGenerator = _signDurationTimeGenerator
+}
+
 func NewSignRequest() *SignRequest {
 	return &SignRequest{}
 }
@@ -48,6 +64,7 @@ func NewSignRequest() *SignRequest {
 // ReadAppSecret 读取签名密钥
 // 框架默认实现，一般应用给自己的请求签名时使用，给其他应用的请求签名时，需要另外实现
 func (req *SignRequest) ReadAppSecret(appKey string) (appSecret string, err gfErrors.ResponsiveError) {
+	// 当前应用从自己的配置中获取应用密钥
 	appSecret = config.Get("app.secret")
 	return
 }
@@ -94,12 +111,12 @@ func (req *SignRequest) ParamsToSign() map[string]interface{} {
 }
 
 // ValidateSign 验证请求签名
-func (req *SignRequest) ValidateSign(params map[string]interface{}, sign string, errs map[string][]string, signDurationTimeGenerator ...SignDurationTimeGenerator) map[string][]string {
-	return ValidateSign(params, sign, errs, signDurationTimeGenerator...)
+func (req *SignRequest) ValidateSign(params map[string]interface{}, sign string, errs map[string][]string) map[string][]string {
+	return ValidateSign(params, sign, errs)
 }
 
 // makeParamString 生成参数字符串
-func makeParamString(params map[string]interface{}, secretReader ...SignAppSecretReader) (paramString string, newParams map[string]interface{}, err gfErrors.ResponsiveError) {
+func makeParamString(params map[string]interface{}) (paramString string, newParams map[string]interface{}, err gfErrors.ResponsiveError) {
 
 	// 按顺序拼接参数名和参数值
 	paramString = ""
@@ -116,8 +133,8 @@ func makeParamString(params map[string]interface{}, secretReader ...SignAppSecre
 
 		var appSecret string
 		// 设置了应用密钥读取器
-		if len(secretReader) > 0 {
-			if appSecret, err = secretReader[0].ReadAppSecret(cast.ToString(appKey)); err != nil {
+		if secretReader != nil {
+			if appSecret, err = secretReader.ReadAppSecret(cast.ToString(appKey)); err != nil {
 				return
 			}
 		} else {
@@ -160,12 +177,12 @@ func makeParamString(params map[string]interface{}, secretReader ...SignAppSecre
 }
 
 // MakeSign 生成请求签名
-func MakeSign(params map[string]interface{}, secretReader ...SignAppSecretReader) (sign string, newParams map[string]interface{}, err gfErrors.ResponsiveError) {
+func MakeSign(params map[string]interface{}) (sign string, newParams map[string]interface{}, err gfErrors.ResponsiveError) {
 
 	sign = ""
 
 	var paramString string
-	paramString, newParams, err = makeParamString(params, secretReader...)
+	paramString, newParams, err = makeParamString(params)
 	if err != nil {
 		return
 	}
@@ -179,7 +196,7 @@ func MakeSign(params map[string]interface{}, secretReader ...SignAppSecretReader
 }
 
 // CheckSign 检查请求签名
-func CheckSign(params map[string]interface{}, sign string, secretReader ...SignAppSecretReader) (ok bool, newParams map[string]interface{}, err gfErrors.ResponsiveError) {
+func CheckSign(params map[string]interface{}, sign string) (ok bool, newParams map[string]interface{}, err gfErrors.ResponsiveError) {
 
 	if len(params) == 0 {
 		ok = false
@@ -187,7 +204,7 @@ func CheckSign(params map[string]interface{}, sign string, secretReader ...SignA
 		return
 	}
 
-	paramString, newParams, err := makeParamString(params, secretReader...)
+	paramString, newParams, err := makeParamString(params)
 	if err != nil {
 		ok = false
 		return
@@ -203,7 +220,7 @@ func CheckSign(params map[string]interface{}, sign string, secretReader ...SignA
 }
 
 // ValidateSign 验证请求签名
-func ValidateSign(params map[string]interface{}, sign string, errs map[string][]string, signDurationTimeGenerator ...SignDurationTimeGenerator) map[string][]string {
+func ValidateSign(params map[string]interface{}, sign string, errs map[string][]string) map[string][]string {
 	ok, _, err := CheckSign(params, sign)
 	if err != nil {
 		errs["sign"] = append(errs["sign"], err.Message())
@@ -214,8 +231,8 @@ func ValidateSign(params map[string]interface{}, sign string, errs map[string][]
 	// 默认签名有效时长为 15 分钟
 	durationMinute := cast.ToInt64(config.Get("app.api_sign_expire_time"))
 	// 自定义了签名持续分钟数
-	if len(signDurationTimeGenerator) > 0 {
-		duration := signDurationTimeGenerator[0].GenerateSignDurationTime()
+	if signDurationTimeGenerator != nil {
+		duration := signDurationTimeGenerator.GenerateSignDurationTime()
 		if duration > 0 {
 			durationMinute = duration
 		}
