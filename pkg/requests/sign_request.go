@@ -26,6 +26,12 @@ type SignAppSecretReader interface {
 	ReadAppSecret(appKey string) (appSecret string, err gfErrors.ResponsiveError)
 }
 
+// SignDurationTimeGenerator 签名持续时间生成器接口
+type SignDurationTimeGenerator interface {
+	// GenerateSignDurationTime 生成签名持续时间，单位分钟
+	GenerateSignDurationTime() int64
+}
+
 // SignRequest 签名请求
 type SignRequest struct {
 	Request
@@ -88,8 +94,8 @@ func (req *SignRequest) ParamsToSign() map[string]interface{} {
 }
 
 // ValidateSign 验证请求签名
-func (req *SignRequest) ValidateSign(params map[string]interface{}, sign string, errs map[string][]string) map[string][]string {
-	return ValidateSign(params, sign, errs)
+func (req *SignRequest) ValidateSign(params map[string]interface{}, sign string, errs map[string][]string, signDurationTimeGenerator ...SignDurationTimeGenerator) map[string][]string {
+	return ValidateSign(params, sign, errs, signDurationTimeGenerator...)
 }
 
 // makeParamString 生成参数字符串
@@ -197,7 +203,7 @@ func CheckSign(params map[string]interface{}, sign string, secretReader ...SignA
 }
 
 // ValidateSign 验证请求签名
-func ValidateSign(params map[string]interface{}, sign string, errs map[string][]string) map[string][]string {
+func ValidateSign(params map[string]interface{}, sign string, errs map[string][]string, signDurationTimeGenerator ...SignDurationTimeGenerator) map[string][]string {
 	ok, _, err := CheckSign(params, sign)
 	if err != nil {
 		errs["sign"] = append(errs["sign"], err.Message())
@@ -205,8 +211,17 @@ func ValidateSign(params map[string]interface{}, sign string, errs map[string][]
 	if !ok {
 		errs["sign"] = append(errs["sign"], "请求签名无效")
 	}
+	// 默认签名有效时长为 15 分钟
+	durationMinute := cast.ToInt64(config.Get("app.api_sign_expire_time"))
+	// 自定义了签名持续分钟数
+	if len(signDurationTimeGenerator) > 0 {
+		duration := signDurationTimeGenerator[0].GenerateSignDurationTime()
+		if duration > 0 {
+			durationMinute = duration
+		}
+	}
 	// 请求签名 15 分钟内有效
-	if cast.ToInt64(params["timestamp"]) < app.TimenowInTimezone().Add(-(time.Duration(15) * time.Minute)).Unix() {
+	if cast.ToInt64(params["timestamp"]) < app.TimenowInTimezone().Add(-(time.Duration(durationMinute) * time.Minute)).Unix() {
 		errs["sign"] = append(errs["sign"], "请求签名已过期")
 	}
 	return errs
