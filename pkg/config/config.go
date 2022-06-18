@@ -5,11 +5,10 @@
 package config
 
 import (
-	"github.com/yidejia/gofw/pkg/helpers"
-	"os"
-
 	"github.com/spf13/cast"
 	viperlib "github.com/spf13/viper" // 自定义包名，避免与内置 viper 实例冲突
+	"github.com/yidejia/gofw/pkg/helpers"
+	"os"
 )
 
 // viper 库实例
@@ -27,7 +26,7 @@ func init() {
 	viper = viperlib.New()
 	// 2. 配置类型，支持 "json", "toml", "yaml", "yml", "properties",
 	//             "props", "prop", "env", "dotenv"
-	viper.SetConfigType("env")
+	// viper.SetConfigType("env")
 	// 3. 环境变量配置文件查找的路径，相对于 main.go
 	viper.AddConfigPath(".")
 	// 4. 设置环境变量前缀，用以区分 Go 的系统环境变量
@@ -40,9 +39,9 @@ func init() {
 
 // InitConfig 初始化配置信息，完成对环境变量以及 config 信息的加载
 func InitConfig(env string) {
-	// 1. 加载环境变量
+	// 加载环境变量文件
 	loadEnv(env)
-	// 2. 注册配置信息
+	// 注册配置信息
 	loadConfig()
 }
 
@@ -50,27 +49,40 @@ func loadConfig() {
 	for name, fn := range ConfigFuncs {
 		viper.Set(name, fn())
 	}
+	//if err := viper.WriteConfigAs("config.json"); err != nil {
+	//	console.Exit(err.Error())
+	//}
 }
 
 func loadEnv(envSuffix string) {
 
-	// 默认加载 .env 文件，如果有传参 --env=name 的话，加载 .env.name 文件
-	envPath := ".env"
-	if len(envSuffix) > 0 {
-		filepath := ".env." + envSuffix
-		if _, err := os.Stat(filepath); err == nil {
-			// 如 .env.testing 或 .env.stage
-			envPath = filepath
+	var configName string
+
+	// 存在 config.json 文件时优先加载，
+	// 这个文件是基于 .env 文件的配置生成的，开发时还是优先使用 .env 文件进行配置，部署时才考虑使用 config.json，建议继续使用 .env
+	if _, err := os.Stat("config.json"); err == nil {
+		configName = "config"
+	} else {
+		viper.SetConfigType("env")
+		// 默认加载 .env 文件，如果有传参 --env=name 的话，加载 .env.name 文件
+		envPath := ".env"
+		if len(envSuffix) > 0 {
+			filepath := ".env." + envSuffix
+			if _, err = os.Stat(filepath); err == nil {
+				// 如 .env.testing 或 .env.stage
+				envPath = filepath
+			}
 		}
+		configName = envPath
 	}
 
-	// 加载 env
-	viper.SetConfigName(envPath)
+	// 加载配置文件里的配置项
+	viper.SetConfigName(configName)
 	if err := viper.ReadInConfig(); err != nil {
 		panic(err)
 	}
 
-	// 监控 .env 文件，变更时重新加载
+	// 监控 .env 等配置文件，变更时重新加载
 	viper.WatchConfig()
 }
 

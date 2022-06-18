@@ -1,17 +1,21 @@
 package cmd
 
 import (
-	"github.com/yidejia/gofw/pkg/config"
-	"github.com/yidejia/gofw/pkg/migrate"
-
 	"github.com/spf13/cobra"
+	"github.com/yidejia/gofw/pkg/migrate"
 )
+
+// MigrateFileLoader 迁移文件加载器函数
+type MigrateFileLoader func ()
 
 var CmdMigrate = &cobra.Command{
 	Use:   "migrate",
 	Short: "Run database migration",
 	// 所有 migrate 下的子命令都会执行以下代码
 }
+
+// 迁移文件加载器函数实例
+var migrateFileLoader = func () {}
 
 // CmdMigrateUp 执行迁移命令
 var CmdMigrateUp = &cobra.Command{
@@ -30,12 +34,19 @@ func init() {
 	)
 }
 
+// SetMigrateFileLoader 设置迁移文件加载器函数
+func SetMigrateFileLoader(loader MigrateFileLoader) {
+	migrateFileLoader = loader
+}
+
+// AutoMigrate 自动执行迁移文件
+func AutoMigrate() {
+	migrator().Up()
+}
+
 func migrator() *migrate.Migrator {
-	// 注册应用 database/migrations 下的所有迁移文件
-	init := config.GetInterface("database.migration_init_func")
-	initFunc := init.(func())
-	initFunc()
-	// 初始化 migrator
+	// 加载迁移文件并初始化 migrator
+	migrateFileLoader()
 	return migrate.NewMigrator()
 }
 
