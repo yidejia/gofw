@@ -2,10 +2,11 @@ package make
 
 import (
 	"fmt"
+	"github.com/spf13/cobra"
 	"github.com/yidejia/gofw/pkg/app"
 	"github.com/yidejia/gofw/pkg/console"
-
-	"github.com/spf13/cobra"
+	"github.com/yidejia/gofw/pkg/file"
+	"os"
 )
 
 // CmdMakeMigration 生成数据库迁移文件命令
@@ -17,22 +18,68 @@ var CmdMakeMigration = &cobra.Command{
 	Short: "Create a migration file",
 	Example: "go run main.go make migration create_users_table -c create_users_table",
 	Run:   runMakeMigration,
-	Args:  cobra.ExactArgs(1), // 只允许且必须传 1 个参数
+	Args:  cobra.MinimumNArgs(1), // 至少传 1 个参数
+}
+
+func init() {
+	CmdMakeMigration.Flags().StringP("model" ,"m", "", "Create table for a model")
 }
 
 func runMakeMigration(cmd *cobra.Command, args []string) {
 
 	// 获取注释
 	comment, _ := cmd.Flags().GetString("comment")
-	// 格式化模型名称，返回一个 Model 对象
-	model := makeModelFromString(args[0], comment, "")
+	name := ""
+	forModel, err := cmd.Flags().GetString("model")
+	if err != nil {
+		console.Exit(fmt.Sprintf("Get model flage error: %s", err.Error()))
+	}
+	if forModel != "" {
+		name = forModel
+	}
+
+	// 迁移目录不存在
+	if !file.Exists("database/migrations") {
+		if err := os.Mkdir("database/migrations", os.ModePerm); err != nil {
+			console.Exit(fmt.Sprintf("failed to create migrations folder: %s", err.Error()))
+		}
+	}
 
 	// 日期格式化
 	timeStr := app.TimenowInTimezone().Format("2006_01_02_150405")
-	fileName := timeStr + "_" + model.PackageName
+	var fileName string
+	variables := make(map[string]string)
+	// 格式化模型名称，返回一个 Model 对象
+	var model Model
+	// 设置了模型名称
+	if name != "" {
+		model = makeModelFromString(name, comment, "")
+		fileName = fmt.Sprintf("%s_create_%s_table", timeStr, model.VariableNamePlural)
+		// 启用表名注释那段代码
+		variables["{{CommentOutTableName}}"] = ""
+		// 表名注释
+		variables["{{TableNameComment}}"] = model.Comment
+		// 迁移说明
+		variables["{{Instruction}}"] = fmt.Sprintf("创建%s表", variables["{{TableNameComment}}"])
+	} else {
+		// 未设置模型名称时，默认为 user 作为示例
+		name = "user"
+		model = makeModelFromString(name, comment, "")
+		// 根据输入参数生成文件名
+		fileName = timeStr + "_" + args[0]
+		// 注释掉表名注释那段代码
+		variables["{{CommentOutTableName}}"] = "// "
+		// 表名注释固定为“用户”，作为示例
+		variables["{{TableNameComment}}"] = "用户"
+		// 迁移说明就是注释
+		variables["{{Instruction}}"] = model.Comment
+	}
+
 	filePath := fmt.Sprintf("database/migrations/%s.go", fileName)
 
-	createFileFromStub(filePath, "migration", model, map[string]string{"{{FileName}}": fileName})
+	variables["{{FileName}}"] = fileName
+
+	createFileFromStub(filePath, "migration", model, variables)
 
 	console.Success("Migration file created，after modify it, use `migrate up` to migrate database.")
 }

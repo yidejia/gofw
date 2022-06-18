@@ -1,36 +1,46 @@
 package migrations
 
-import (
-    "database/sql"
-    "gohub/app/models"
-    "gohub/pkg/migrate"
+// {{Instruction}}
+// @author {{Author}} {{AuthorEmail}}
+// @created {{CreatedDataTime}}
+// @copyright © 2010-{{CopyrightToYear}} 广州伊的家网络科技有限公司
 
-    "gorm.io/gorm"
+import (
+	"database/sql"
+	"github.com/yidejia/gofw/pkg/migrate"
+	gfModels "github.com/yidejia/gofw/pkg/models"
+	"gorm.io/gorm"
+	"{{AppName}}/app/models"
 )
 
 func init() {
 
-    type User struct {
-        models.BaseModel
+	type {{StructName}} struct {
+		models.Model // 嵌入应用模型基类
 
-        // TODO 设置字段
-        Name     string `gorm:"type:varchar(255);not null;index"`
-        Email    string `gorm:"type:varchar(255);index;default:null"`
-        Phone    string `gorm:"type:varchar(20);index;default:null"`
-        Password string `gorm:"type:varchar(255)"`
+		Name      string `gorm:"type:varchar(20);not null;index:name;comment:名称"`
+		Password  string `gorm:"type:varchar(255);default:'';comment:密码"`
+		Status    uint8  `gorm:"type:tinyint unsigned;default:0;comment:状态"`
+		Phone     string `gorm:"type:varchar(20);not null;index:phone;comment:手机"`
 
-        models.CommonTimestampsField
-    }
+		gfModels.CommonTimestampsField // 时间戳，不需要的可以删除这个嵌入
+	}
 
-    // TODO 执行迁移
-    up := func(migrator gorm.Migrator, DB *sql.DB) {
-        migrator.AutoMigrate(&User{})
-    }
+	// TODO 执行迁移
+	up := func(migrator gorm.Migrator, DB *sql.DB) error {
+		var err error
+		if err = migrator.AutoMigrate(&{{StructName}}{}); err != nil {
+			return err
+		}
+		// 添加表名注释
+		{{CommentOutTableName}}_, err = DB.Exec("alter table `{{VariableNamePlural}}` comment'{{TableNameComment}}'")
+		return err
+	}
 
-    // TODO 回滚迁移
-    down := func(migrator gorm.Migrator, DB *sql.DB) {
-        migrator.DropTable(&User{})
-    }
+	// TODO 回滚迁移
+	down := func(migrator gorm.Migrator, DB *sql.DB) error {
+		return migrator.DropTable(&{{StructName}}{})
+	}
 
-    migrate.Add("{{FileName}}", up, down)
+	migrate.Add("{{FileName}}", up, down)
 }

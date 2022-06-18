@@ -18,35 +18,6 @@ import (
 )
 
 // Model 模板文件填充模型，参数解释
-// 单个词，用户命令传参，以 User 模型为例：
-//  - user
-//  - User
-//  - users
-//  - Users
-// 整理好的数据：
-// {
-//     "TableName": "users",
-//     "StructName": "User",
-//     "StructNamePlural": "Users"
-//     "VariableName": "user",
-//     "VariableNamePlural": "users",
-//     "PackageName": "user"
-// }
-// -
-// 两个词或者以上，用户命令传参，以 TopicComment 模型为例：
-//  - topic_comment
-//  - topic_comments
-//  - TopicComment
-//  - TopicComments
-// 整理好的数据：
-// {
-//     "TableName": "topic_comments",
-//     "StructName": "TopicComment",
-//     "StructNamePlural": "TopicComments"
-//     "VariableName": "topicComment",
-//     "VariableNamePlural": "topicComments",
-//     "PackageName": "topic_comment"
-// }
 type Model struct {
 	TableName          string // 生成模型结构体时对应的数据表名
 	StructName         string // 结构体名称
