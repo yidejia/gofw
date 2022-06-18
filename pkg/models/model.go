@@ -78,14 +78,14 @@ type Model struct {
 
 // CommonTimestampsField 通用时间戳
 type CommonTimestampsField struct {
-	CreatedAt JSONTime `gorm:"column:created_at;type:timestamp NULL;comment:'创建时间';" json:"created_at,omitempty"`
-	UpdatedAt JSONTime `gorm:"column:updated_at;type:timestamp NULL;comment:'更新时间';" json:"updated_at,omitempty"`
+	CreatedAt JSONTime `gorm:"column:created_at;type:timestamp NULL;comment:创建时间;" json:"created_at,omitempty"`
+	UpdatedAt JSONTime `gorm:"column:updated_at;type:timestamp NULL;comment:更新时间;" json:"updated_at,omitempty"`
 }
 
 // DeletedAtTimestampsField 删除时间戳
 // 一般用于软删除
 type DeletedAtTimestampsField struct {
-	DeletedAt *JSONTime `gorm:"column:deleted_at;type:timestamp NULL;index;comment:'删除时间';" json:"deleted_at,omitempty"`
+	DeletedAt *JSONTime `gorm:"column:deleted_at;type:timestamp NULL;index;comment:删除时间;" json:"deleted_at,omitempty"`
 }
 
 // GetStringID 获取 ID 的字符串格式
