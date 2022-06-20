@@ -1,8 +1,28 @@
 // Package {{CustomPackageName}} {{ModuleComment}}模块包
+// 一般一个控制器对应一个路由组，示例：
+// TODO 注册{{Comment}}路由组
+// {{VariableNamePlural}}Group := v1.Group("/{{VariableNamePlural}}")
+// {{VariableNamePlural}}Group.Use(gfMiddlewares.LimitIP("1000-H"))
+// {
+//	{{VariableNamePlural}}Ctrl := new({{CustomPackageName}}.{{StructNamePlural}}Controller)
+//  // 创建{{Comment}}
+//  {{VariableNamePlural}}Group.POST("", {{VariableNamePlural}}Ctrl.Store)
+//  // {{Comment}}列表
+//  {{VariableNamePlural}}Group.GET("", {{VariableNamePlural}}Ctrl.Index)
+//	// {{Comment}}详情
+//  {{VariableNamePlural}}Group.GET("/:id", {{VariableNamePlural}}Ctrl.Show)
+//  // 保存{{Comment}}
+//  {{VariableNamePlural}}Group.PATCH("/:id", {{VariableNamePlural}}Ctrl.Save)
+//  // 删除{{Comment}}
+//  {{VariableNamePlural}}Group.DELETE("/:id", {{VariableNamePlural}}Ctrl.Destroy)
+//  // 根据字段 Field 判断{{Comment}}是否存在
+//  {{VariableNamePlural}}Group.GET("/{{VariableNamePlural}}/field/exists", {{VariableNamePlural}}Ctrl.ExistsField)
+// }
 package {{CustomPackageName}}
 
 import (
     "github.com/gin-gonic/gin"
+    "github.com/spf13/cast"
     gfReqs "github.com/yidejia/gofw/pkg/requests"
     "github.com/yidejia/gofw/pkg/response"
     {{Version}} "{{AppName}}/app/http/controllers/api/{{Version}}"
@@ -14,12 +34,16 @@ import (
 // {{StructNamePlural}}Controller {{Comment}}控制器
 // @author {{Author}} {{AuthorEmail}}
 // @created {{CreatedDataTime}}
-// @copyright © 2010-{{CopyrightToYear}} 广州伊的家网络科技有限公司
+// @copyright © {{CopyrightFromYear}}-{{CopyrightToYear}} {{AuthorCompany}}
+// 路由定义时需要先实例化控制器，调用示例：
+// {{VariableNamePlural}}Ctrl := new({{CustomPackageName}}.{{StructNamePlural}}Controller)
 type {{StructNamePlural}}Controller struct {
     {{Version}}.APIController
 }
 
 // Store 创建{{Comment}}
+// 路由建议定义为：
+// {{VariableNamePlural}}Group.POST("", {{VariableNamePlural}}Ctrl.Store)
 func (ctrl *{{StructNamePlural}}Controller) Store(c *gin.Context) {
 
 	req := &{{CustomPackageName}}Reqs.Create{{StructName}}Request{}
@@ -27,14 +51,18 @@ func (ctrl *{{StructNamePlural}}Controller) Store(c *gin.Context) {
 		return
 	}
 
-	if _{{VariableName}}, err := {{CustomPackageName}}Svcs.New{{StructName}}Service().Create(req.ToModel().(*{{CustomPackageName}}.{{StructName}})); err != nil {
+    // 将请求结构转换成模型，变量名加前缀“_”是为了避免跟控制器模块包名 {{CustomPackageName}} 冲突
+    _{{VariableName}} := req.ToModel().(*{{CustomPackageName}}.{{StructName}})
+	if err := {{CustomPackageName}}Svcs.New{{StructName}}Service().Create(_{{VariableName}}); err != nil {
 		response.AbortWithError(c, err)
 	} else {
-		response.Item(c, _user)
+		response.Created(c, _{{VariableName}})
 	}
 }
 
 // Index {{Comment}}列表
+// 路由建议定义为：
+// {{VariableNamePlural}}Group.GET("", {{VariableNamePlural}}Ctrl.Index)
 func (ctrl *{{StructNamePlural}}Controller) Index(c *gin.Context) {
 
 	req := &gfReqs.PaginationRequest{}
@@ -50,10 +78,63 @@ func (ctrl *{{StructNamePlural}}Controller) Index(c *gin.Context) {
 }
 
 // Show {{Comment}}详情
+// 路由建议定义为：
+// {{VariableNamePlural}}Group.GET("/:id", {{VariableNamePlural}}Ctrl.Show)
 func (ctrl *{{StructNamePlural}}Controller) Show(c *gin.Context) {
-	if _{{VariableName}}, err := {{CustomPackageName}}Svcs.New{{StructName}}Service().Get(c.Param("id")); err != nil {
+    // 变量名加前缀“_”是为了避免跟控制器模块包名 {{CustomPackageName}} 冲突
+	if _{{VariableName}}, err := {{CustomPackageName}}Svcs.New{{StructName}}Service().Get(cast.ToUint64(c.Param("id"))); err != nil {
 		response.AbortWithError(c, err)
 	} else {
 		response.Item(c, _{{VariableName}})
+	}
+}
+
+// Save 保存{{Comment}}
+// 路由建议定义为：
+// {{VariableNamePlural}}Group.PATCH("/:id", {{VariableNamePlural}}Ctrl.Save)
+func (ctrl *{{StructNamePlural}}Controller) Save(c *gin.Context) {
+
+	req := &{{CustomPackageName}}Reqs.Save{{StructName}}Request{}
+	if ok := req.BindAndValidate(c, req); !ok {
+		return
+	}
+
+    // 将请求结构转换成模型，变量名加前缀“_”是为了避免跟控制器模块包名 {{CustomPackageName}} 冲突
+    _{{VariableName}} := req.ToModel().(*{{CustomPackageName}}.{{StructName}})
+    _{{VariableName}}.ID = cast.ToUint64(c.Param("id"))
+	if _, err := {{CustomPackageName}}Svcs.New{{StructName}}Service().Save(_{{VariableName}}); err != nil {
+		response.AbortWithError(c, err)
+	} else {
+		response.Item(c, _{{VariableName}})
+	}
+}
+
+// Destroy 删除{{Comment}}
+// 路由建议定义为：
+// {{VariableNamePlural}}Group.DELETE("/:id", {{VariableNamePlural}}Ctrl.Destroy)
+func (ctrl *{{StructNamePlural}}Controller) Destroy(c *gin.Context) {
+
+    // 变量名加前缀“_”是为了避免跟控制器模块包名 {{CustomPackageName}} 冲突
+    _{{VariableName}} := &{{CustomPackageName}}.{{StructName}}{}
+    _{{VariableName}}.ID = cast.ToUint64(c.Param("id"))
+	if _, err := {{CustomPackageName}}Svcs.New{{StructName}}Service().Delete(_{{VariableName}}); err != nil {
+		response.AbortWithError(c, err)
+	} else {
+		response.Success(c)
+	}
+}
+
+// ExistsField 根据字段 Field 判断{{Comment}}是否存在
+// 这个方法只是示例，实际开发时，请将 Field 代替成实际需要判断的字段，避免数据泄漏
+// 路由建议定义为：
+// {{VariableNamePlural}}Group.GET("/field/exists", {{VariableNamePlural}}Ctrl.ExistsField)
+func (ctrl *{{StructNamePlural}}Controller) ExistsField(c *gin.Context) {
+
+	if ok, err := {{CustomPackageName}}Svcs.New{{StructName}}Service().ExistsField(c.Param("field")); err != nil {
+		response.AbortWithError(c, err)
+	} else {
+		response.JSON(c, gin.H{
+			"exist": ok,
+		})
 	}
 }

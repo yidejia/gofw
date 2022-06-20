@@ -21,9 +21,17 @@ type Validatable interface {
 }
 
 // ModelConverter 模型转换器接口
+// 一般用在创建模型时，从请求中提取数据快速生成模型数据
 type ModelConverter interface {
-	// ToModel 从请求中提取数据生成模型
+	// ToModel 将请求结构体转换成模型
 	ToModel() db.IModel
+}
+
+// MapConverter 映射转换器接口
+// 一般用在更新模型时，从请求中提取部分字段，用于更新模型的部分字段
+type MapConverter interface {
+	// ToMap 将请求结构体转换成映射
+	ToMap() map[string]interface{}
 }
 
 // Request 请求基类

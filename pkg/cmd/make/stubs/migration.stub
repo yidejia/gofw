@@ -3,7 +3,7 @@ package migrations
 // {{Instruction}}
 // @author {{Author}} {{AuthorEmail}}
 // @created {{CreatedDataTime}}
-// @copyright © 2010-{{CopyrightToYear}} 广州伊的家网络科技有限公司
+// @copyright © {{CopyrightFromYear}}-{{CopyrightToYear}} {{AuthorCompany}}
 
 import (
 	"database/sql"
@@ -42,5 +42,7 @@ func init() {
 		return migrator.DropTable(&{{StructName}}{})
 	}
 
+    // 注册迁移文件
+    // 不是连接默认数据库执行迁移时，可以在 down 参数后面传入数据库连接名，即可实现在其它数据库上执行迁移
 	migrate.Add("{{FileName}}", up, down)
 }

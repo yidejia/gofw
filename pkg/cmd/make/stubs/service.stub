@@ -3,6 +3,7 @@ package {{CustomPackageName}}
 
 import (
 	gfErrors "github.com/yidejia/gofw/pkg/errors"
+	"github.com/yidejia/gofw/pkg/paginator"
     "{{AppName}}/app/models/{{CustomPackageName}}"
     {{CustomPackageName}}Repos "{{AppName}}/app/repositories/{{CustomPackageName}}"
     svcs "{{AppName}}/app/services"
@@ -11,7 +12,7 @@ import (
 // {{StructName}}Service {{Comment}}服务
 // @author {{Author}} {{AuthorEmail}}
 // @created {{CreatedDataTime}}
-// @copyright © 2010-{{CopyrightToYear}} 广州伊的家网络科技有限公司
+// @copyright © {{CopyrightFromYear}}-{{CopyrightToYear}} {{AuthorCompany}}
 type {{StructName}}Service struct {
 	svcs.Service
     repo *{{CustomPackageName}}Repos.{{StructName}}Repository
@@ -30,9 +31,34 @@ func (svc *{{StructName}}Service) Create({{VariableName}} *{{CustomPackageName}}
     return
 }
 
+// Paginate {{Comment}}列表
+func (svc *{{StructName}}Service) Paginate(page, perPage int, fields ...string) ({{VariableNamePlural}} []{{CustomPackageName}}.{{StructName}}, paging paginator.Paging, err gfErrors.ResponsiveError) {
+    return svc.repo.Paginate(page, perPage, fields...)
+}
+
+// All 获取所有{{Comment}}
+func (svc *{{StructName}}Service) All(fields ...string) ({{VariableNamePlural}} []{{CustomPackageName}}.{{StructName}}, err gfErrors.ResponsiveError) {
+    {{VariableNamePlural}}, err = svc.repo.All(fields...)
+    return
+}
+
+// Get 通过 ID 获取{{Comment}}
+func (svc *{{StructName}}Service) Get(id uint64, fields ...string) ({{VariableName}} {{CustomPackageName}}.{{StructName}}, err gfErrors.ResponsiveError) {
+    {{VariableName}}, err = svc.repo.Get(id, fields...)
+    return
+}
+
+// GetBy 通过指定字段获取{{Comment}}
+func (svc *{{StructName}}Service) GetBy(field, value string, fields ...string) ({{VariableName}} {{CustomPackageName}}.{{StructName}}, err gfErrors.ResponsiveError) {
+    {{VariableName}}, err = svc.repo.GetBy(field, value, fields...)
+    return
+}
+
 // Save 保存{{Comment}}
 func (svc *{{StructName}}Service) Save({{VariableName}} *{{CustomPackageName}}.{{StructName}}) (rowsAffected int64, err gfErrors.ResponsiveError) {
-    rowsAffected, err = svc.repo.Save({{VariableName}})
+    if {{VariableName}}.ID > 0 {
+        rowsAffected, err = svc.repo.Save({{VariableName}})
+    }
     return
 }
 
@@ -42,25 +68,15 @@ func (svc *{{StructName}}Service) Delete({{VariableName}} *{{CustomPackageName}}
     return
 }
 
-// Get 通过 ID 获取{{Comment}}
-func (svc *{{StructName}}Service) Get(id string) ({{VariableName}} {{CustomPackageName}}.{{StructName}}, err gfErrors.ResponsiveError) {
-    {{VariableName}}, err = svc.repo.Get(id)
-    return
+// Exists 根据字段判断{{Comment}}是否存在
+func (svc *{{StructName}}Service) Exists(field, value string) (bool, gfErrors.ResponsiveError) {
+    return svc.repo.Exists(field, value)
 }
 
-// GetBy 通过指定字段获取{{Comment}}
-func (svc *{{StructName}}Service) GetBy(field, value string) ({{VariableName}} {{CustomPackageName}}.{{StructName}}, err gfErrors.ResponsiveError) {
-    {{VariableName}}, err = svc.repo.GetBy(field, value)
-    return
-}
-
-// All 获取所有{{Comment}}
-func (svc *{{StructName}}Service) All() ({{VariableNamePlural}} []{{CustomPackageName}}.{{StructName}}, err gfErrors.ResponsiveError) {
-    {{VariableNamePlural}}, err = svc.repo.All()
-    return
-}
-
-// IsExist 根据字段判断{{Comment}}是否存在
-func (svc *{{StructName}}Service) IsExist(field, value string) (bool, gfErrors.ResponsiveError) {
-    return svc.repo.IsExist(field, value)
+// ExistsField 根据字段 field 判断{{Comment}}是否存在
+func (svc *{{StructName}}Service) ExistsField(field string) (exists bool, err gfErrors.ResponsiveError) {
+	if exists, err = svc.Exists("field", field); err != nil {
+		err = svc.NewErrorInternal(err.Error(), "根据字段 field 判断{{Comment}}是否存在失败", "{{ModuleComment}}模块", "ExistsField 根据字段 field 判断{{Comment}}是否存在")
+	}
+	return
 }

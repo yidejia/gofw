@@ -10,11 +10,11 @@ import (
 // {{StructName}} {{Comment}}模型
 // @author {{Author}} {{AuthorEmail}}
 // @created {{CreatedDataTime}}
-// @copyright © 2010-{{CopyrightToYear}} 广州伊的家网络科技有限公司
+// @copyright © {{CopyrightFromYear}}-{{CopyrightToYear}} {{AuthorCompany}}
 type {{StructName}} struct {
     models.Model // 嵌入应用模型基类
 
-    // TODO 在这里添加模型字段
+    Name string `json:"name,omitempty"` // 名称
 
     gfModels.CommonTimestampsField // 时间戳，不需要的可以删除这个嵌入
 }
@@ -37,11 +37,11 @@ func (m {{StructName}}) ModelName() string {
 //}
 
 // TODO 注册模型钩子方法
-// func ({{VariableName}} *{{StructName}}) BeforeSave(tx *gorm.DB) (err error) {}
 // func ({{VariableName}} *{{StructName}}) BeforeCreate(tx *gorm.DB) (err error) {}
 // func ({{VariableName}} *{{StructName}}) AfterCreate(tx *gorm.DB) (err error) {}
 // func ({{VariableName}} *{{StructName}}) BeforeUpdate(tx *gorm.DB) (err error) {}
 // func ({{VariableName}} *{{StructName}}) AfterUpdate(tx *gorm.DB) (err error) {}
+// func ({{VariableName}} *{{StructName}}) BeforeSave(tx *gorm.DB) (err error) {}
 // func ({{VariableName}} *{{StructName}}) AfterSave(tx *gorm.DB) (err error) {}
 // func ({{VariableName}} *{{StructName}}) BeforeDelete(tx *gorm.DB) (err error) {}
 // func ({{VariableName}} *{{StructName}}) AfterDelete(tx *gorm.DB) (err error) {}

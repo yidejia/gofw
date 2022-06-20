@@ -173,7 +173,9 @@ func createFileFromStub(filePath string, stubName string, model Model, variables
 	replaces["{{Author}}"] = config.Get("app.developer", "")
 	replaces["{{AuthorEmail}}"] = config.Get("app.developer_email", "")
 	replaces["{{CreatedDataTime}}"] = app.TimenowInTimezone().Format("2006-01-02 15:04")
+	replaces["{{CopyrightFromYear}}"] = config.GetString("app.copyright_from_year", app.TimenowInTimezone().Format("2006"))
 	replaces["{{CopyrightToYear}}"] = app.TimenowInTimezone().Format("2006")
+	replaces["{{AuthorCompany}}"] = config.Get("app.developer_company", "非常牛逼有限公司")
 	replaces["{{AppName}}"] = config.Get("app.name")
 
 	if len(replaces["{{Author}}"]) == 0 {

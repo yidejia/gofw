@@ -1,33 +1,91 @@
 package requests
 
+// {{Comment}}请求验证器
+// @author {{Author}} {{AuthorEmail}}
+// @created {{CreatedDataTime}}
+// @copyright © {{CopyrightFromYear}}-{{CopyrightToYear}} {{AuthorCompany}}
+
 import (
-    "github.com/gin-gonic/gin"
     "github.com/thedevsaddam/govalidator"
+    "github.com/yidejia/gofw/pkg/db"
+    "{{AppName}}/app/models/{{CustomPackageName}}"
+    reqs "{{AppName}}/app/requests"
 )
 
-type {{StructName}}Request struct {
-    // Name        string `valid:"name" json:"name"`
-    // Description string `valid:"description" json:"description,omitempty"`
-    FIXME()
+// Create{{StructName}}Request 创建{{Comment}}请求
+type Create{{StructName}}Request struct {
+    reqs.Request
+    Name string `json:"name" form:"name" valid:"name"`
 }
 
-func {{StructName}}Save(data interface{}, c *gin.Context) map[string][]string {
+// Validate 验证请求
+func (req *Create{{StructName}}Request) Validate(extra ...interface{}) map[string][]string {
 
-    rules := govalidator.MapData{
-        // "name":        []string{"required", "min_cn:2", "max_cn:8", "not_exists:{{TableName}},name"},
-        // "description": []string{"min_cn:3", "max_cn:255"},
-    }
-    messages := govalidator.MapData{
-        // "name": []string{
-        //     "required:名称为必填项",
-        //     "min_cn:名称长度需至少 2 个字",
-        //     "max_cn:名称长度不能超过 8 个字",
-        //     "not_exists:名称已存在",
-        // },
-        // "description": []string{
-        //     "min_cn:描述长度需至少 3 个字",
-        //     "max_cn:描述长度不能超过 255 个字",
-        // },
-    }
-    return validate(data, rules, messages)
+	rules := govalidator.MapData{
+		"name": []string{"required", "min:1"},
+	}
+
+	messages := govalidator.MapData{
+		"name": []string{
+			"required:名称为必填项",
+			"min:名称长度至少为 1",
+		},
+	}
+
+	return req.ValidateStruct(req, rules, messages)
+}
+
+// ToModel 将请求转换成模型
+// 请求验证器一般在控制器里被调用，验证通过后通过这个方法从请求中提取数据转换成 model 后传给 service 层进行业务处理
+func (req *Create{{StructName}}Request) ToModel() db.IModel {
+	return &{{CustomPackageName}}.{{StructName}}{
+		Name: req.Name,
+	}
+}
+
+// ParamsToSign 返回用于签名验证的请求参数
+// 当需要对请求进行签名验证时，这个方法返回参与签名的参数，不需要签名验证时可删除此方法
+func (req *Create{{StructName}}Request) ParamsToSign() map[string]interface{} {
+	return map[string]interface{}{
+		"name": req.Name,
+	}
+}
+
+// Save{{StructName}}Request 保存{{Comment}}请求
+type Save{{StructName}}Request struct {
+    reqs.Request
+    Name string `json:"name" form:"name" valid:"name"`
+}
+
+// Validate 验证请求
+func (req *Save{{StructName}}Request) Validate(extra ...interface{}) map[string][]string {
+
+	rules := govalidator.MapData{
+		"name": []string{"required", "min:11"},
+	}
+
+	messages := govalidator.MapData{
+		"name": []string{
+			"required:名称为必填项",
+			"min:名称长度至少为 1",
+		},
+	}
+
+	return req.ValidateStruct(req, rules, messages)
+}
+
+// ToModel 将请求转换成模型
+// 请求验证器一般在控制器里被调用，验证通过后通过这个方法从请求中提取数据转换成 model 后传给 service 层进行业务处理
+func (req *Save{{StructName}}Request) ToModel() db.IModel {
+	return &{{CustomPackageName}}.{{StructName}}{
+		Name: req.Name,
+	}
+}
+
+// ParamsToSign 返回用于签名验证的请求参数
+// 当需要对请求进行签名验证时，这个方法返回参与签名的参数，不需要签名验证时可删除此方法
+func (req *Save{{StructName}}Request) ParamsToSign() map[string]interface{} {
+	return map[string]interface{}{
+		"name": req.Name,
+	}
 }

@@ -4,6 +4,8 @@ package {{CustomPackageName}}
 import (
 	"github.com/yidejia/gofw/pkg/db"
 	gfErrors "github.com/yidejia/gofw/pkg/errors"
+	"github.com/yidejia/gofw/pkg/paginator"
+	"gorm.io/gorm"
 	"{{AppName}}/app/models/{{CustomPackageName}}"
 	repos "{{AppName}}/app/repositories"
 )
@@ -11,7 +13,7 @@ import (
 // {{StructName}}Repository {{Comment}}仓库
 // @author {{Author}} {{AuthorEmail}}
 // @created {{CreatedDataTime}}
-// @copyright © 2010-{{CopyrightToYear}} 广州伊的家网络科技有限公司
+// @copyright © {{CopyrightFromYear}}-{{CopyrightToYear}} {{AuthorCompany}}
 type {{StructName}}Repository struct {
 	repos.Repository
 }
@@ -26,6 +28,78 @@ func (repo *{{StructName}}Repository) Create({{VariableName}} *{{CustomPackageNa
     if _err := db.DB({{VariableName}}).Create({{VariableName}}).Error; _err != nil {
 		err = repo.NewErrorInternal(_err, "创建{{Comment}}失败", "{{ModuleComment}}模块", "Create 创建{{Comment}}")
 	}
+	return
+}
+
+// Paginate {{Comment}}列表
+func (repo *{{StructName}}Repository) Paginate(page, perPage int, fields ...string) ({{VariableNamePlural}} []{{CustomPackageName}}.{{StructName}}, paging paginator.Paging, err gfErrors.ResponsiveError) {
+
+	var _err error
+
+	if len(fields) > 0 {
+		paging, _err = paginator.Paginate(db.Model({{CustomPackageName}}.{{StructName}}{}).Select(fields), &{{VariableNamePlural}}, page, perPage)
+	} else {
+		paging, _err = paginator.Paginate(db.Model({{CustomPackageName}}.{{StructName}}{}), &{{VariableNamePlural}}, page, perPage)
+	}
+
+	if err != nil {
+		err = repo.NewErrorInternal(_err, "获取{{Comment}}列表失败", "{{ModuleComment}}模块", "Paginate {{Comment}}列表")
+	}
+
+	return
+}
+
+// All 获取所有{{Comment}}
+func (repo *{{StructName}}Repository) All(fields ...string) ({{VariableNamePlural}} []{{CustomPackageName}}.{{StructName}}, err gfErrors.ResponsiveError) {
+
+	var _err error
+
+	if len(fields) > 0 {
+		_err = db.DB({{CustomPackageName}}.{{StructName}}{}).Select(fields).Find(&{{VariableNamePlural}}).Error
+	} else {
+		_err = db.DB({{CustomPackageName}}.{{StructName}}{}).Find(&{{VariableNamePlural}}).Error
+	}
+
+	if _err != nil {
+		err = repo.NewError(_err, {{CustomPackageName}}.{{StructName}}{}, "{{ModuleComment}}模块", "All 获取所有{{Comment}}")
+	}
+
+	return
+}
+
+// Get 通过 ID 获取{{Comment}}
+func (repo *{{StructName}}Repository) Get(id uint64, fields ...string) ({{VariableName}} {{CustomPackageName}}.{{StructName}}, err gfErrors.ResponsiveError) {
+
+	var tx *gorm.DB
+
+	if len(fields) > 0 {
+		tx = db.DB({{VariableName}}).Where("id", id).Select(fields).First(&{{VariableName}})
+	} else {
+		tx = db.DB({{VariableName}}).Where("id", id).First(&{{VariableName}})
+	}
+
+	if _err := tx.Error; _err != nil {
+		err = repo.NewError(_err, {{VariableName}}, "{{ModuleComment}}模块", "Get 通过 ID 获取{{Comment}}")
+	}
+
+	return
+}
+
+// GetBy 通过指定字段获取{{Comment}}
+func (repo *{{StructName}}Repository) GetBy(field, value string, fields ...string) ({{VariableName}} {{CustomPackageName}}.{{StructName}}, err gfErrors.ResponsiveError) {
+
+	var tx *gorm.DB
+
+	if len(fields) > 0 {
+		tx = db.DB({{VariableName}}).Where(field, value).Select(fields).First(&{{VariableName}})
+	} else {
+		tx = db.DB({{VariableName}}).Where(field, value).First(&{{VariableName}})
+	}
+
+	if _err := tx.Error; _err != nil {
+		err = repo.NewError(_err, {{VariableName}}, "员工模块", "GetBy 通过指定字段获取{{Comment}}")
+	}
+
 	return
 }
 
@@ -49,34 +123,10 @@ func (repo *{{StructName}}Repository) Delete({{VariableName}} *{{CustomPackageNa
     return
 }
 
-// Get 通过 ID 获取{{Comment}}
-func (repo *{{StructName}}Repository) Get(id string) ({{VariableName}} {{CustomPackageName}}.{{StructName}}, err gfErrors.ResponsiveError) {
-    if _err := db.DB({{VariableName}}).Where("id", id).First(&{{VariableName}}).Error; _err != nil {
-		err = repo.NewError(_err, {{VariableName}}, "{{ModuleComment}}模块", "Get 通过 ID 获取{{Comment}}")
-	}
-    return
-}
-
-// GetBy 通过指定字段获取{{Comment}}
-func (repo *{{StructName}}Repository) GetBy(field, value string) ({{VariableName}} {{CustomPackageName}}.{{StructName}}, err gfErrors.ResponsiveError) {
-    if _err := db.DB({{VariableName}} ).Where("? = ?", field, value).First(&{{VariableName}} ).Error; _err != nil {
-		err = repo.NewError(_err, {{VariableName}} , "{{ModuleComment}}模块", "GetBy 通过指定字段获取{{Comment}}")
-	}
-    return
-}
-
-// All 获取所有{{Comment}}
-func (repo *{{StructName}}Repository) All() ({{VariableNamePlural}} []{{CustomPackageName}}.{{StructName}}, err gfErrors.ResponsiveError) {
-	if _err := db.DB({{CustomPackageName}}.{{StructName}}{}).Find(&{{VariableNamePlural}}).Error; _err != nil {
-		err = repo.NewError(_err, {{CustomPackageName}}.{{StructName}}{}, "{{ModuleComment}}模块", "All 获取所有{{Comment}}")
-	}
-    return
-}
-
-// IsExist 根据字段判断{{Comment}}是否存在
-func (repo *{{StructName}}Repository) IsExist(field, value string) (bool, gfErrors.ResponsiveError) {
+// Exists 根据字段判断{{Comment}}是否存在
+func (repo *{{StructName}}Repository) Exists(field, value string) (bool, gfErrors.ResponsiveError) {
     var count int64
-    if _err := db.Model({{CustomPackageName}}.{{StructName}}{}).Where("? = ?", field, value).Count(&count).Error; _err != nil {
+    if _err := db.Model({{CustomPackageName}}.{{StructName}}{}).Where(field, value).Count(&count).Error; _err != nil {
 		return false, repo.NewErrorInternal(_err, "根据字段判断{{Comment}}是否存在失败", "{{ModuleComment}}模块", "IsExist 根据字段判断{{Comment}}是否存在")
 	}
     return count > 0, nil

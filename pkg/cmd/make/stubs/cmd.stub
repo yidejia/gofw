@@ -9,7 +9,7 @@ import (
 // Cmd{{StructName}} {{Comment}}命令
 // @author {{Author}} {{AuthorEmail}}
 // @created {{CreatedDataTime}}
-// @copyright © 2010-{{CopyrightToYear}} 广州伊的家网络科技有限公司
+// @copyright © {{CopyrightFromYear}}-{{CopyrightToYear}} {{AuthorCompany}}
 var Cmd{{StructName}} = &cobra.Command{
     Use:     "{{PackageName}}",
     Short:   "Here puts the command description",
