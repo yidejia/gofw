@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"github.com/spf13/cast"
 	"github.com/yidejia/gofw/pkg/config"
+	"github.com/yidejia/gofw/pkg/helpers"
 	"strings"
 	"time"
 )
@@ -82,6 +83,19 @@ type CommonTimestampsField struct {
 	UpdatedAt JSONTime `gorm:"column:updated_at;type:timestamp NULL;comment:更新时间;" json:"updated_at,omitempty"`
 }
 
+// TimeToString 时间字段转换字符串
+func (m CommonTimestampsField) TimeToString(field string) string {
+	if field == "created_at" {
+		createdAt, _ := m.CreatedAt.MarshalJSON()
+		return  strings.Trim(string(createdAt), "\"")
+	} else if field == "updated_at" {
+		updatedAt, _ := m.UpdatedAt.MarshalJSON()
+		return strings.Trim(string(updatedAt), "\"")
+	} else {
+		return ""
+	}
+}
+
 // DeletedAtTimestampsField 删除时间戳
 // 一般用于软删除
 type DeletedAtTimestampsField struct {
@@ -105,8 +119,10 @@ func (m Model) ModelName() string {
 }
 
 // ToMap 将模型转换成映射
-func (m Model) ToMap() map[string]interface{} {
-	return map[string]interface{}{
-		"id": m.ID,
+func (m Model) ToMap(fields ...string) map[string]interface{} {
+	_map := helpers.StructToMap(m, fields...)
+	if helpers.SearchStringInSlice(fields, "id") > 0 {
+		_map["id"] = m.ID
 	}
+	return _map
 }

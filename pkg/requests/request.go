@@ -27,13 +27,6 @@ type ModelConverter interface {
 	ToModel() db.IModel
 }
 
-// MapConverter 映射转换器接口
-// 一般用在更新模型时，从请求中提取部分字段，用于更新模型的部分字段
-type MapConverter interface {
-	// ToMap 将请求结构体转换成映射
-	ToMap() map[string]interface{}
-}
-
 // Request 请求基类
 type Request struct {
 }

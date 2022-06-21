@@ -7,9 +7,12 @@ package helpers
 import (
 	"crypto/rand"
 	"fmt"
+	"github.com/fatih/structs"
+	"github.com/yidejia/gofw/pkg/str"
 	"io"
 	mathrand "math/rand"
 	"reflect"
+	"sort"
 	"time"
 )
 
@@ -75,4 +78,55 @@ func RandomString(length int) string {
 		b[i] = letters[mathrand.Intn(len(letters))]
 	}
 	return string(b)
+}
+
+// StructToMap 将结构体转换成映射
+func StructToMap(obj interface{}, fields ...string) map[string]interface{} {
+
+	_map := structs.Map(obj)
+	newMap := make(map[string]interface{})
+
+	if !sort.StringsAreSorted(fields) {
+		sort.Strings(fields)
+	}
+
+	fieldsLen := len(fields)
+	var k string
+	var v interface{}
+	var i int
+	for k, v = range _map {
+		k = str.Snake(k)
+		i = sort.SearchStrings(fields, k)
+		if i < fieldsLen && fields[i] == k {
+			newMap[k] = v
+		}
+	}
+	return newMap
+}
+
+// MergeMaps 合并多个映射
+func MergeMaps(_map map[string]interface{}, moreMaps ...map[string]interface{}) map[string]interface{} {
+	if len(moreMaps) > 0 {
+		var k string
+		var v interface{}
+		var moreMap map[string]interface{}
+		for _, moreMap = range moreMaps {
+			for k, v = range moreMap {
+				_map[k] = v
+			}
+		}
+	}
+	return _map
+}
+
+// SearchStringInSlice 在切片在查找字符串
+func SearchStringInSlice(_slice []string, str string) int {
+	var k int
+	var v string
+	for k, v = range _slice {
+		if v == str {
+			return k
+		}
+	}
+	return -1
 }
