@@ -86,6 +86,9 @@ func StructToMap(obj interface{}, fields ...string) map[string]interface{} {
 	_map := structs.Map(obj)
 	newMap := make(map[string]interface{})
 
+	oldFields := make([]string, len(fields))
+	copy(oldFields, fields)
+	// sort 包使用二分查找算法，为了提高查找效率，需要先进行排序
 	if !sort.StringsAreSorted(fields) {
 		sort.Strings(fields)
 	}
@@ -101,7 +104,18 @@ func StructToMap(obj interface{}, fields ...string) map[string]interface{} {
 			newMap[k] = v
 		}
 	}
-	return newMap
+
+	oldMap := make(map[string]interface{})
+	var ok bool
+	for _, k = range oldFields {
+		if v, ok = newMap[k]; ok {
+			oldMap[k] = v
+		}
+	}
+
+	fmt.Printf("oldMap:%v", oldMap)
+
+	return oldMap
 }
 
 // MergeMaps 合并多个映射
@@ -121,12 +135,12 @@ func MergeMaps(_map map[string]interface{}, moreMaps ...map[string]interface{}) 
 
 // SearchStringInSlice 在切片在查找字符串
 func SearchStringInSlice(_slice []string, str string) int {
-	var k int
-	var v string
-	for k, v = range _slice {
-		if v == str {
-			return k
-		}
+	// sort 包使用二分查找算法，为了提高查找效率，需要先进行排序
+	if !sort.StringsAreSorted(_slice) {
+		sort.Strings(_slice)
+	}
+	if i := sort.SearchStrings(_slice, str); i < len(_slice) && _slice[i] == str {
+		return i
 	}
 	return -1
 }

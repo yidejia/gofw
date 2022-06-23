@@ -29,8 +29,6 @@ type IModel interface {
 	GetStringID() string
 	// ModelName 模型名称
 	ModelName() string
-	// ToMap 将模型转换成映射
-	ToMap(fields ...string) map[string]interface{}
 }
 
 // connections 数据库连接映射表
@@ -158,7 +156,7 @@ func DB(connector Connector) *gorm.DB {
 	return Connection(connector.Connection())
 }
 
-// Model 通过实现模型接口的对象获取数据库会话对象
+// Model 通过实现模型接口的对象获取数据库会话对象并将模型设置为当前表达式模型实例，模型对应数据表在 sql 语法解析时将作为驱动表
 func Model(iModel IModel) *gorm.DB {
 	return DB(iModel).Model(iModel)
 }

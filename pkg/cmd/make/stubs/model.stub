@@ -28,12 +28,11 @@ func (m {{StructName}}) ModelName() string {
 // ToMap 将模型转换成映射
 // 一般用于模型字段中存在零值字段的情况，这种零值返回json数据编码时会被过滤掉，返回映射时即不会被过滤
 // 一般在控制器返回响应时根据需要调用，示例：
-// fields := []string{"id", "name"}
-// if {{VariableNamePlural}}, paging, err := {{CustomPackageName}}Svcs.New{{StructName}}Service().Paginate(req.Page, req.PerPage, fields...); err != nil {
-//     response.AbortWithError(c, err)
-// } else {
-//     response.Paginate(c, {{CustomPackageName}}.{{StructName}}{}.SliceToMapSlice({{VariableNamePlural}}, fields...), paging)
-// }
+//if err = {{CustomPackageName}}Svcs.New{{StructName}}Service().Create(authUser, _{{VariableName}}); err != nil {
+//	  response.AbortWithError(c, err)
+//} else {
+//	  response.Created(c, _{{VariableName}}.ToMap())
+//}
 func (m {{StructName}}) ToMap(fields ...string) map[string]interface{} {
 
 	if len(fields) == 0 {
@@ -64,6 +63,13 @@ func (m {{StructName}}) ToMap(fields ...string) map[string]interface{} {
 
 // SliceToMapSlice 将应用模型切片转换成应用映射切片
 // 就是在模型切片上应用 ToMap 方法，解决返回零值字段被过滤的问题
+// 一般在控制器返回响应时根据需要调用，示例：
+// fields := []string{"id", "name"}
+// if {{VariableNamePlural}}, paging, err := {{CustomPackageName}}Svcs.New{{StructName}}Service().Paginate(req.Page, req.PerPage, fields...); err != nil {
+//     response.AbortWithError(c, err)
+// } else {
+//     response.Paginate(c, {{CustomPackageName}}.{{StructName}}{}.SliceToMapSlice({{VariableNamePlural}}, fields...), paging)
+// }
 func (m {{StructName}}) SliceToMapSlice({{VariableNamePlural}} []{{StructName}}, fields ...string) []map[string]interface{} {
 	{{VariableNamePlural}}MapSlice := make([]map[string]interface{}, len({{VariableNamePlural}}))
 	for k, _{{VariableName}} := range {{VariableNamePlural}} {

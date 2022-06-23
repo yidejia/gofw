@@ -70,15 +70,15 @@ func (repo *{{StructName}}Repository) All(fields ...string) ({{VariableNamePlura
 // Get 通过 ID 获取{{Comment}}
 func (repo *{{StructName}}Repository) Get(id uint64, fields ...string) ({{VariableName}} {{CustomPackageName}}.{{StructName}}, err gfErrors.ResponsiveError) {
 
-	var tx *gorm.DB
+	var _err error
 
 	if len(fields) > 0 {
-		tx = db.DB({{VariableName}}).Where("id", id).Select(fields).First(&{{VariableName}})
+		_err = db.DB({{VariableName}}).Where("id", id).Select(fields).First(&{{VariableName}}).Error
 	} else {
-		tx = db.DB({{VariableName}}).Where("id", id).First(&{{VariableName}})
+		_err = db.DB({{VariableName}}).Where("id", id).First(&{{VariableName}}).Error
 	}
 
-	if _err := tx.Error; _err != nil {
+	if _err != nil {
 		err = repo.NewError(_err, {{VariableName}}, "{{ModuleComment}}模块", "Get 通过 ID 获取{{Comment}}")
 	}
 
@@ -88,15 +88,15 @@ func (repo *{{StructName}}Repository) Get(id uint64, fields ...string) ({{Variab
 // GetBy 通过指定字段获取{{Comment}}
 func (repo *{{StructName}}Repository) GetBy(field, value string, fields ...string) ({{VariableName}} {{CustomPackageName}}.{{StructName}}, err gfErrors.ResponsiveError) {
 
-	var tx *gorm.DB
+	var _err error
 
 	if len(fields) > 0 {
-		tx = db.DB({{VariableName}}).Where(field, value).Select(fields).First(&{{VariableName}})
+		_err = db.DB({{VariableName}}).Where(field, value).Select(fields).First(&{{VariableName}}).Error
 	} else {
-		tx = db.DB({{VariableName}}).Where(field, value).First(&{{VariableName}})
+		_err = db.DB({{VariableName}}).Where(field, value).First(&{{VariableName}}).Error
 	}
 
-	if _err := tx.Error; _err != nil {
+	if _err != nil {
 		err = repo.NewError(_err, {{VariableName}}, "员工模块", "GetBy 通过指定字段获取{{Comment}}")
 	}
 

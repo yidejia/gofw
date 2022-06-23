@@ -54,7 +54,7 @@ func runMakeMigration(cmd *cobra.Command, args []string) {
 	// 设置了模型名称
 	if name != "" {
 		model = makeModelFromString(name, comment, "")
-		fileName = fmt.Sprintf("%s_create_%s_table", timeStr, model.VariableNamePlural)
+		fileName = fmt.Sprintf("%s_create_%s_table", timeStr, model.TableName)
 		// 启用表名注释那段代码
 		variables["{{CommentOutTableName}}"] = ""
 		// 表名注释

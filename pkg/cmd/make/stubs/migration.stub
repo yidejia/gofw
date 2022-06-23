@@ -33,7 +33,7 @@ func init() {
 			return err
 		}
 		// 添加表名注释
-		{{CommentOutTableName}}_, err = DB.Exec("alter table `{{VariableNamePlural}}` comment'{{TableNameComment}}'")
+		{{CommentOutTableName}}_, err = DB.Exec("alter table `{{TableName}}` comment'{{TableNameComment}}'")
 		return err
 	}
 

@@ -10,14 +10,14 @@ import (
 	"fmt"
 	"github.com/spf13/cast"
 	"github.com/yidejia/gofw/pkg/config"
-	"github.com/yidejia/gofw/pkg/helpers"
+	"gorm.io/gorm"
 	"strings"
 	"time"
 )
 
 const TimeFormat = "2006-01-02 15:04:05"
 
-// JSONTime 用于 JSON 数据的时间
+// JSONTime 用于 JSON 编码的时间结构体，用于重新定义时间的 JSON 输出格式
 type JSONTime struct {
 	time.Time
 }
@@ -74,13 +74,16 @@ func (t *JSONTime) String() string {
 
 // Model 模型基类
 type Model struct {
-	ID uint64 `gorm:"column:id;primaryKey;autoIncrement;" json:"id,omitempty"`
+	ID uint64 `json:"id,omitempty" gorm:"column:id;primaryKey;autoIncrement;"`
 }
 
 // CommonTimestampsField 通用时间戳
 type CommonTimestampsField struct {
-	CreatedAt JSONTime `gorm:"column:created_at;type:timestamp NULL;comment:创建时间;" json:"created_at,omitempty"`
-	UpdatedAt JSONTime `gorm:"column:updated_at;type:timestamp NULL;comment:更新时间;" json:"updated_at,omitempty"`
+	// 时间字段设置为指针类型，是为了 JSON 编码时 omitempty tag 能生效，只有指针为 nil 时才会被认为是零值，空结构体不是零值，编码时依然会被输出
+	CreatedAt *JSONTime `json:"created_at,omitempty" gorm:"column:created_at;type:timestamp NULL;comment:创建时间;"`
+	UpdatedAt *JSONTime `json:"updated_at,omitempty" gorm:"column:updated_at;type:timestamp NULL;comment:更新时间;"`
+	DeletedAt *JSONTime `json:"deleted_at,omitempty" gorm:"column:deleted_at;type:timestamp NULL;index;comment:删除时间;"`
+	// DeletedAt *time.Time  `json:"deleted_at,omitempty" gorm:"column:deleted_at;type:timestamp NULL;index;comment:删除时间;"`
 }
 
 // TimeToString 时间字段转换字符串
@@ -99,7 +102,7 @@ func (m CommonTimestampsField) TimeToString(field string) string {
 // DeletedAtTimestampsField 删除时间戳
 // 一般用于软删除
 type DeletedAtTimestampsField struct {
-	DeletedAt *JSONTime `gorm:"column:deleted_at;type:timestamp NULL;index;comment:删除时间;" json:"deleted_at,omitempty"`
+	DeletedAt *JSONTime `json:"deleted_at,omitempty" gorm:"column:deleted_at;type:timestamp NULL;index;comment:删除时间;"`
 }
 
 // GetStringID 获取 ID 的字符串格式
@@ -118,11 +121,18 @@ func (m Model) ModelName() string {
 	return "模型"
 }
 
-// ToMap 将模型转换成映射
-func (m Model) ToMap(fields ...string) map[string]interface{} {
-	_map := helpers.StructToMap(m, fields...)
-	if helpers.SearchStringInSlice(fields, "id") > 0 {
-		_map["id"] = m.ID
+// PreloadWith 预加载关联模型
+// 用于只是指定返回特定字段的简单关联场景
+func (m Model) PreloadWith(tx *gorm.DB, with map[string][]string) *gorm.DB {
+
+	for model, modelFields := range with {
+		tx = tx.Preload(model, func(db *gorm.DB) *gorm.DB {
+			if len(modelFields) > 0 {
+				return db.Select(modelFields)
+			}
+			return db
+		})
 	}
-	return _map
+
+	return tx
 }
