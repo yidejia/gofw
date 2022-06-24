@@ -136,19 +136,16 @@ func init() {
 		// 第二个参数，字段名称，如 id
 		dbFiled := rng[1]
 
-		// 用户请求过来的数据
-		requestValue := value.(string)
-
 		// 查询数据库
 		var count int64
-		db.Connection(dbConn).Table(tableName).Where(dbFiled+" = ?", requestValue).Count(&count)
+		db.Connection(dbConn).Table(tableName).Where(dbFiled, value).Count(&count)
 		// 验证不通过，数据不存在
 		if count == 0 {
 			// 如果有自定义错误消息的话，使用自定义消息
 			if message != "" {
 				return errors.New(message)
 			}
-			return fmt.Errorf("%v 不存在", requestValue)
+			return fmt.Errorf("%v 不存在", value)
 		}
 		return nil
 	})

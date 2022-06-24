@@ -2,7 +2,6 @@
 package {{CustomPackageName}}
 
 import (
-    gfHelpers "github.com/yidejia/gofw/pkg/helpers"
     gfModels "github.com/yidejia/gofw/pkg/models"
     // "gorm.io/gorm"
     "{{AppName}}/app/models"
@@ -23,59 +22,6 @@ type {{StructName}} struct {
 // ModelName 模型名称
 func (m {{StructName}}) ModelName() string {
 	return "{{Comment}}"
-}
-
-// ToMap 将模型转换成映射
-// 一般用于模型字段中存在零值字段的情况，这种零值返回json数据编码时会被过滤掉，返回映射时即不会被过滤
-// 一般在控制器返回响应时根据需要调用，示例：
-//if err = {{CustomPackageName}}Svcs.New{{StructName}}Service().Create(authUser, _{{VariableName}}); err != nil {
-//	  response.AbortWithError(c, err)
-//} else {
-//	  response.Created(c, _{{VariableName}}.ToMap())
-//}
-func (m {{StructName}}) ToMap(fields ...string) map[string]interface{} {
-
-	if len(fields) == 0 {
-	    // TODO 这里设置可以被查询的字段
-		fields = []string{
-			"id", "name",
-		}
-	}
-
-	_map := gfHelpers.StructToMap(m, fields...)
-
-	if gfHelpers.SearchStringInSlice(fields, "id") > 0 {
-		_map["id"] = m.ID
-	}
-
-    // TODO 没有设置时间字段时这段代码可删除
-	if gfHelpers.SearchStringInSlice(fields, "created_at") > 0 {
-		_map["created_at"] = m.CommonTimestampsField.TimeToString("created_at")
-	}
-
-    // TODO 没有设置时间字段时这段代码可删除
-	if gfHelpers.SearchStringInSlice(fields, "updated_at") > 0 {
-		_map["updated_at"] = m.CommonTimestampsField.TimeToString("updated_at")
-	}
-
-	return _map
-}
-
-// SliceToMapSlice 将应用模型切片转换成应用映射切片
-// 就是在模型切片上应用 ToMap 方法，解决返回零值字段被过滤的问题
-// 一般在控制器返回响应时根据需要调用，示例：
-// fields := []string{"id", "name"}
-// if {{VariableNamePlural}}, paging, err := {{CustomPackageName}}Svcs.New{{StructName}}Service().Paginate(req.Page, req.PerPage, fields...); err != nil {
-//     response.AbortWithError(c, err)
-// } else {
-//     response.Paginate(c, {{CustomPackageName}}.{{StructName}}{}.SliceToMapSlice({{VariableNamePlural}}, fields...), paging)
-// }
-func (m {{StructName}}) SliceToMapSlice({{VariableNamePlural}} []{{StructName}}, fields ...string) []map[string]interface{} {
-	{{VariableNamePlural}}MapSlice := make([]map[string]interface{}, len({{VariableNamePlural}}))
-	for k, _{{VariableName}} := range {{VariableNamePlural}} {
-		{{VariableNamePlural}}MapSlice[k] = _{{VariableName}}.ToMap(fields...)
-	}
-	return {{VariableNamePlural}}MapSlice
 }
 
 // Connection 获取模型对应的数据库连接
