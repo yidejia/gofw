@@ -113,6 +113,7 @@ func Success(c *gin.Context, meta ...gin.H) {
 
 // NoContent 返回一个无实体内容响应
 // 执行某个『没有具体返回数据』的『变更』操作成功后调用，例如删除资源、变更资源状态，只需通过响应头判断操作是否成功
+// 尽量使用已经统一响应结构的 Success 方法
 func NoContent(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
@@ -127,7 +128,7 @@ func Data(c *gin.Context, data interface{}) {
 }
 
 // JSON 响应 200 和 JSON 数据
-// 需要自定义 JSON 数据结构时才使用，尽量使用上面已经统一的响应结构
+// 需要自定义 JSON 数据结构时才使用，尽量使用已经统一响应结构的 Data 方法
 func JSON(c *gin.Context, data interface{}) {
 	c.JSON(http.StatusOK, data)
 }
