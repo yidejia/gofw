@@ -14,4 +14,4 @@ type Authenticate interface {
 }
 
 // UserResolver 获取用户模型的函数类型
-type UserResolver func(userId string) (user Authenticate, err gfErrors.ResponsiveError)
+type UserResolver func(userId uint64) (user Authenticate, err gfErrors.ResponsiveError)

@@ -20,7 +20,7 @@ func SetUserResolver(_userResolver UserResolver)  {
 }
 
 // ResolveUser 获取用户模型
-func ResolveUser(id string) (user Authenticate, err gfErrors.ResponsiveError) {
+func ResolveUser(id uint64) (user Authenticate, err gfErrors.ResponsiveError) {
 	if userResolver != nil {
 		return userResolver(id)
 	}

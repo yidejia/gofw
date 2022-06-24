@@ -8,7 +8,6 @@ package models
 import (
 	"database/sql/driver"
 	"fmt"
-	"github.com/spf13/cast"
 	"github.com/yidejia/gofw/pkg/config"
 	"gorm.io/gorm"
 	"strings"
@@ -103,11 +102,6 @@ func (m CommonTimestampsField) TimeToString(field string) string {
 // 一般用于软删除
 type DeletedAtTimestampsField struct {
 	DeletedAt *JSONTime `json:"deleted_at,omitempty" gorm:"column:deleted_at;type:timestamp NULL;index;comment:删除时间;"`
-}
-
-// GetStringID 获取 ID 的字符串格式
-func (m Model) GetStringID() string {
-	return cast.ToString(m.ID)
 }
 
 // Connection 获取模型对应的数据库连接

@@ -17,28 +17,27 @@ import (
 )
 
 var (
-	ErrTokenMissing           error = errors.New("请求缺少令牌")
-	ErrTokenExpired           error = errors.New("令牌已过期")
-	ErrTokenExpiredMaxRefresh error = errors.New("令牌已过最大刷新时间")
-	ErrTokenMalformed         error = errors.New("请求令牌格式有误")
-	ErrTokenInvalid           error = errors.New("请求令牌无效")
-	ErrHeaderEmpty            error = errors.New("需要认证才能访问！")
-	ErrHeaderMalformed        error = errors.New("请求头中令牌格式有误")
+	ErrTokenMissing           = errors.New("请求缺少令牌")
+	ErrTokenExpired           = errors.New("令牌已过期")
+	ErrTokenExpiredMaxRefresh = errors.New("令牌已过最大刷新时间")
+	ErrTokenMalformed         = errors.New("请求令牌格式有误")
+	ErrTokenInvalid           = errors.New("请求令牌无效")
+	ErrHeaderEmpty            = errors.New("需要认证才能访问！")
+	ErrHeaderMalformed        = errors.New("请求头中令牌格式有误")
 )
 
 // JWT 定义一个jwt对象
 type JWT struct {
-
 	// 秘钥，用以加密 JWT，读取配置信息 app.secret
 	SignKey []byte
-
 	// 刷新 Token 的最大过期时间
 	MaxRefresh time.Duration
 }
 
 // JWTCustomClaims 自定义载荷
 type JWTCustomClaims struct {
-	UserID       string `json:"user_id"`
+
+	UserID       uint64 `json:"user_id"`
 	UserName     string `json:"user_name"`
 	ExpireAtTime int64  `json:"expire_time"`
 
@@ -129,7 +128,7 @@ func (jwt *JWT) RefreshToken(c *gin.Context) (string, error) {
 }
 
 // MakeToken 生成 Token
-func (jwt *JWT) MakeToken(userID string, userName string) string {
+func (jwt *JWT) MakeToken(userID uint64, userName string) string {
 
 	// 1. 构造用户 claims 信息(负荷)
 	expireAtTime := jwt.expireAtTime()

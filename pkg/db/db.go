@@ -25,8 +25,6 @@ type Connector interface {
 // IModel 模型接口
 type IModel interface {
 	Connector
-	// GetStringID 获取 ID 的字符串格式
-	GetStringID() string
 	// ModelName 模型名称
 	ModelName() string
 }
