@@ -30,44 +30,6 @@ func Created(c *gin.Context, model interface{}, meta ...gin.H) {
 	}
 }
 
-// Item 响应 200 和带 data 键的 JSON 数据
-// 执行『查询或更新操作』后返回查询到或已更新的一个资源对象
-// @param model 模型实例
-// @param meta 附加的元数据
-func Item(c *gin.Context, model interface{}, meta ...gin.H) {
-	if len(meta) > 0 {
-		JSON(c, gin.H{
-			"success": true,
-			"data":    model,
-			"meta":    meta[0],
-		})
-	} else {
-		JSON(c, gin.H{
-			"success": true,
-			"data":    model,
-		})
-	}
-}
-
-// Collection 响应 200 和带 data 键的 JSON 数据
-// 执行『查询操作』后返回一个资源集合
-// @param modelSlice 模型切片
-// @param meta 附加的元数据
-func Collection(c *gin.Context, modelSlice interface{}, meta ...gin.H) {
-	if len(meta) > 0 {
-		JSON(c, gin.H{
-			"success": true,
-			"data":    modelSlice,
-			"meta":    meta[0],
-		})
-	} else {
-		JSON(c, gin.H{
-			"success": true,
-			"data":    modelSlice,
-		})
-	}
-}
-
 // Paginate 响应 200 和带 data 键的 JSON 数据
 // 执行『查询操作』后返回一个资源集合的分页，适用于资源集合比较大的场景
 // @param modelSlice 模型切片
@@ -93,6 +55,44 @@ func Paginate(c *gin.Context, modelSlice interface{}, paging paginator.Paging, m
 	}
 }
 
+// Collection 响应 200 和带 data 键的 JSON 数据
+// 执行『查询操作』后返回一个资源集合
+// @param modelSlice 模型切片
+// @param meta 附加的元数据
+func Collection(c *gin.Context, modelSlice interface{}, meta ...gin.H) {
+	if len(meta) > 0 {
+		JSON(c, gin.H{
+			"success": true,
+			"data":    modelSlice,
+			"meta":    meta[0],
+		})
+	} else {
+		JSON(c, gin.H{
+			"success": true,
+			"data":    modelSlice,
+		})
+	}
+}
+
+// Item 响应 200 和带 data 键的 JSON 数据
+// 执行『查询或更新操作』后返回查询到或已更新的一个资源对象
+// @param model 模型实例
+// @param meta 附加的元数据
+func Item(c *gin.Context, model interface{}, meta ...gin.H) {
+	if len(meta) > 0 {
+		JSON(c, gin.H{
+			"success": true,
+			"data":    model,
+			"meta":    meta[0],
+		})
+	} else {
+		JSON(c, gin.H{
+			"success": true,
+			"data":    model,
+		})
+	}
+}
+
 // Success 响应 200 和预设『操作成功！』的 JSON 数据
 // 执行某个『没有具体返回数据』的『变更』操作成功后调用，例如删除资源、变更资源状态
 // @param meta 附加的元数据
@@ -111,26 +111,12 @@ func Success(c *gin.Context, meta ...gin.H) {
 	}
 }
 
-// NoContent 返回一个无实体内容响应
-// 执行某个『没有具体返回数据』的『变更』操作成功后调用，例如删除资源、变更资源状态，只需通过响应头判断操作是否成功
-// 尽量使用已经统一响应结构的 Success 方法
-func NoContent(c *gin.Context) {
-	c.Status(http.StatusNoContent)
-}
-
 // Data 响应 200 和带 data 键的 JSON 数据
-// 返回的不是 model 时才考虑使用，一般使用上面标准的响应方法即可
 func Data(c *gin.Context, data interface{}) {
 	JSON(c, gin.H{
 		"success": true,
 		"data":    data,
 	})
-}
-
-// JSON 响应 200 和 JSON 数据
-// 需要自定义 JSON 数据结构时才使用，尽量使用已经统一响应结构的 Data 方法
-func JSON(c *gin.Context, data interface{}) {
-	c.JSON(http.StatusOK, data)
 }
 
 // AbortWithError 中断处理并返回错误
@@ -157,6 +143,12 @@ func AbortWithError(c *gin.Context, err gfErrors.ResponsiveError) {
 		}
 	}
 	c.AbortWithStatusJSON(err.HttpStatus(), jsonData)
+}
+
+// JSON 响应 200 和 JSON 数据
+// 需要自定义 JSON 数据结构时才使用，尽量使用已经统一响应结构的 Data 方法
+func JSON(c *gin.Context, data interface{}) {
+	c.JSON(http.StatusOK, data)
 }
 
 // BadRequest 中断处理并返回请求格式不正确错误
@@ -217,4 +209,11 @@ func Error(c *gin.Context, httpStatus int, err error, message ...string) {
 // String 返回字符串
 func String(c *gin.Context, httpStatus int, format string, values ...interface{}) {
 	c.String(httpStatus, format, values...)
+}
+
+// NoContent 返回一个无实体内容响应
+// 执行某个『没有具体返回数据』的『变更』操作成功后调用，例如删除资源、变更资源状态，只需通过响应头判断操作是否成功
+// 尽量使用已经统一响应结构的 Success 方法
+func NoContent(c *gin.Context) {
+	c.Status(http.StatusNoContent)
 }
