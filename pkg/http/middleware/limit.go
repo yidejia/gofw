@@ -1,11 +1,12 @@
-package middlewares
+package middleware
 
 import (
+	"net/http"
+
 	"github.com/yidejia/gofw/pkg/app"
 	"github.com/yidejia/gofw/pkg/limiter"
 	"github.com/yidejia/gofw/pkg/logger"
 	"github.com/yidejia/gofw/pkg/response"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/cast"

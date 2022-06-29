@@ -1,8 +1,9 @@
-// Package middlewares Gin 中间件
-package middlewares
+// Package middleware Gin 中间件
+package middleware
 
 import (
 	"fmt"
+
 	"github.com/gin-gonic/gin"
 	"github.com/yidejia/gofw/pkg/auth"
 	"github.com/yidejia/gofw/pkg/jwt"

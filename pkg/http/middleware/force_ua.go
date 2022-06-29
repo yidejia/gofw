@@ -1,5 +1,5 @@
-// Package middlewares Gin 中间件
-package middlewares
+// Package middleware Gin 中间件
+package middleware
 
 import (
 	"github.com/yidejia/gofw/pkg/response"

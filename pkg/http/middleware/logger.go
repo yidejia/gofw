@@ -1,15 +1,16 @@
-// Package middlewares 存放系统中间件
+// Package middleware 存放系统中间件
 // @author 余海坚 haijianyu10@qq.com
 // @created 2022-04-22 17:14
 // @copyright © 2010-2022 广州伊的家网络科技有限公司
-package middlewares
+package middleware
 
 import (
 	"bytes"
-	"github.com/yidejia/gofw/pkg/helpers"
-	"github.com/yidejia/gofw/pkg/logger"
 	"io/ioutil"
 	"time"
+
+	"github.com/yidejia/gofw/pkg/helpers"
+	"github.com/yidejia/gofw/pkg/logger"
 
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/cast"

@@ -1,4 +1,4 @@
-package middlewares
+package middleware
 
 import (
 	"github.com/yidejia/gofw/pkg/jwt"

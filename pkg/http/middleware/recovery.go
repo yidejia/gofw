@@ -1,12 +1,13 @@
-package middlewares
+package middleware
 
 import (
-	"github.com/yidejia/gofw/pkg/logger"
 	"net"
 	"net/http/httputil"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/yidejia/gofw/pkg/logger"
 
 	"github.com/gin-gonic/gin"
 	"github.com/yidejia/gofw/pkg/response"
