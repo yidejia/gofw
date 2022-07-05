@@ -7,12 +7,12 @@ package redis
 import (
 	"context"
 	"fmt"
-	"github.com/yidejia/gofw/pkg/config"
-	"github.com/yidejia/gofw/pkg/logger"
 	"sync"
 	"time"
 
-	redis "github.com/go-redis/redis/v8"
+	"github.com/go-redis/redis/v8"
+	"github.com/yidejia/gofw/pkg/config"
+	"github.com/yidejia/gofw/pkg/logger"
 )
 
 // RedisClient Redis 服务
