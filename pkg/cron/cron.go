@@ -47,7 +47,7 @@ func InitWithConfig() {
 		if err != nil {
 			panic("init cron with timezone failed:" + err.Error())
 		}
-		// 创建时间规格式解析器，启用秒计时单位，秒可选
+		// 创建时间格式解析器，启用秒计时单位，秒可选
 		_parser := cronPkg.NewParser(
 			cronPkg.SecondOptional | cronPkg.Minute | cronPkg.Hour | cronPkg.Dom | cronPkg.Month | cronPkg.Dow | cronPkg.Descriptor,
 		)
