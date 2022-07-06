@@ -3,6 +3,9 @@ package verifycode
 
 import (
 	"fmt"
+	"strings"
+	"sync"
+
 	"github.com/yidejia/gofw/pkg/app"
 	"github.com/yidejia/gofw/pkg/config"
 	"github.com/yidejia/gofw/pkg/helpers"
@@ -10,8 +13,6 @@ import (
 	"github.com/yidejia/gofw/pkg/mail"
 	"github.com/yidejia/gofw/pkg/redis"
 	"github.com/yidejia/gofw/pkg/sms"
-	"strings"
-	"sync"
 )
 
 // VerifyCode 操作对象
@@ -54,7 +55,9 @@ func (vc *VerifyCode) SendSMS(phone, content string, scene ...string) bool {
 	}
 
 	// 方便本地和 API 自动测试
-	if !app.IsProduction() && strings.HasPrefix(phone, config.GetString("verifycode.debug_phone_prefix")) {
+	if !app.IsProduction() &&
+		(config.GetBool("verifycode.debug_mode") ||
+			strings.HasPrefix(phone, config.GetString("verifycode.debug_phone_prefix"))) {
 		return true
 	}
 
@@ -66,7 +69,7 @@ func (vc *VerifyCode) SendSMS(phone, content string, scene ...string) bool {
 	return _sms.Send(phone, sms.Message{
 		Template: _sms.GetMessageTemplate(),
 		Data:     _sms.HandleVerifyCode(code),
-		Content: content,
+		Content:  content,
 	})
 }
 
@@ -77,7 +80,8 @@ func (vc *VerifyCode) CheckAnswer(key string, answer string) bool {
 
 	// 方便开发，在非生产环境下，具备特殊前缀的手机号和特殊 Email 后缀，直接验证成功
 	if !app.IsProduction() &&
-		(strings.HasPrefix(key, config.GetString("verifycode.debug_phone_prefix")) ||
+		(config.GetBool("verifycode.debug_mode") ||
+			strings.HasPrefix(key, config.GetString("verifycode.debug_phone_prefix")) ||
 			strings.HasSuffix(key, config.GetString("verifycode.debug_email_suffix"))) {
 		return true
 	}
