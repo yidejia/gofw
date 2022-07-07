@@ -8,10 +8,11 @@ package models
 import (
 	"database/sql/driver"
 	"fmt"
-	"github.com/yidejia/gofw/pkg/config"
-	"gorm.io/gorm"
 	"strings"
 	"time"
+
+	"github.com/yidejia/gofw/pkg/config"
+	"gorm.io/gorm"
 )
 
 const TimeFormat = "2006-01-02 15:04:05"
@@ -76,20 +77,18 @@ type Model struct {
 	ID uint64 `json:"id,omitempty" gorm:"column:id;primaryKey;autoIncrement;"`
 }
 
-// CommonTimestampsField 通用时间戳
+// CommonTimestampsField 通用时间
 type CommonTimestampsField struct {
 	// 时间字段设置为指针类型，是为了 JSON 编码时 omitempty tag 能生效，只有指针为 nil 时才会被认为是零值，空结构体不是零值，编码时依然会被输出
 	CreatedAt *JSONTime `json:"created_at,omitempty" gorm:"column:created_at;type:timestamp NULL;comment:创建时间;"`
 	UpdatedAt *JSONTime `json:"updated_at,omitempty" gorm:"column:updated_at;type:timestamp NULL;comment:更新时间;"`
-	DeletedAt *JSONTime `json:"deleted_at,omitempty" gorm:"column:deleted_at;type:timestamp NULL;index;comment:删除时间;"`
-	// DeletedAt *time.Time  `json:"deleted_at,omitempty" gorm:"column:deleted_at;type:timestamp NULL;index;comment:删除时间;"`
 }
 
 // TimeToString 时间字段转换字符串
 func (m CommonTimestampsField) TimeToString(field string) string {
 	if field == "created_at" {
 		createdAt, _ := m.CreatedAt.MarshalJSON()
-		return  strings.Trim(string(createdAt), "\"")
+		return strings.Trim(string(createdAt), "\"")
 	} else if field == "updated_at" {
 		updatedAt, _ := m.UpdatedAt.MarshalJSON()
 		return strings.Trim(string(updatedAt), "\"")
@@ -98,10 +97,20 @@ func (m CommonTimestampsField) TimeToString(field string) string {
 	}
 }
 
-// DeletedAtTimestampsField 删除时间戳
+// DeletedAtTimestampsField 删除时间
 // 一般用于软删除
 type DeletedAtTimestampsField struct {
 	DeletedAt *JSONTime `json:"deleted_at,omitempty" gorm:"column:deleted_at;type:timestamp NULL;index;comment:删除时间;"`
+}
+
+// TimeToString 时间字段转换字符串
+func (m DeletedAtTimestampsField) TimeToString(field string) string {
+	if field == "deleted_at" {
+		deletedAt, _ := m.DeletedAt.MarshalJSON()
+		return strings.Trim(string(deletedAt), "\"")
+	} else {
+		return ""
+	}
 }
 
 // Connection 获取模型对应的数据库连接

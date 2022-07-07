@@ -23,7 +23,8 @@ func init() {
 		Status    uint8  `gorm:"type:tinyint unsigned;default:0;comment:状态"`
 		Phone     string `gorm:"type:varchar(20);not null;index:phone;comment:手机"`
 
-		gfModels.CommonTimestampsField // 时间戳，不需要的可以删除这个嵌入
+		gfModels.CommonTimestampsField    // 创建更新时间，不需要的可以删除这个嵌入
+		gfModels.DeletedAtTimestampsField // 删除时间，不需要支持软删除的模型可以删除这个嵌入
 	}
 
 	// TODO 执行迁移

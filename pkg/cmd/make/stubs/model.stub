@@ -16,7 +16,8 @@ type {{StructName}} struct {
 
     Name string `json:"name,omitempty"` // 名称
 
-    gfModels.CommonTimestampsField // 时间戳，不需要的可以删除这个嵌入
+    gfModels.CommonTimestampsField    // 创建更新时间，不需要的可以删除这个嵌入
+    gfModels.DeletedAtTimestampsField // 删除时间，不需要支持软删除的模型可以删除这个嵌入
 }
 
 // ModelName 模型名称
