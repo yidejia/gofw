@@ -6,21 +6,37 @@ package client
 
 import (
 	"encoding/json"
+
 	"github.com/valyala/fasthttp"
 )
 
 // Post 请求
-func Post(url string, param interface{}) (string, error) {
+func Post(url string, param interface{}) (string, int, error) {
 	return Request("POST", url, param)
 }
 
 // Get 请求
-func Get(url string, param interface{}) (string, error) {
+func Get(url string, param interface{}) (string, int, error) {
 	return Request("GET", url, param)
 }
 
+// Patch 请求
+func Patch(url string, param interface{}) (string, int, error) {
+	return Request("PATCH", url, param)
+}
+
+// Put 请求
+func Put(url string, param interface{}) (string, int, error) {
+	return Request("PUT", url, param)
+}
+
+// Delete 请求
+func Delete(url string, param interface{}) (string, int, error) {
+	return Request("DELETE", url, param)
+}
+
 // Request 请求
-func Request(method, url string, param interface{}) (string, error) {
+func Request(method, url string, param interface{}) (string, int, error) {
 
 	req := fasthttp.AcquireRequest()
 	resp := fasthttp.AcquireResponse()
@@ -31,17 +47,16 @@ func Request(method, url string, param interface{}) (string, error) {
 
 	buf, err := json.Marshal(param)
 	if err != nil {
-		return "", err
+		return "", 500, err
 	}
 	req.SetBody(buf)
 
 	err = fasthttp.Do(req, resp)
-
 	if err != nil {
-		return "", err
+		return "", 500, err
 	}
 
 	b := resp.Body()
 
-	return string(b), nil
+	return string(b), resp.Header.StatusCode(), nil
 }
