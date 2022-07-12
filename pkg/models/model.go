@@ -100,7 +100,8 @@ func (m CommonTimestampsField) TimeToString(field string) string {
 // DeletedAtTimestampsField 删除时间
 // 一般用于软删除
 type DeletedAtTimestampsField struct {
-	DeletedAt *JSONTime `json:"deleted_at,omitempty" gorm:"column:deleted_at;type:timestamp NULL;index;comment:删除时间;"`
+	DeletedAt *JSONTime      `json:"deleted_at,omitempty" gorm:"column:deleted_at;type:timestamp NULL;index;comment:删除时间;"`
+	Deleted   gorm.DeletedAt `json:"-" gorm:"column:deleted_at"` // 启用软删除
 }
 
 // TimeToString 时间字段转换字符串
