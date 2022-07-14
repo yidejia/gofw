@@ -55,3 +55,8 @@ func (svc *Service) NewErrorLocked(message ...string) gfErrors.ResponsiveError {
 func (svc *Service) NewErrorInternal(err error, message ...string) gfErrors.ResponsiveError {
 	return gfErrors.NewErrorInternal(err, message...)
 }
+
+// NewErrorServiceUnavailable 生成服务不可用错误
+func (svc *Service) NewErrorServiceUnavailable(message ...string) gfErrors.ResponsiveError {
+	return gfErrors.NewErrorServiceUnavailable(message...)
+}

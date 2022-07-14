@@ -1,14 +1,15 @@
 package errors
 
 import (
-	"github.com/yidejia/gofw/pkg/logger"
 	"net/http"
+
+	"github.com/yidejia/gofw/pkg/logger"
 )
 
 // errorBadRequest 请求资源格式错误
 type errorBadRequest struct {
 	message string
-	err error
+	err     error
 }
 
 func NewErrorBadRequest(err error, message ...string) ResponsiveError {
@@ -38,7 +39,7 @@ func (err *errorBadRequest) Error() error {
 	return err.err
 }
 
-func (err *errorBadRequest) Errors() map[string][]string  {
+func (err *errorBadRequest) Errors() map[string][]string {
 	return nil
 }
 
@@ -67,7 +68,7 @@ func (err *errorUnauthorized) Error() error {
 	return nil
 }
 
-func (err *errorUnauthorized) Errors() map[string][]string  {
+func (err *errorUnauthorized) Errors() map[string][]string {
 	return nil
 }
 
@@ -96,7 +97,7 @@ func (err *errorForbidden) Error() error {
 	return nil
 }
 
-func (err *errorForbidden) Errors() map[string][]string  {
+func (err *errorForbidden) Errors() map[string][]string {
 	return nil
 }
 
@@ -125,7 +126,7 @@ func (err *errorNotFound) Error() error {
 	return nil
 }
 
-func (err *errorNotFound) Errors() map[string][]string  {
+func (err *errorNotFound) Errors() map[string][]string {
 	return nil
 }
 
@@ -154,14 +155,14 @@ func (err *errorMethodNotAllowed) Error() error {
 	return nil
 }
 
-func (err *errorMethodNotAllowed) Errors() map[string][]string  {
+func (err *errorMethodNotAllowed) Errors() map[string][]string {
 	return nil
 }
 
 // errorUnprocessableEntity 资源无法处理错误
 type errorUnprocessableEntity struct {
 	message string
-	errors map[string][]string
+	errors  map[string][]string
 }
 
 func NewErrorUnprocessableEntity(errors map[string][]string, message ...string) ResponsiveError {
@@ -184,7 +185,7 @@ func (err *errorUnprocessableEntity) Error() error {
 	return nil
 }
 
-func (err *errorUnprocessableEntity) Errors() map[string][]string  {
+func (err *errorUnprocessableEntity) Errors() map[string][]string {
 	return err.errors
 }
 
@@ -213,14 +214,14 @@ func (err *errorLocked) Error() error {
 	return nil
 }
 
-func (err *errorLocked) Errors() map[string][]string  {
+func (err *errorLocked) Errors() map[string][]string {
 	return nil
 }
 
 // errorInternal 内部错误
 type errorInternal struct {
 	message string
-	err error
+	err     error
 }
 
 func NewErrorInternal(err error, message ...string) ResponsiveError {
@@ -250,22 +251,51 @@ func (err *errorInternal) Error() error {
 	return err.err
 }
 
-func (err *errorInternal) Errors() map[string][]string  {
+func (err *errorInternal) Errors() map[string][]string {
+	return nil
+}
+
+// errorServiceUnavailable 服务不可用错误
+type errorServiceUnavailable struct {
+	message string
+}
+
+func NewErrorServiceUnavailable(message ...string) ResponsiveError {
+	if len(message) > 0 {
+		return &errorServiceUnavailable{message[0]}
+	} else {
+		return &errorServiceUnavailable{"服务不可用"}
+	}
+}
+
+func (err *errorServiceUnavailable) HttpStatus() int {
+	return http.StatusServiceUnavailable
+}
+
+func (err *errorServiceUnavailable) Message() string {
+	return err.message
+}
+
+func (err *errorServiceUnavailable) Error() error {
+	return nil
+}
+
+func (err *errorServiceUnavailable) Errors() map[string][]string {
 	return nil
 }
 
 // errorCustom 自定义错误
 type errorCustom struct {
 	httpStatus int
-	message string
-	err error
+	message    string
+	err        error
 }
 
 func NewErrorCustom(httpStatus int, err error, message ...string) ResponsiveError {
 	if len(message) > 0 {
-		return &errorCustom{httpStatus,message[0], err}
+		return &errorCustom{httpStatus, message[0], err}
 	} else {
-		return &errorCustom{httpStatus,err.Error(), err}
+		return &errorCustom{httpStatus, err.Error(), err}
 	}
 }
 
@@ -281,6 +311,6 @@ func (err *errorCustom) Error() error {
 	return err.err
 }
 
-func (err *errorCustom) Errors() map[string][]string  {
+func (err *errorCustom) Errors() map[string][]string {
 	return nil
 }
