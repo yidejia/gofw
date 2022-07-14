@@ -23,7 +23,7 @@ type JSONTime struct {
 }
 
 // MarshalJSON 实现编码 JSON数据接口
-func (t JSONTime) MarshalJSON() ([]byte, error) {
+func (t *JSONTime) MarshalJSON() ([]byte, error) {
 	// 自定义 JSON 数据中的时间格式
 	formatted := fmt.Sprintf("\"%v\"", t.Format(TimeFormat))
 	return []byte(formatted), nil
@@ -48,7 +48,7 @@ func (t *JSONTime) UnmarshalJSON(data []byte) error {
 }
 
 // Value 往数据库插入数据时调用
-func (t JSONTime) Value() (driver.Value, error) {
+func (t *JSONTime) Value() (driver.Value, error) {
 	var zeroTime time.Time
 	// 判断给定时间是否和默认零时间的时间戳相同
 	if t.Time.UnixNano() == zeroTime.UnixNano() {
@@ -85,7 +85,7 @@ type CommonTimestampsField struct {
 }
 
 // TimeToString 时间字段转换字符串
-func (m CommonTimestampsField) TimeToString(field string) string {
+func (m *CommonTimestampsField) TimeToString(field string) string {
 	if field == "created_at" {
 		createdAt, _ := m.CreatedAt.MarshalJSON()
 		return strings.Trim(string(createdAt), "\"")
@@ -100,12 +100,12 @@ func (m CommonTimestampsField) TimeToString(field string) string {
 // DeletedAtTimestampsField 删除时间
 // 一般用于软删除
 type DeletedAtTimestampsField struct {
-	DeletedAt *JSONTime      `json:"deleted_at,omitempty" gorm:"column:deleted_at;type:timestamp NULL;index;comment:删除时间;"`
-	Deleted   gorm.DeletedAt `json:"-" gorm:"column:deleted_at"` // 启用软删除
+	DeletedAt *JSONTime       `json:"deleted_at,omitempty" gorm:"column:deleted_at;type:timestamp NULL;index;comment:删除时间;"`
+	Deleted   *gorm.DeletedAt `json:"-" gorm:"column:deleted_at"` // 启用软删除
 }
 
 // TimeToString 时间字段转换字符串
-func (m DeletedAtTimestampsField) TimeToString(field string) string {
+func (m *DeletedAtTimestampsField) TimeToString(field string) string {
 	if field == "deleted_at" {
 		deletedAt, _ := m.DeletedAt.MarshalJSON()
 		return strings.Trim(string(deletedAt), "\"")
@@ -115,19 +115,19 @@ func (m DeletedAtTimestampsField) TimeToString(field string) string {
 }
 
 // Connection 获取模型对应的数据库连接
-func (m Model) Connection() string {
+func (m *Model) Connection() string {
 	// 返回默认的数据库连接
 	return config.Get("database.default")
 }
 
 // ModelName 模型名称
-func (m Model) ModelName() string {
+func (m *Model) ModelName() string {
 	return "模型"
 }
 
 // PreloadWith 预加载关联模型
 // 用于只是指定返回特定字段的简单关联场景
-func (m Model) PreloadWith(tx *gorm.DB, with map[string][]string) *gorm.DB {
+func (m *Model) PreloadWith(tx *gorm.DB, with map[string][]string) *gorm.DB {
 
 	for model, modelFields := range with {
 		tx = tx.Preload(model, func(db *gorm.DB) *gorm.DB {

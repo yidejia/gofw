@@ -21,19 +21,19 @@ type {{StructName}} struct {
 }
 
 // ModelName 模型名称
-func (m {{StructName}}) ModelName() string {
+func (m *{{StructName}}) ModelName() string {
 	return "{{Comment}}"
 }
 
 // Connection 获取模型对应的数据库连接
 // 不是使用默认数据库的模型需要定义使用哪个数据库连接
 // 使用默认数据库连接可以删除此方法
-//func (m {{StructName}}) Connection() string {
+//func (m *{{StructName}}) Connection() string {
 //    return "db_connection_name"
 //}
 
 // TableName 返回表名
-//func (m {{StructName}}) TableName() string {
+//func (m *{{StructName}}) TableName() string {
 //    return "table_name"
 //}
 
