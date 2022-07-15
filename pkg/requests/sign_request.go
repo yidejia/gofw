@@ -3,74 +3,107 @@ package requests
 import (
 	"errors"
 	"fmt"
+	"time"
+
+	"github.com/yidejia/gofw/pkg/logger"
+
 	"github.com/spf13/cast"
 	"github.com/thedevsaddam/govalidator"
 	"github.com/yidejia/gofw/pkg/app"
 	"github.com/yidejia/gofw/pkg/config"
-	gfErrors "github.com/yidejia/gofw/pkg/errors"
 	"github.com/yidejia/gofw/pkg/hash"
 	"github.com/yidejia/gofw/pkg/helpers"
 	"github.com/yidejia/gofw/pkg/maptool"
-	"time"
 )
 
-// Signatable 请求可签名接口
-type Signatable interface {
+// Signable 请求可签名接口
+type Signable interface {
 	// ParamsToSign 返回用于签名验证的请求参数
 	ParamsToSign() map[string]interface{}
 }
 
-// SignAppSecretReader 签名密钥读取器接口
-type SignAppSecretReader interface {
-	// ReadAppSecret 读取签名密钥
-	ReadAppSecret(appKey string) (appSecret string, err gfErrors.ResponsiveError)
+// SignSecretFunc 根据应用 key 获取签名密钥函数
+type SignSecretFunc func(appKey string) (string, error)
+
+// SignOptions 签名选项
+type SignOptions struct {
+	Secret              string         // 签名密钥
+	SecretFunc          SignSecretFunc // 根据应用 key 获取签名密码函数
+	ErrorMessage        string         // 签名操作内部错误信息
+	InvalidErrorMessage string         // 签名无效错误信息
+	ExpireTime          int64          // 签名有效期，单位分钟
 }
 
-// SignDurationTimeGenerator 签名有效时间生成器接口
-type SignDurationTimeGenerator interface {
-	// GenerateSignDurationTime 生成签名持续时间，单位分钟
-	GenerateSignDurationTime() int64
-}
+// SignOption 签名选项设置函数
+type SignOption func(*SignOptions)
 
 // SignRequest 签名请求
 type SignRequest struct {
 	Request
 	AppKey    string `json:"app_key" form:"app_key" valid:"app_key"`          // 应用 key
 	RandomStr string `json:"random_str" form:"random_str" valid:"random_str"` // 随机字符串
-	Timestamp int64 `json:"timestamp" form:"timestamp" valid:"timestamp"`     // 时间戳
+	Timestamp int64  `json:"timestamp" form:"timestamp" valid:"timestamp"`    // 时间戳
 	Sign      string `json:"sign" form:"sign" valid:"sign"`                   // 签名
 }
 
-// secretReader 签名密钥读取器实例
-var secretReader SignAppSecretReader
-
-// SetSecretReader 设置签名密钥读取器
-func SetSecretReader(_secretReader SignAppSecretReader) {
-	secretReader = _secretReader
-}
-
-// signDurationTimeGenerator 签名有效时间生成器实例
-var signDurationTimeGenerator SignDurationTimeGenerator
-
-// SetSignDurationTimeGenerator 设置签名有效时间生成器
-func SetSignDurationTimeGenerator(_signDurationTimeGenerator SignDurationTimeGenerator) {
-	signDurationTimeGenerator = _signDurationTimeGenerator
-}
-
+// NewSignRequest 新建签名请求
 func NewSignRequest() *SignRequest {
 	return &SignRequest{}
 }
 
-// ReadAppSecret 读取签名密钥
-// 框架默认实现，一般应用给自己的请求签名时使用，给其他应用的请求签名时，需要另外实现
-func (req *SignRequest) ReadAppSecret(appKey string) (appSecret string, err gfErrors.ResponsiveError) {
-	// 当前应用从自己的配置中获取应用密钥
-	appSecret = config.Get("app.secret")
-	return
+// NewSignOptions 新建签名选项
+func (req *SignRequest) NewSignOptions(options ...SignOption) *SignOptions {
+	signOptions := &SignOptions{
+		Secret:              config.Get("app.secret"),                                 // 默认使用当前应用自己的密钥进行签名
+		SecretFunc:          nil,                                                      // 默认不设置获取签名密钥的函数，而是使用当前应用的密钥
+		ErrorMessage:        "",                                                       // 默认直接返回内部错误信息，可能过于技术语言，信息要直达普通用户时最好自定义
+		InvalidErrorMessage: "请求签名无效",                                                 // 默认签名无效时的请求信息，可能过于技术语言，信息要直达普通用户时最好自定义
+		ExpireTime:          cast.ToInt64(config.Get("app.api_sign_expire_time", 15)), // 签名有效期默认15分钟
+	}
+	// 调用选项函数设置各个选项
+	for _, option := range options {
+		option(signOptions)
+	}
+	return signOptions
+}
+
+// WithSecret 设置签名密钥
+func (req *SignRequest) WithSecret(secret string) SignOption {
+	return func(options *SignOptions) {
+		options.Secret = secret
+	}
+}
+
+// WithSecretFunc 设置根据应用 key 获取签名密钥函数
+func (req *SignRequest) WithSecretFunc(secretFunc SignSecretFunc) SignOption {
+	return func(options *SignOptions) {
+		options.SecretFunc = secretFunc
+	}
+}
+
+// WithErrorMessage 设置签名操作内部错误信息
+func (req *SignRequest) WithErrorMessage(message string) SignOption {
+	return func(options *SignOptions) {
+		options.ErrorMessage = message
+	}
+}
+
+// WithInvalidErrorMessage 设置签名无效时的错误信息
+func (req *SignRequest) WithInvalidErrorMessage(message string) SignOption {
+	return func(options *SignOptions) {
+		options.InvalidErrorMessage = message
+	}
+}
+
+// WithExpireTime 设置签名有效期，单位分钟
+func (req *SignRequest) WithExpireTime(expireTime int64) SignOption {
+	return func(options *SignOptions) {
+		options.ExpireTime = expireTime
+	}
 }
 
 // Validate 验证请求
-func (req *SignRequest) Validate(extra ...interface{}) map[string][]string  {
+func (req *SignRequest) Validate(extra ...interface{}) map[string][]string {
 
 	rules := govalidator.MapData{
 		"app_key":    []string{"required", "min:2"},
@@ -111,12 +144,12 @@ func (req *SignRequest) ParamsToSign() map[string]interface{} {
 }
 
 // ValidateSign 验证请求签名
-func (req *SignRequest) ValidateSign(params map[string]interface{}, sign string, errs map[string][]string) map[string][]string {
-	return ValidateSign(params, sign, errs)
+func (req *SignRequest) ValidateSign(params map[string]interface{}, sign string, errs map[string][]string, options *SignOptions) map[string][]string {
+	return ValidateSign(params, sign, errs, options)
 }
 
 // makeParamString 生成参数字符串
-func makeParamString(params map[string]interface{}) (paramString string, newParams map[string]interface{}, err gfErrors.ResponsiveError) {
+func makeParamString(params map[string]interface{}, options *SignOptions) (paramString string, newParams map[string]interface{}, err error) {
 
 	// 按顺序拼接参数名和参数值
 	paramString = ""
@@ -132,15 +165,17 @@ func makeParamString(params map[string]interface{}) (paramString string, newPara
 		}
 
 		var appSecret string
-		// 设置了应用密钥读取器
-		if secretReader != nil {
-			if appSecret, err = secretReader.ReadAppSecret(cast.ToString(appKey)); err != nil {
+		// 设置了获取签名密钥函数
+		if options.SecretFunc != nil {
+			if appSecret, err = options.SecretFunc(cast.ToString(appKey)); err != nil {
 				return
 			}
+		} else if len(options.Secret) > 0 {
+			// 设置了签名密钥
+			appSecret = options.Secret
 		} else {
-			if appSecret, err = NewSignRequest().ReadAppSecret(cast.ToString(appKey)); err != nil {
-				return
-			}
+			err = errors.New("没有设置签名密钥")
+			return
 		}
 
 		randomStr, ok := params["random_str"]
@@ -177,12 +212,12 @@ func makeParamString(params map[string]interface{}) (paramString string, newPara
 }
 
 // MakeSign 生成请求签名
-func MakeSign(params map[string]interface{}) (sign string, newParams map[string]interface{}, err gfErrors.ResponsiveError) {
+func MakeSign(params map[string]interface{}, options *SignOptions) (sign string, newParams map[string]interface{}, err error) {
 
 	sign = ""
 
 	var paramString string
-	paramString, newParams, err = makeParamString(params)
+	paramString, newParams, err = makeParamString(params, options)
 	if err != nil {
 		return
 	}
@@ -196,15 +231,15 @@ func MakeSign(params map[string]interface{}) (sign string, newParams map[string]
 }
 
 // CheckSign 检查请求签名
-func CheckSign(params map[string]interface{}, sign string) (ok bool, newParams map[string]interface{}, err gfErrors.ResponsiveError) {
+func CheckSign(params map[string]interface{}, sign string, options *SignOptions) (ok bool, newParams map[string]interface{}, err error) {
 
 	if len(params) == 0 {
 		ok = false
-		err = gfErrors.NewErrorBadRequest(errors.New("请求参数不能为空"), "请求参数不能为空")
+		err = errors.New("请求参数不能为空")
 		return
 	}
 
-	paramString, newParams, err := makeParamString(params)
+	paramString, newParams, err := makeParamString(params, options)
 	if err != nil {
 		ok = false
 		return
@@ -212,7 +247,7 @@ func CheckSign(params map[string]interface{}, sign string) (ok bool, newParams m
 
 	if paramString == "" {
 		ok = false
-		err = gfErrors.NewErrorInternal(errors.New("检查请求签名失败"), "检查请求签名失败")
+		err = errors.New("检查请求签名失败")
 		return
 	}
 
@@ -220,25 +255,21 @@ func CheckSign(params map[string]interface{}, sign string) (ok bool, newParams m
 }
 
 // ValidateSign 验证请求签名
-func ValidateSign(params map[string]interface{}, sign string, errs map[string][]string) map[string][]string {
-	ok, _, err := CheckSign(params, sign)
+func ValidateSign(params map[string]interface{}, sign string, errs map[string][]string, options *SignOptions) map[string][]string {
+	ok, _, err := CheckSign(params, sign, options)
 	if err != nil {
-		errs["sign"] = append(errs["sign"], err.Message())
-	}
-	if !ok {
-		errs["sign"] = append(errs["sign"], "请求签名无效")
-	}
-	// 默认签名有效时长为 15 分钟
-	durationMinute := cast.ToInt64(config.Get("app.api_sign_expire_time"))
-	// 自定义了签名持续分钟数
-	if signDurationTimeGenerator != nil {
-		duration := signDurationTimeGenerator.GenerateSignDurationTime()
-		if duration > 0 {
-			durationMinute = duration
+		if len(options.ErrorMessage) > 0 {
+			logger.ErrorString("请求签名", "验证请求签名", err.Error())
+			errs["sign"] = append(errs["sign"], options.ErrorMessage)
+		} else {
+			errs["sign"] = append(errs["sign"], err.Error())
 		}
 	}
+	if !ok {
+		errs["sign"] = append(errs["sign"], options.InvalidErrorMessage)
+	}
 	// 请求签名 15 分钟内有效
-	if cast.ToInt64(params["timestamp"]) < app.TimenowInTimezone().Add(-(time.Duration(durationMinute) * time.Minute)).Unix() {
+	if cast.ToInt64(params["timestamp"]) < app.TimenowInTimezone().Add(-(time.Duration(options.ExpireTime) * time.Minute)).Unix() {
 		errs["sign"] = append(errs["sign"], "请求签名已过期")
 	}
 	return errs
