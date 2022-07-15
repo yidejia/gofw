@@ -32,6 +32,7 @@ type SignOptions struct {
 	ErrorMessage        string         // 签名操作内部错误信息
 	InvalidErrorMessage string         // 签名无效错误信息
 	ExpireTime          int64          // 签名有效期，单位分钟
+	ExpiredErrorMessage string         // 签名过期错误信息
 }
 
 // SignOption 签名选项设置函数
@@ -59,6 +60,7 @@ func (req *SignRequest) NewSignOptions(options ...SignOption) *SignOptions {
 		ErrorMessage:        "",                                                       // 默认直接返回内部错误信息，可能过于技术语言，信息要直达普通用户时最好自定义
 		InvalidErrorMessage: "请求签名无效",                                                 // 默认签名无效时的请求信息，可能过于技术语言，信息要直达普通用户时最好自定义
 		ExpireTime:          cast.ToInt64(config.Get("app.api_sign_expire_time", 15)), // 签名有效期默认15分钟
+		ExpiredErrorMessage: "请求签名已过期",                                                // 使用默认错误信息
 	}
 	// 调用选项函数设置各个选项
 	for _, option := range options {
@@ -99,6 +101,13 @@ func (req *SignRequest) WithInvalidErrorMessage(message string) SignOption {
 func (req *SignRequest) WithExpireTime(expireTime int64) SignOption {
 	return func(options *SignOptions) {
 		options.ExpireTime = expireTime
+	}
+}
+
+// WithExpiredErrorMessage 设置签名过期错误信息
+func (req *SignRequest) WithExpiredErrorMessage(message string) SignOption {
+	return func(options *SignOptions) {
+		options.ExpiredErrorMessage = message
 	}
 }
 
@@ -270,7 +279,7 @@ func ValidateSign(params map[string]interface{}, sign string, errs map[string][]
 	}
 	// 请求签名 15 分钟内有效
 	if cast.ToInt64(params["timestamp"]) < app.TimenowInTimezone().Add(-(time.Duration(options.ExpireTime) * time.Minute)).Unix() {
-		errs["sign"] = append(errs["sign"], "请求签名已过期")
+		errs["sign"] = append(errs["sign"], options.ExpiredErrorMessage)
 	}
 	return errs
 }
