@@ -2,11 +2,12 @@ package make
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/spf13/cobra"
 	"github.com/yidejia/gofw/pkg/app"
 	"github.com/yidejia/gofw/pkg/console"
 	"github.com/yidejia/gofw/pkg/file"
-	"os"
 )
 
 // CmdMakeMigration 生成数据库迁移文件命令
@@ -14,15 +15,15 @@ import (
 // @created 2022-04-23 17:57
 // @copyright © 2010-2022 广州伊的家网络科技有限公司
 var CmdMakeMigration = &cobra.Command{
-	Use:   "migration",
-	Short: "Create a migration file",
+	Use:     "migration",
+	Short:   "Create a migration file",
 	Example: "go run main.go make migration create_users_table -c create_users_table",
-	Run:   runMakeMigration,
-	Args:  cobra.MinimumNArgs(1), // 至少传 1 个参数
+	Run:     runMakeMigration,
+	Args:    cobra.MinimumNArgs(1), // 至少传 1 个参数
 }
 
 func init() {
-	CmdMakeMigration.Flags().StringP("model" ,"m", "", "Create table for a model")
+	CmdMakeMigration.Flags().StringP("model", "m", "", "Create table for a model")
 }
 
 func runMakeMigration(cmd *cobra.Command, args []string) {
@@ -46,7 +47,7 @@ func runMakeMigration(cmd *cobra.Command, args []string) {
 	}
 
 	// 日期格式化
-	timeStr := app.TimenowInTimezone().Format("2006_01_02_150405")
+	timeStr := app.TimeNowInTimezone().Format("2006_01_02_150405")
 	var fileName string
 	variables := make(map[string]string)
 	// 格式化模型名称，返回一个 Model 对象

@@ -7,6 +7,8 @@ package make
 import (
 	"embed"
 	"fmt"
+	"strings"
+
 	"github.com/iancoleman/strcase"
 	"github.com/spf13/cobra"
 	"github.com/yidejia/gofw/pkg/app"
@@ -14,7 +16,6 @@ import (
 	"github.com/yidejia/gofw/pkg/console"
 	"github.com/yidejia/gofw/pkg/file"
 	"github.com/yidejia/gofw/pkg/str"
-	"strings"
 )
 
 // Model 模板文件填充模型，参数解释
@@ -59,7 +60,7 @@ func init() {
 
 	for _, subCmd := range CmdMake.Commands() {
 		// 为子命令设置注释选项
-		subCmd.Flags().StringP("comment" ,"c", "", "set comment for struct or file")
+		subCmd.Flags().StringP("comment", "c", "", "set comment for struct or file")
 	}
 }
 
@@ -172,9 +173,9 @@ func createFileFromStub(filePath string, stubName string, model Model, variables
 	replaces["{{CustomPackageName}}"] = model.CustomPackageName
 	replaces["{{Author}}"] = config.Get("app.developer", "")
 	replaces["{{AuthorEmail}}"] = config.Get("app.developer_email", "")
-	replaces["{{CreatedDataTime}}"] = app.TimenowInTimezone().Format("2006-01-02 15:04")
-	replaces["{{CopyrightFromYear}}"] = config.GetString("app.copyright_from_year", app.TimenowInTimezone().Format("2006"))
-	replaces["{{CopyrightToYear}}"] = app.TimenowInTimezone().Format("2006")
+	replaces["{{CreatedDataTime}}"] = app.TimeNowInTimezone().Format("2006-01-02 15:04")
+	replaces["{{CopyrightFromYear}}"] = config.GetString("app.copyright_from_year", app.TimeNowInTimezone().Format("2006"))
+	replaces["{{CopyrightToYear}}"] = app.TimeNowInTimezone().Format("2006")
 	replaces["{{AuthorCompany}}"] = config.Get("app.developer_company", "非常牛逼有限公司")
 	replaces["{{AppName}}"] = config.Get("app.name")
 

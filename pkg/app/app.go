@@ -5,8 +5,9 @@
 package app
 
 import (
-	"github.com/yidejia/gofw/pkg/config"
 	"time"
+
+	"github.com/yidejia/gofw/pkg/config"
 )
 
 // IsLocal 当前运行在本地开发环境
@@ -24,10 +25,10 @@ func IsTesting() bool {
 	return config.Get("app.env") == "testing"
 }
 
-// TimenowInTimezone 获取当前时间，支持时区
-func TimenowInTimezone() time.Time {
-	chinaTimezone, _ := time.LoadLocation(config.GetString("app.timezone"))
-	return time.Now().In(chinaTimezone)
+// TimeNowInTimezone 获取当前时间，支持时区
+func TimeNowInTimezone() time.Time {
+	timezone, _ := time.LoadLocation(config.GetString("app.timezone"))
+	return time.Now().In(timezone)
 }
 
 // URL 传参 path 拼接站点的 URL

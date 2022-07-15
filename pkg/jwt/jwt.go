@@ -6,11 +6,12 @@ package jwt
 
 import (
 	"errors"
+	"strings"
+	"time"
+
 	"github.com/yidejia/gofw/pkg/app"
 	"github.com/yidejia/gofw/pkg/config"
 	"github.com/yidejia/gofw/pkg/logger"
-	"strings"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	jwtpkg "github.com/golang-jwt/jwt"
@@ -36,7 +37,6 @@ type JWT struct {
 
 // JWTCustomClaims 自定义载荷
 type JWTCustomClaims struct {
-
 	UserID       uint64 `json:"user_id"`
 	UserName     string `json:"user_name"`
 	ExpireAtTime int64  `json:"expire_time"`
@@ -117,7 +117,7 @@ func (jwt *JWT) RefreshToken(c *gin.Context) (string, error) {
 	claims := token.Claims.(*JWTCustomClaims)
 
 	// 5. 检查是否过了『最大允许刷新的时间』
-	x := app.TimenowInTimezone().Add(-jwt.MaxRefresh).Unix()
+	x := app.TimeNowInTimezone().Add(-jwt.MaxRefresh).Unix()
 	if claims.IssuedAt > x {
 		// 修改过期时间
 		claims.StandardClaims.ExpiresAt = jwt.expireAtTime()
@@ -137,8 +137,8 @@ func (jwt *JWT) MakeToken(userID uint64, userName string) string {
 		userName,
 		expireAtTime,
 		jwtpkg.StandardClaims{
-			NotBefore: app.TimenowInTimezone().Unix(), // 签名生效时间
-			IssuedAt:  app.TimenowInTimezone().Unix(), // 首次签名时间（后续刷新 Token 不会更新）
+			NotBefore: app.TimeNowInTimezone().Unix(), // 签名生效时间
+			IssuedAt:  app.TimeNowInTimezone().Unix(), // 首次签名时间（后续刷新 Token 不会更新）
 			ExpiresAt: expireAtTime,                   // 签名过期时间
 			Issuer:    config.GetString("app.name"),   // 签名颁发者
 		},
@@ -163,7 +163,7 @@ func (jwt *JWT) createToken(claims JWTCustomClaims) (string, error) {
 
 // expireAtTime 过期时间
 func (jwt *JWT) expireAtTime() int64 {
-	timenow := app.TimenowInTimezone()
+	timenow := app.TimeNowInTimezone()
 
 	var expireTime int64
 	if config.GetBool("app.debug") {

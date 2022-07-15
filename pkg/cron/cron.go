@@ -86,7 +86,7 @@ func lock(job Job) error {
 	if err != nil {
 		return err
 	}
-	now := app.TimenowInTimezone()
+	now := app.TimeNowInTimezone()
 	// 任务下一次调度时间距离现在的间隔
 	d := schedule.Next(now).Sub(now)
 	// 创建的互斥锁需要在下一次任务被调度前被释放，否则任务会因为无法获取锁而无法执行

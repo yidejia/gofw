@@ -6,16 +6,17 @@ package file
 
 import (
 	"fmt"
-	"github.com/disintegration/imaging"
-	"github.com/gin-gonic/gin"
-	"github.com/yidejia/gofw/pkg/app"
-	"github.com/yidejia/gofw/pkg/auth"
-	"github.com/yidejia/gofw/pkg/helpers"
 	"io/ioutil"
 	"mime/multipart"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/disintegration/imaging"
+	"github.com/gin-gonic/gin"
+	"github.com/yidejia/gofw/pkg/app"
+	"github.com/yidejia/gofw/pkg/auth"
+	"github.com/yidejia/gofw/pkg/helpers"
 )
 
 // Put 将数据存入文件
@@ -46,7 +47,7 @@ func SaveUploadAvatar(c *gin.Context, file *multipart.FileHeader) (string, error
 	var avatar string
 	// 确保目录存在，不存在创建
 	publicPath := "public"
-	dirName := fmt.Sprintf("/uploads/avatars/%s/%s/", app.TimenowInTimezone().Format("2006/01/02"), auth.CurrentUID(c))
+	dirName := fmt.Sprintf("/uploads/avatars/%s/%s/", app.TimeNowInTimezone().Format("2006/01/02"), auth.CurrentUID(c))
 	os.MkdirAll(publicPath+dirName, 0755)
 
 	// 保存文件

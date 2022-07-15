@@ -196,7 +196,7 @@ func makeParamString(params map[string]interface{}, options *SignOptions) (param
 		timestamp, ok := params["timestamp"]
 		if !ok || cast.ToInt64(timestamp) <= 0 {
 			// 未设置时间戳，说明是当前应用发起的签名，获取当前时间戳
-			timestamp = app.TimenowInTimezone().Unix()
+			timestamp = app.TimeNowInTimezone().Unix()
 		}
 
 		// 填充标准参数
@@ -278,7 +278,7 @@ func ValidateSign(params map[string]interface{}, sign string, errs map[string][]
 		errs["sign"] = append(errs["sign"], options.InvalidErrorMessage)
 	}
 	// 请求签名 15 分钟内有效
-	if cast.ToInt64(params["timestamp"]) < app.TimenowInTimezone().Add(-(time.Duration(options.ExpireTime) * time.Minute)).Unix() {
+	if cast.ToInt64(params["timestamp"]) < app.TimeNowInTimezone().Add(-(time.Duration(options.ExpireTime) * time.Minute)).Unix() {
 		errs["sign"] = append(errs["sign"], options.ExpiredErrorMessage)
 	}
 	return errs
