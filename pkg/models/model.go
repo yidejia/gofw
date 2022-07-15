@@ -49,6 +49,9 @@ func (t *JSONTime) UnmarshalJSON(data []byte) error {
 
 // Value 往数据库插入数据时调用
 func (t *JSONTime) Value() (driver.Value, error) {
+	if t == nil {
+		return nil, nil
+	}
 	var zeroTime time.Time
 	// 判断给定时间是否和默认零时间的时间戳相同
 	if t.Time.UnixNano() == zeroTime.UnixNano() {
