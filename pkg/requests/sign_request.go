@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/thedevsaddam/govalidator"
+
 	"github.com/yidejia/gofw/pkg/logger"
 
 	"github.com/spf13/cast"
-	"github.com/thedevsaddam/govalidator"
 	"github.com/yidejia/gofw/pkg/app"
 	"github.com/yidejia/gofw/pkg/config"
 	"github.com/yidejia/gofw/pkg/hash"
@@ -47,6 +48,61 @@ type SignRequest struct {
 	Sign      string `json:"sign" form:"sign" valid:"sign"`                   // 签名
 }
 
+// signSecretFunc 获取请求签名密钥的函数
+var signSecretFunc = func(appKey string) (string, error) {
+	// 是当前应用就返回自己的密钥
+	if appKey == config.Get("app.key") {
+		return config.Get("app.secret"), nil
+	}
+	return "", nil
+}
+
+// SetSignSecretFunc 设置获取请求签名密钥的函数
+func SetSignSecretFunc(f SignSecretFunc) {
+	signSecretFunc = f
+}
+
+// Validate 验证请求
+func (req *SignRequest) Validate(extra ...interface{}) map[string][]string {
+
+	rules := govalidator.MapData{
+		"app_key":    []string{"required", "min:2"},
+		"random_str": []string{"required", "len:10"},
+		"timestamp":  []string{"required", "digits:10"},
+		"sign":       []string{"required", "len:32"},
+	}
+
+	messages := govalidator.MapData{
+		"app_key": []string{
+			"required:应用 key 为必填项",
+			"min:应用 key 长度需大于 2",
+		},
+		"random_str": []string{
+			"required:随机字符串为必填项",
+			"len:随机字符串长度需等于 10",
+		},
+		"timestamp": []string{
+			"required:时间戳为必填项",
+			"digits:时间戳需为10位整数",
+		},
+		"sign": []string{
+			"required:请求签名为必填项",
+			"len:请求签名长度需要为 32",
+		},
+	}
+
+	return req.ValidateStruct(req, rules, messages)
+}
+
+// ParamsToSign 返回用于签名验证的请求参数
+func (req *SignRequest) ParamsToSign() map[string]interface{} {
+	return map[string]interface{}{
+		"app_key":    req.AppKey,
+		"random_str": req.RandomStr,
+		"timestamp":  req.Timestamp,
+	}
+}
+
 // NewSignRequest 新建签名请求
 func NewSignRequest() *SignRequest {
 	return &SignRequest{}
@@ -55,8 +111,8 @@ func NewSignRequest() *SignRequest {
 // NewSignOptions 新建签名选项
 func (req *SignRequest) NewSignOptions(options ...SignOption) *SignOptions {
 	signOptions := &SignOptions{
-		Secret:              config.Get("app.secret"),                                 // 默认使用当前应用自己的密钥进行签名
-		SecretFunc:          nil,                                                      // 默认不设置获取签名密钥的函数，而是使用当前应用的密钥
+		Secret:              config.Get("app.secret"), // 默认使用当前应用自己的密钥进行签名
+		SecretFunc:          signSecretFunc,
 		ErrorMessage:        "",                                                       // 默认直接返回内部错误信息，可能过于技术语言，信息要直达普通用户时最好自定义
 		InvalidErrorMessage: "请求签名无效",                                                 // 默认签名无效时的请求信息，可能过于技术语言，信息要直达普通用户时最好自定义
 		ExpireTime:          cast.ToInt64(config.Get("app.api_sign_expire_time", 15)), // 签名有效期默认15分钟
@@ -111,47 +167,6 @@ func (req *SignRequest) WithExpiredErrorMessage(message string) SignOption {
 	}
 }
 
-// Validate 验证请求
-func (req *SignRequest) Validate(extra ...interface{}) map[string][]string {
-
-	rules := govalidator.MapData{
-		"app_key":    []string{"required", "min:2"},
-		"random_str": []string{"required", "len:10"},
-		"timestamp":  []string{"required", "digits:10"},
-		"sign":       []string{"required", "len:32"},
-	}
-
-	messages := govalidator.MapData{
-		"app_key": []string{
-			"required:应用名为必填项",
-			"min:应用名长度需大于 2",
-		},
-		"random_str": []string{
-			"required:随机字符串为必填项",
-			"min:随机字符串长度需等于 10",
-		},
-		"timestamp": []string{
-			"required:时间戳为必填项",
-			"digits:时间戳需为10位整数",
-		},
-		"sign": []string{
-			"required:请求签名为必填项",
-			"len:请求签名长度需要为 32",
-		},
-	}
-
-	return req.ValidateStruct(req, rules, messages)
-}
-
-// ParamsToSign 返回用于签名验证的请求参数
-func (req *SignRequest) ParamsToSign() map[string]interface{} {
-	return map[string]interface{}{
-		"app_key":    req.AppKey,
-		"random_str": req.RandomStr,
-		"timestamp":  req.Timestamp,
-	}
-}
-
 // ValidateSign 验证请求签名
 func (req *SignRequest) ValidateSign(params map[string]interface{}, sign string, errs map[string][]string, options *SignOptions) map[string][]string {
 	return ValidateSign(params, sign, errs, options)
@@ -162,7 +177,7 @@ func makeParamString(params map[string]interface{}, options *SignOptions) (param
 
 	// 按顺序拼接参数名和参数值
 	paramString = ""
-	// 对参数按字典序排序
+	// 对参数名按字典序排序
 	paramNames := maptool.SortIndictOrder(params)
 
 	if len(paramNames) > 0 {
@@ -182,6 +197,9 @@ func makeParamString(params map[string]interface{}, options *SignOptions) (param
 		} else if len(options.Secret) > 0 {
 			// 设置了签名密钥
 			appSecret = options.Secret
+		} else if appKey == config.Get("app.key") {
+			// 是当前应用时，可以使用自己的密钥
+			appSecret = config.Get("app.secret")
 		} else {
 			err = errors.New("没有设置签名密钥")
 			return
@@ -200,10 +218,11 @@ func makeParamString(params map[string]interface{}, options *SignOptions) (param
 		}
 
 		// 填充标准参数
-		newParams = make(map[string]interface{})
-		newParams["app_key"] = appKey
-		newParams["random_str"] = randomStr
-		newParams["timestamp"] = timestamp
+		newParams = map[string]interface{}{
+			"app_key":    appKey,
+			"random_str": randomStr,
+			"timestamp":  timestamp,
+		}
 
 		paramString = fmt.Sprintf("app_key=%s&app_secret=%s&random_str=%s&timestamp=%d", appKey, appSecret, randomStr, timestamp)
 
