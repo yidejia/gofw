@@ -2,7 +2,7 @@
 // 一般一个控制器对应一个路由组，示例：
 // TODO 注册{{Comment}}路由组
 // {{VariableNamePlural}}Group := v1.Group("/{{VariableNamePlural}}")
-// {{VariableNamePlural}}Group.Use(gfMiddlewares.LimitIP("1000-H"))
+// {{VariableNamePlural}}Group.Use(gfMid.LimitIP("1000-H"))
 // {
 //	{{VariableNamePlural}}Ctrl := new({{CustomPackageName}}.{{StructNamePlural}}Controller)
 //  // 创建{{Comment}}
