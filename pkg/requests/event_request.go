@@ -59,8 +59,8 @@ func (req *EventRequest) Validate(extra ...interface{}) map[string][]string {
 	}
 
 	return req.MergeValidateErrors(
-		req.SignRequest.Validate(extra...),
 		req.ValidateStruct(req, rules, messages),
+		req.SignRequest.Validate(extra...),
 	)
 }
 

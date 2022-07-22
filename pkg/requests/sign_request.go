@@ -168,7 +168,9 @@ func (req *SignRequest) WithExpiredErrorMessage(message string) SignOption {
 }
 
 // ValidateSign 验证请求签名
-func (req *SignRequest) ValidateSign(params map[string]interface{}, sign string, errs map[string][]string, options *SignOptions) map[string][]string {
+func (req *SignRequest) ValidateSign(params map[string]interface{}, sign string, errs map[string][]string, options *SignOptions, extra ...interface{}) map[string][]string {
+	// 验证签名标准参数
+	errs = req.MergeValidateErrors(errs, req.Validate(extra...))
 	return ValidateSign(params, sign, errs, options)
 }
 
