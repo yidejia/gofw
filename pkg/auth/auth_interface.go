@@ -1,6 +1,6 @@
 package auth
 
-import gfErrors "github.com/yidejia/gofw/pkg/errors"
+import gfErrs "github.com/yidejia/gofw/pkg/errors"
 
 // Authenticate 可认证接口
 // @author 余海坚 haijianyu10@qq.com
@@ -14,4 +14,4 @@ type Authenticate interface {
 }
 
 // UserResolver 获取用户模型的函数类型
-type UserResolver func(userId uint64) (user Authenticate, err gfErrors.ResponsiveError)
+type UserResolver func(userId uint64) (user Authenticate, err gfErrs.ResponsiveError)

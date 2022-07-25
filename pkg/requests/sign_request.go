@@ -270,6 +270,7 @@ func CheckSign(params map[string]interface{}, sign string, options *SignOptions)
 	}
 
 	paramString, newParams, err := makeParamString(params, options)
+	logger.Dump(paramString, "paramString")
 	if err != nil {
 		ok = false
 		return

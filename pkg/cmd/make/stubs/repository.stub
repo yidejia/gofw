@@ -3,7 +3,7 @@ package {{CustomPackageName}}
 
 import (
 	"github.com/yidejia/gofw/pkg/db"
-	gfErrors "github.com/yidejia/gofw/pkg/errors"
+	gfErrs "github.com/yidejia/gofw/pkg/errors"
 	"github.com/yidejia/gofw/pkg/paginator"
 	"{{AppName}}/app/models/{{CustomPackageName}}"
 	repos "{{AppName}}/app/repositories"
@@ -23,7 +23,7 @@ func New{{StructName}}Repository() *{{StructName}}Repository {
 }
 
 // Create 创建{{Comment}}
-func (repo *{{StructName}}Repository) Create({{VariableName}} *{{CustomPackageName}}.{{StructName}}) (err gfErrors.ResponsiveError) {
+func (repo *{{StructName}}Repository) Create({{VariableName}} *{{CustomPackageName}}.{{StructName}}) (err gfErrs.ResponsiveError) {
     if _err := db.DB({{VariableName}}).Create({{VariableName}}).Error; _err != nil {
 		err = repo.NewErrorInternal(_err, "创建{{Comment}}失败", "{{ModuleComment}}模块", "Create 创建{{Comment}}")
 	}
@@ -31,7 +31,7 @@ func (repo *{{StructName}}Repository) Create({{VariableName}} *{{CustomPackageNa
 }
 
 // Paginate {{Comment}}列表
-func (repo *{{StructName}}Repository) Paginate(page, perPage int, fields ...string) ({{VariableNamePlural}} []{{CustomPackageName}}.{{StructName}}, paging paginator.Paging, err gfErrors.ResponsiveError) {
+func (repo *{{StructName}}Repository) Paginate(page, perPage int, fields ...string) ({{VariableNamePlural}} []{{CustomPackageName}}.{{StructName}}, paging paginator.Paging, err gfErrs.ResponsiveError) {
 
 	var _err error
 
@@ -49,7 +49,7 @@ func (repo *{{StructName}}Repository) Paginate(page, perPage int, fields ...stri
 }
 
 // All 获取所有{{Comment}}
-func (repo *{{StructName}}Repository) All(fields ...string) ({{VariableNamePlural}} []{{CustomPackageName}}.{{StructName}}, err gfErrors.ResponsiveError) {
+func (repo *{{StructName}}Repository) All(fields ...string) ({{VariableNamePlural}} []{{CustomPackageName}}.{{StructName}}, err gfErrs.ResponsiveError) {
 
 	var _err error
 
@@ -67,7 +67,7 @@ func (repo *{{StructName}}Repository) All(fields ...string) ({{VariableNamePlura
 }
 
 // Get 通过 ID 获取{{Comment}}
-func (repo *{{StructName}}Repository) Get(id uint64, fields ...string) ({{VariableName}} {{CustomPackageName}}.{{StructName}}, err gfErrors.ResponsiveError) {
+func (repo *{{StructName}}Repository) Get(id uint64, fields ...string) ({{VariableName}} {{CustomPackageName}}.{{StructName}}, err gfErrs.ResponsiveError) {
 
 	var _err error
 
@@ -85,7 +85,7 @@ func (repo *{{StructName}}Repository) Get(id uint64, fields ...string) ({{Variab
 }
 
 // GetBy 通过指定字段获取{{Comment}}
-func (repo *{{StructName}}Repository) GetBy(field, value string, fields ...string) ({{VariableName}} {{CustomPackageName}}.{{StructName}}, err gfErrors.ResponsiveError) {
+func (repo *{{StructName}}Repository) GetBy(field, value string, fields ...string) ({{VariableName}} {{CustomPackageName}}.{{StructName}}, err gfErrs.ResponsiveError) {
 
 	var _err error
 
@@ -103,7 +103,7 @@ func (repo *{{StructName}}Repository) GetBy(field, value string, fields ...strin
 }
 
 // Save 保存{{Comment}}
-func (repo *{{StructName}}Repository) Save({{VariableName}} *{{CustomPackageName}}.{{StructName}}) (rowsAffected int64, err gfErrors.ResponsiveError) {
+func (repo *{{StructName}}Repository) Save({{VariableName}} *{{CustomPackageName}}.{{StructName}}) (rowsAffected int64, err gfErrs.ResponsiveError) {
     result := db.DB({{VariableName}}).Save({{VariableName}})
 	rowsAffected = result.RowsAffected
 	if _err := result.Error; _err != nil {
@@ -113,7 +113,7 @@ func (repo *{{StructName}}Repository) Save({{VariableName}} *{{CustomPackageName
 }
 
 // Delete 删除{{Comment}}
-func (repo *{{StructName}}Repository) Delete({{VariableName}} *{{CustomPackageName}}.{{StructName}}) (rowsAffected int64, err gfErrors.ResponsiveError) {
+func (repo *{{StructName}}Repository) Delete({{VariableName}} *{{CustomPackageName}}.{{StructName}}) (rowsAffected int64, err gfErrs.ResponsiveError) {
     result := db.DB({{VariableName}}).Delete({{VariableName}})
 	rowsAffected = result.RowsAffected
 	if _err := result.Error; _err != nil {
@@ -123,7 +123,7 @@ func (repo *{{StructName}}Repository) Delete({{VariableName}} *{{CustomPackageNa
 }
 
 // Exists 根据字段判断{{Comment}}是否存在
-func (repo *{{StructName}}Repository) Exists(field, value string) (bool, gfErrors.ResponsiveError) {
+func (repo *{{StructName}}Repository) Exists(field, value string) (bool, gfErrs.ResponsiveError) {
     var count int64
     if _err := db.Model(&{{CustomPackageName}}.{{StructName}}{}).Where(field, value).Count(&count).Error; _err != nil {
 		return false, repo.NewErrorInternal(_err, "根据字段判断{{Comment}}是否存在失败", "{{ModuleComment}}模块", "IsExist 根据字段判断{{Comment}}是否存在")

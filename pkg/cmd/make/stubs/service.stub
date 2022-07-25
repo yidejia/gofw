@@ -2,7 +2,7 @@
 package {{CustomPackageName}}
 
 import (
-	gfErrors "github.com/yidejia/gofw/pkg/errors"
+	gfErrs "github.com/yidejia/gofw/pkg/errors"
 	"github.com/yidejia/gofw/pkg/paginator"
     "{{AppName}}/app/models/{{CustomPackageName}}"
     {{CustomPackageName}}Repos "{{AppName}}/app/repositories/{{CustomPackageName}}"
@@ -26,36 +26,36 @@ func New{{StructName}}Service() *{{StructName}}Service {
 }
 
 // Create 创建{{Comment}}
-func (svc *{{StructName}}Service) Create({{VariableName}} *{{CustomPackageName}}.{{StructName}}) (err gfErrors.ResponsiveError) {
+func (svc *{{StructName}}Service) Create({{VariableName}} *{{CustomPackageName}}.{{StructName}}) (err gfErrs.ResponsiveError) {
     err = svc.repo.Create({{VariableName}})
     return
 }
 
 // Paginate {{Comment}}列表
-func (svc *{{StructName}}Service) Paginate(page, perPage int, fields ...string) ({{VariableNamePlural}} []{{CustomPackageName}}.{{StructName}}, paging paginator.Paging, err gfErrors.ResponsiveError) {
+func (svc *{{StructName}}Service) Paginate(page, perPage int, fields ...string) ({{VariableNamePlural}} []{{CustomPackageName}}.{{StructName}}, paging paginator.Paging, err gfErrs.ResponsiveError) {
     return svc.repo.Paginate(page, perPage, fields...)
 }
 
 // All 获取所有{{Comment}}
-func (svc *{{StructName}}Service) All(fields ...string) ({{VariableNamePlural}} []{{CustomPackageName}}.{{StructName}}, err gfErrors.ResponsiveError) {
+func (svc *{{StructName}}Service) All(fields ...string) ({{VariableNamePlural}} []{{CustomPackageName}}.{{StructName}}, err gfErrs.ResponsiveError) {
     {{VariableNamePlural}}, err = svc.repo.All(fields...)
     return
 }
 
 // Get 通过 ID 获取{{Comment}}
-func (svc *{{StructName}}Service) Get(id uint64, fields ...string) ({{VariableName}} {{CustomPackageName}}.{{StructName}}, err gfErrors.ResponsiveError) {
+func (svc *{{StructName}}Service) Get(id uint64, fields ...string) ({{VariableName}} {{CustomPackageName}}.{{StructName}}, err gfErrs.ResponsiveError) {
     {{VariableName}}, err = svc.repo.Get(id, fields...)
     return
 }
 
 // GetBy 通过指定字段获取{{Comment}}
-func (svc *{{StructName}}Service) GetBy(field, value string, fields ...string) ({{VariableName}} {{CustomPackageName}}.{{StructName}}, err gfErrors.ResponsiveError) {
+func (svc *{{StructName}}Service) GetBy(field, value string, fields ...string) ({{VariableName}} {{CustomPackageName}}.{{StructName}}, err gfErrs.ResponsiveError) {
     {{VariableName}}, err = svc.repo.GetBy(field, value, fields...)
     return
 }
 
 // Save 保存{{Comment}}
-func (svc *{{StructName}}Service) Save({{VariableName}} *{{CustomPackageName}}.{{StructName}}) (rowsAffected int64, err gfErrors.ResponsiveError) {
+func (svc *{{StructName}}Service) Save({{VariableName}} *{{CustomPackageName}}.{{StructName}}) (rowsAffected int64, err gfErrs.ResponsiveError) {
     if {{VariableName}}.ID > 0 {
         rowsAffected, err = svc.repo.Save({{VariableName}})
     }
@@ -63,18 +63,18 @@ func (svc *{{StructName}}Service) Save({{VariableName}} *{{CustomPackageName}}.{
 }
 
 // Delete 删除{{Comment}}
-func (svc *{{StructName}}Service) Delete({{VariableName}} *{{CustomPackageName}}.{{StructName}}) (rowsAffected int64, err gfErrors.ResponsiveError) {
+func (svc *{{StructName}}Service) Delete({{VariableName}} *{{CustomPackageName}}.{{StructName}}) (rowsAffected int64, err gfErrs.ResponsiveError) {
     rowsAffected, err = svc.repo.Delete({{VariableName}})
     return
 }
 
 // Exists 根据字段判断{{Comment}}是否存在
-func (svc *{{StructName}}Service) Exists(field, value string) (bool, gfErrors.ResponsiveError) {
+func (svc *{{StructName}}Service) Exists(field, value string) (bool, gfErrs.ResponsiveError) {
     return svc.repo.Exists(field, value)
 }
 
 // ExistsField 根据字段 field 判断{{Comment}}是否存在
-func (svc *{{StructName}}Service) ExistsField(field string) (exists bool, err gfErrors.ResponsiveError) {
+func (svc *{{StructName}}Service) ExistsField(field string) (exists bool, err gfErrs.ResponsiveError) {
 	if exists, err = svc.Exists("field", field); err != nil {
 		err = svc.NewErrorInternal(err.Error(), "根据字段 field 判断{{Comment}}是否存在失败", "{{ModuleComment}}模块", "ExistsField 根据字段 field 判断{{Comment}}是否存在")
 	}

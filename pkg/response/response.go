@@ -5,10 +5,11 @@
 package response
 
 import (
-	"github.com/gin-gonic/gin"
-	gfErrors "github.com/yidejia/gofw/pkg/errors"
-	"github.com/yidejia/gofw/pkg/paginator"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
+	gfErrs "github.com/yidejia/gofw/pkg/errors"
+	"github.com/yidejia/gofw/pkg/paginator"
 )
 
 // Created 响应 201 和带 data 键的 JSON 数据
@@ -48,7 +49,7 @@ func Paginate(c *gin.Context, modelSlice interface{}, paging paginator.Paging, m
 		JSON(c, gin.H{
 			"success": true,
 			"data":    modelSlice,
-			"meta":    gin.H{
+			"meta": gin.H{
 				"pagination": paging,
 			},
 		})
@@ -120,7 +121,7 @@ func Data(c *gin.Context, data interface{}) {
 }
 
 // AbortWithError 中断处理并返回错误
-func AbortWithError(c *gin.Context, err gfErrors.ResponsiveError) {
+func AbortWithError(c *gin.Context, err gfErrs.ResponsiveError) {
 	jsonData := gin.H{
 		"success": false,
 		"message": err.Message(),
@@ -155,32 +156,32 @@ func JSON(c *gin.Context, data interface{}) {
 // 一般用于请求还未到达业务层，例如在中间件处理过程中遇到请求格式不正确错误
 // 没有内部错误对象需要返回时，err 可以设置为 nil
 func BadRequest(c *gin.Context, err error, message ...string) {
-	AbortWithError(c, gfErrors.NewErrorBadRequest(err, message...))
+	AbortWithError(c, gfErrs.NewErrorBadRequest(err, message...))
 }
 
 // Unauthorized 中断处理并返回用户未授权错误
 // 一般用于请求还未到达业务层，例如在中间件处理过程中遇到用户未授权错误
 func Unauthorized(c *gin.Context, message ...string) {
-	AbortWithError(c, gfErrors.NewErrorUnauthorized(message...))
+	AbortWithError(c, gfErrs.NewErrorUnauthorized(message...))
 }
 
 // Forbidden 中断处理并返回无权访问错误
 // 一般用于请求还未到达业务层，例如在中间件处理过程中遇到无权访问错误
 func Forbidden(c *gin.Context, message ...string) {
-	AbortWithError(c, gfErrors.NewErrorForbidden(message...))
+	AbortWithError(c, gfErrs.NewErrorForbidden(message...))
 }
 
 // NotFound 中断处理并返回不存在错误
 // 一般用于请求还未到达业务层，例如在中间件处理过程中遇到不存在错误
 func NotFound(c *gin.Context, message ...string) {
-	AbortWithError(c, gfErrors.NewErrorNotFound(message...))
+	AbortWithError(c, gfErrs.NewErrorNotFound(message...))
 }
 
 // InternalError 中断处理并返回系统内部错误
 // 一般用于请求还未到达业务层，例如在中间件处理过程中遇到系统内部错误
 // 没有内部错误对象需要返回时，err 可以设置为 nil
 func InternalError(c *gin.Context, err error, message ...string) {
-	AbortWithError(c, gfErrors.NewErrorInternal(err, message...))
+	AbortWithError(c, gfErrs.NewErrorInternal(err, message...))
 }
 
 // ValidationError 处理表单验证不通过的错误，
@@ -196,14 +197,14 @@ func InternalError(c *gin.Context, err error, message ...string) {
 //     "message": "请求验证不通过，具体请查看 errors"
 // }
 func ValidationError(c *gin.Context, errors map[string][]string, message ...string) {
-	AbortWithError(c, gfErrors.NewErrorUnprocessableEntity(errors, message...))
+	AbortWithError(c, gfErrs.NewErrorUnprocessableEntity(errors, message...))
 }
 
 // Error 中断处理并返回自定义错误
 // 一般用于请求还未到达业务层，例如在中间件处理过程中遇到错误
 // 没有错误对象需要返回时，err 可以设置为 nil
 func Error(c *gin.Context, httpStatus int, err error, message ...string) {
-	AbortWithError(c, gfErrors.NewErrorCustom(httpStatus, err, message...))
+	AbortWithError(c, gfErrs.NewErrorCustom(httpStatus, err, message...))
 }
 
 // String 返回字符串

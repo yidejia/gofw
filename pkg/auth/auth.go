@@ -6,8 +6,9 @@ package auth
 
 import (
 	"errors"
+
 	"github.com/gin-gonic/gin"
-	gfErrors "github.com/yidejia/gofw/pkg/errors"
+	gfErrs "github.com/yidejia/gofw/pkg/errors"
 	"github.com/yidejia/gofw/pkg/logger"
 )
 
@@ -15,16 +16,16 @@ import (
 var userResolver UserResolver
 
 // SetUserResolver 设置获取用户模型的函数
-func SetUserResolver(_userResolver UserResolver)  {
+func SetUserResolver(_userResolver UserResolver) {
 	userResolver = _userResolver
 }
 
 // ResolveUser 获取用户模型
-func ResolveUser(id uint64) (user Authenticate, err gfErrors.ResponsiveError) {
+func ResolveUser(id uint64) (user Authenticate, err gfErrs.ResponsiveError) {
 	if userResolver != nil {
 		return userResolver(id)
 	}
-	return nil, gfErrors.NewErrorNotFound("用户不存在")
+	return nil, gfErrs.NewErrorNotFound("用户不存在")
 }
 
 // CurrentUID 从 gin.context 中获取当前登录用户 ID

@@ -8,8 +8,9 @@ package repositories
 import (
 	"errors"
 	"fmt"
+
 	"github.com/yidejia/gofw/pkg/db"
-	gfErrors "github.com/yidejia/gofw/pkg/errors"
+	gfErrs "github.com/yidejia/gofw/pkg/errors"
 	"gorm.io/gorm"
 )
 
@@ -18,19 +19,19 @@ type Repository struct {
 }
 
 // NewErrorNotFound 生成资源不存在错误
-func (repo *Repository) NewErrorNotFound(message ...string) gfErrors.ResponsiveError {
-	return gfErrors.NewErrorNotFound(message...)
+func (repo *Repository) NewErrorNotFound(message ...string) gfErrs.ResponsiveError {
+	return gfErrs.NewErrorNotFound(message...)
 }
 
 // NewErrorInternal 生成系统内部错误
 // 没有内部错误对象需要返回时，err 可以设置为 nil
-func (repo *Repository) NewErrorInternal(err error, message ...string) gfErrors.ResponsiveError {
-	return gfErrors.NewErrorInternal(err, message...)
+func (repo *Repository) NewErrorInternal(err error, message ...string) gfErrs.ResponsiveError {
+	return gfErrs.NewErrorInternal(err, message...)
 }
 
 // NewError 自动生成合适的错误
 // 一般用于获取单个模块的场景，自动判断是模型不存在还是查询出错
-func (repo *Repository) NewError(err error, iModel db.IModel, message ...string) gfErrors.ResponsiveError {
+func (repo *Repository) NewError(err error, iModel db.IModel, message ...string) gfErrs.ResponsiveError {
 	// 模型不存在
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		if iModel != nil {
