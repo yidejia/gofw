@@ -1,6 +1,8 @@
 package requests
 
 import (
+	"fmt"
+
 	"github.com/gin-gonic/gin"
 	"github.com/thedevsaddam/govalidator"
 	"github.com/yidejia/gofw/pkg/events"
@@ -55,6 +57,7 @@ func (req *EventRequest) Validate(extra ...interface{}) map[string][]string {
 			"required:事件编码为必填项",
 			"min:事件编码长度至少为 1",
 			"max:事件编码长度至少为 255",
+			fmt.Sprintf("exists:事件编码 %s 不存在", req.Code),
 		},
 	}
 
