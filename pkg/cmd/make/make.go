@@ -179,16 +179,16 @@ func createFileFromStub(filePath string, stubName string, model Model, variables
 	replaces["{{AuthorCompany}}"] = config.Get("app.developer_company", "非常牛逼有限公司")
 	replaces["{{AppName}}"] = config.Get("app.name")
 
-	if len(replaces["{{Author}}"]) == 0 {
-		console.Exit("Please set the developer name in the .env file DEVELOPER=")
+	if replaces["{{Author}}"] == "" {
+		console.Exit("Please set the developer name in the .env file with DEVELOPER=")
 	}
 
-	if len(replaces["{{AuthorEmail}}"]) == 0 {
-		console.Exit("Please set the developer email in the .env file DEVELOPER_EMAIL=")
+	if replaces["{{AuthorEmail}}"] == "" {
+		console.Exit("Please set the developer email in the .env file with DEVELOPER_EMAIL=")
 	}
 
 	// 设置默认版本号
-	if len(replaces["{{Version}}"]) == 0 {
+	if replaces["{{Version}}"] == "" {
 		replaces["{{Version}}"] = "v1"
 	}
 
