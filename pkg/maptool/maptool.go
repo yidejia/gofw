@@ -10,7 +10,7 @@ import (
 
 // SortIndictOrder 按字典序排序
 func SortIndictOrder(mapData map[string]interface{}) (keys []string) {
-	keys = make([]string, 0)
+	keys = make([]string, len(mapData))
 	for key, _ := range mapData {
 		keys = append(keys, key)
 	}
