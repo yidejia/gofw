@@ -6,7 +6,9 @@ package client
 
 import (
 	"encoding/json"
+	"net/url"
 
+	"github.com/spf13/cast"
 	"github.com/valyala/fasthttp"
 )
 
@@ -59,4 +61,14 @@ func Request(method, url string, param interface{}) (string, int, error) {
 	b := resp.Body()
 
 	return string(b), resp.Header.StatusCode(), nil
+}
+
+// BuildQuery 构建查询字符串
+func BuildQuery(params map[string]interface{}) (paramStr string) {
+	q := (&url.URL{}).Query()
+	for k, v := range params {
+		q.Add(k, cast.ToString(v))
+	}
+	paramStr = q.Encode()
+	return
 }
