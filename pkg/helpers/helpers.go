@@ -7,13 +7,14 @@ package helpers
 import (
 	"crypto/rand"
 	"fmt"
-	"github.com/fatih/structs"
-	"github.com/yidejia/gofw/pkg/str"
 	"io"
-	mathrand "math/rand"
+	mathRand "math/rand"
 	"reflect"
 	"sort"
 	"time"
+
+	"github.com/fatih/structs"
+	"github.com/yidejia/gofw/pkg/str"
 )
 
 // Empty 类似于 PHP 的 empty() 函数
@@ -47,7 +48,7 @@ func MicrosecondsStr(elapsed time.Duration) string {
 	return fmt.Sprintf("%.3fms", float64(elapsed.Nanoseconds())/1e6)
 }
 
-// RandomNumber 生成长度为 length 随机数字字符串
+// RandomNumber 生成长度为 length 的随机数字字符串
 func RandomNumber(length int) string {
 	table := []byte{'1', '2', '3', '4', '5', '6', '7', '8', '9', '0'}
 	b := make([]byte, length)
@@ -71,11 +72,11 @@ func FirstElement(args []string) string {
 
 // RandomString 生成长度为 length 的随机字符串
 func RandomString(length int) string {
-	mathrand.Seed(time.Now().UnixNano())
+	mathRand.Seed(time.Now().UnixNano())
 	letters := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	b := make([]byte, length)
 	for i := range b {
-		b[i] = letters[mathrand.Intn(len(letters))]
+		b[i] = letters[mathRand.Intn(len(letters))]
 	}
 	return string(b)
 }
@@ -112,8 +113,6 @@ func StructToMap(obj interface{}, fields ...string) map[string]interface{} {
 			oldMap[k] = v
 		}
 	}
-
-	fmt.Printf("oldMap:%v", oldMap)
 
 	return oldMap
 }
