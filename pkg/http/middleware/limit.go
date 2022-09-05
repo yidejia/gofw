@@ -3,7 +3,6 @@ package middleware
 import (
 	"net/http"
 
-	"github.com/yidejia/gofw/pkg/app"
 	"github.com/yidejia/gofw/pkg/limiter"
 	"github.com/yidejia/gofw/pkg/logger"
 	"github.com/yidejia/gofw/pkg/response"
@@ -20,15 +19,11 @@ import (
 // * 1000 reqs/hour: "1000-H"
 // * 2000 reqs/day: "2000-D"
 //
-func LimitIP(limit string) gin.HandlerFunc {
-	if app.IsTesting() {
-		limit = "1000000-H"
-	}
-
+func LimitIP(limit string, message ...string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// 针对 IP 限流
 		key := limiter.GetKeyIP(c)
-		if ok := limitHandler(c, key, limit); !ok {
+		if ok := limitHandler(c, key, limit, message...); !ok {
 			return
 		}
 		c.Next()
@@ -36,10 +31,7 @@ func LimitIP(limit string) gin.HandlerFunc {
 }
 
 // LimitPerRoute 限流中间件，用在单独的路由中
-func LimitPerRoute(limit string) gin.HandlerFunc {
-	if app.IsTesting() {
-		limit = "1000000-H"
-	}
+func LimitPerRoute(limit string, message ...string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		// 针对单个路由，增加访问次数
@@ -47,15 +39,16 @@ func LimitPerRoute(limit string) gin.HandlerFunc {
 
 		// 针对 IP + 路由进行限流
 		key := limiter.GetKeyRouteWithIP(c)
-		if ok := limitHandler(c, key, limit); !ok {
+		if ok := limitHandler(c, key, limit, message...); !ok {
 			return
 		}
+
 		c.Next()
 	}
 }
 
 // limitHandler 对请求进行限流
-func limitHandler(c *gin.Context, key string, limit string) bool {
+func limitHandler(c *gin.Context, key string, limit string, message ...string) bool {
 
 	// 获取超额的情况
 	rate, err := limiter.CheckRate(c, key, limit)
@@ -73,11 +66,16 @@ func limitHandler(c *gin.Context, key string, limit string) bool {
 	c.Header("X-RateLimit-Remaining", cast.ToString(rate.Remaining))
 	c.Header("X-RateLimit-Reset", cast.ToString(rate.Reset))
 
+	msg := "接口请求太频繁"
+	// 设置了自定义消息
+	if len(message) > 0 {
+		msg = message[0]
+	}
 	// 超额
 	if rate.Reached {
 		// 提示用户超额了
 		c.AbortWithStatusJSON(http.StatusTooManyRequests, gin.H{
-			"message": "接口请求太频繁",
+			"message": msg,
 		})
 		return false
 	}

@@ -44,12 +44,12 @@ func NewVerifyCode() *VerifyCode {
 // SendSMS 发送短信验证码
 // 调用示例：
 // verifycode.NewVerifyCode().SendSMS(request.Phone, request.Content)
-func (vc *VerifyCode) SendSMS(phone, content string, scene ...string) bool {
+func (vc *VerifyCode) SendSMS(phone, content string, scene ...uint8) bool {
 
 	// 生成验证码
 	var code string
 	if len(scene) > 0 {
-		code = vc.generateVerifyCode(fmt.Sprintf("%s:%s", scene[0], phone))
+		code = vc.generateVerifyCode(fmt.Sprintf("%d:%s", scene[0], phone))
 	} else {
 		code = vc.generateVerifyCode(phone)
 	}
