@@ -1,8 +1,6 @@
 package middleware
 
 import (
-	"net/http"
-
 	"github.com/yidejia/gofw/pkg/limiter"
 	"github.com/yidejia/gofw/pkg/logger"
 	"github.com/yidejia/gofw/pkg/response"
@@ -12,13 +10,15 @@ import (
 )
 
 // LimitIP 全局限流中间件，针对 IP 进行限流，需要配置 redis 才能使用
-// limit 为格式化字符串，如 "5-S" ，示例:
+// @author 余海坚 haijianyu10@qq.com
+// @created 2022-09-02 17:30
+// @copyright © 2010-2022 广州伊的家网络科技有限公司
 //
+// limit 为格式化字符串，如 "5-S"，示例:
 // * 5 reqs/second: "5-S"
 // * 10 reqs/minute: "10-M"
 // * 1000 reqs/hour: "1000-H"
 // * 2000 reqs/day: "2000-D"
-//
 func LimitIP(limit string, message ...string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// 针对 IP 限流
@@ -30,24 +30,45 @@ func LimitIP(limit string, message ...string) gin.HandlerFunc {
 	}
 }
 
-// LimitPerRoute 限流中间件，用在单独的路由中
-func LimitPerRoute(limit string, message ...string) gin.HandlerFunc {
+// LimitRoute 路由限流中间件，针对路由进行限流，需要配置 redis 才能使用
+// @author 余海坚 haijianyu10@qq.com
+// @created 2022-09-06 11:47
+// @copyright © 2010-2022 广州伊的家网络科技有限公司
+//
+// limit 为格式化字符串，如 "5-S"，示例:
+// * 5 reqs/second: "5-S"
+// * 10 reqs/minute: "10-M"
+// * 1000 reqs/hour: "1000-H"
+// * 2000 reqs/day: "2000-D"
+func LimitRoute(limit string, message ...string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-
 		// 针对单个路由，增加访问次数
 		c.Set("limiter-once", false)
-
 		// 针对 IP + 路由进行限流
 		key := limiter.GetKeyRouteWithIP(c)
 		if ok := limitHandler(c, key, limit, message...); !ok {
 			return
 		}
-
 		c.Next()
 	}
 }
 
-// limitHandler 对请求进行限流
+// LimitKey 自定义 key 限流中间件，针对自定义 key 进行限流，需要配置 redis 才能使用，在控制器中结合业务逻辑使用
+// @author 余海坚 haijianyu10@qq.com
+// @created 2022-09-06 16:35
+// @copyright © 2010-2022 广州伊的家网络科技有限公司
+//
+// limit 为格式化字符串，如 "5-S"，示例:
+// * 5 reqs/second: "5-S"
+// * 10 reqs/minute: "10-M"
+// * 1000 reqs/hour: "1000-H"
+// * 2000 reqs/day: "2000-D"
+func LimitKey(c *gin.Context, key string, limit string, message ...string) bool {
+	c.Set("limiter-once", false)
+	return limitHandler(c, key, limit, message...)
+}
+
+// limitHandler 对请求进行限流处理
 func limitHandler(c *gin.Context, key string, limit string, message ...string) bool {
 
 	// 获取超额的情况
@@ -73,10 +94,10 @@ func limitHandler(c *gin.Context, key string, limit string, message ...string) b
 	}
 	// 超额
 	if rate.Reached {
+		// 请求上下文标记请求频率已超标
+		c.Set("limiter-reached", true)
 		// 提示用户超额了
-		c.AbortWithStatusJSON(http.StatusTooManyRequests, gin.H{
-			"message": msg,
-		})
+		response.TooManyRequests(c, msg)
 		return false
 	}
 

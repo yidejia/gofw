@@ -218,6 +218,35 @@ func (err *errorLocked) Errors() map[string][]string {
 	return nil
 }
 
+// errorTooManyRequests 请求过于频繁错误
+type errorTooManyRequests struct {
+	message string
+}
+
+func NewErrorTooManyRequests(message ...string) ResponsiveError {
+	if len(message) > 0 {
+		return &errorTooManyRequests{message[0]}
+	} else {
+		return &errorTooManyRequests{"请求过于频繁"}
+	}
+}
+
+func (err *errorTooManyRequests) HttpStatus() int {
+	return http.StatusTooManyRequests
+}
+
+func (err *errorTooManyRequests) Message() string {
+	return err.message
+}
+
+func (err *errorTooManyRequests) Error() error {
+	return nil
+}
+
+func (err *errorTooManyRequests) Errors() map[string][]string {
+	return nil
+}
+
 // errorInternal 内部错误
 type errorInternal struct {
 	message string

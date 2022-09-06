@@ -177,6 +177,11 @@ func NotFound(c *gin.Context, message ...string) {
 	AbortWithError(c, gfErrs.NewErrorNotFound(message...))
 }
 
+// TooManyRequests 中断处理并返回请求过于频繁错误
+func TooManyRequests(c *gin.Context, message ...string) {
+	AbortWithError(c, gfErrs.NewErrorTooManyRequests(message...))
+}
+
 // InternalError 中断处理并返回系统内部错误
 // 一般用于请求还未到达业务层，例如在中间件处理过程中遇到系统内部错误
 // 没有内部错误对象需要返回时，err 可以设置为 nil

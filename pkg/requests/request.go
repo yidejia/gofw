@@ -119,6 +119,12 @@ func BindAndValidate(c *gin.Context, data Validatable, extra ...interface{}) boo
 	// 数据验证
 	errs := Validate(data, extra...)
 
+	// 请求过于频繁，限制客户端短时间内多次尝试破解类似验证码这种规则
+	if c.GetBool("limiter-reached") {
+		c.Set("limiter-reached", false)
+		return false
+	}
+
 	// 验证不通过
 	if len(errs) > 0 {
 		response.ValidationError(c, errs, "")

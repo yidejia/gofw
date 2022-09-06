@@ -5,22 +5,23 @@
 package limiter
 
 import (
+	"strings"
+
 	"github.com/yidejia/gofw/pkg/config"
 	"github.com/yidejia/gofw/pkg/logger"
 	"github.com/yidejia/gofw/pkg/redis"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 	limiterpkg "github.com/ulule/limiter/v3"
 	sredis "github.com/ulule/limiter/v3/drivers/store/redis"
 )
 
-// GetKeyIP 获取 Limitor 的 Key，IP
+// GetKeyIP 获取针对 IP 限流的 key
 func GetKeyIP(c *gin.Context) string {
 	return c.ClientIP()
 }
 
-// GetKeyRouteWithIP Limitor 的 Key，路由+IP，针对单个路由做限流
+// GetKeyRouteWithIP 获取针对 路由+IP 限流的 key
 func GetKeyRouteWithIP(c *gin.Context) string {
 	return routeToKeyString(c.FullPath()) + c.ClientIP()
 }
@@ -54,10 +55,8 @@ func CheckRate(c *gin.Context, key string, formatted string) (limiterpkg.Context
 		// Peek() 取结果，不增加访问次数
 		return limiterObj.Peek(c, key)
 	} else {
-
 		// 确保多个路由组里调用 LimitIP 进行限流时，只增加一次访问次数。
 		c.Set("limiter-once", true)
-
 		// Get() 取结果且增加访问次数
 		return limiterObj.Get(c, key)
 	}
