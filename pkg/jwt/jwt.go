@@ -73,7 +73,7 @@ type JWTCustomClaims struct {
 
 func NewJWT() *JWT {
 	return &JWT{
-		SignKey:    []byte(config.GetString("app.secret")),
+		SignKey:    []byte(config.GetString("jwt.sign_key")),
 		MaxRefresh: time.Duration(config.GetInt64("jwt.max_refresh_time")) * time.Minute,
 	}
 }
