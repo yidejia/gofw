@@ -33,7 +33,7 @@ var (
 
 // Driver JWT 驱动接口
 type Driver interface {
-	// PreParserToken 预处理令牌
+	// PreParserToken 预处理 token
 	PreParserToken(tokenString string, context interface{}) (string, error)
 }
 
