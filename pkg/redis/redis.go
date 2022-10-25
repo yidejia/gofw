@@ -1,4 +1,4 @@
-// Package redis 工具包
+// Package redis 包
 // @author 余海坚 haijianyu10@qq.com
 // @created 2022-04-22 17:47
 // @copyright © 2010-2022 广州伊的家网络科技有限公司
@@ -32,7 +32,8 @@ func InitWithConfig() {
 			fmt.Sprintf("%v:%v", config.GetString(fmt.Sprintf("redis.%v.host", name)), config.GetString(fmt.Sprintf("redis.%v.port", name))),
 			config.GetString(fmt.Sprintf("redis.%v.username", name)),
 			config.GetString(fmt.Sprintf("redis.%v.password", name)),
-			config.GetInt(fmt.Sprintf("redis.%v.database", name)))
+			config.GetInt(fmt.Sprintf("redis.%v.database", name)),
+		)
 		// 缓存 redis 连接
 		connections.Store(name, rds)
 	}

@@ -26,12 +26,13 @@ func AuthJWT() gin.HandlerFunc {
 			return
 		}
 
-		// JWT 解析成功，设置用err
+		// JWT 解析成功，解析用户模型
 		user, gfErr := auth.ResolveUser(claims.UserID)
 		if gfErr != nil {
 			response.Unauthorized(c, "用户不存在，鉴权失败")
 			return
 		}
+
 		// 将用户信息存入 gin.context 里，后续 auth 包将从这里拿到当前用户数据
 		c.Set("user_id", claims.UserID)
 		c.Set("user_name", claims.UserName)

@@ -9,9 +9,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/yidejia/gofw/pkg/hash"
+
 	"github.com/yidejia/gofw/pkg/app"
 	"github.com/yidejia/gofw/pkg/config"
 	"github.com/yidejia/gofw/pkg/logger"
+	"github.com/yidejia/gofw/pkg/redis"
 
 	"github.com/gin-gonic/gin"
 	jwtpkg "github.com/golang-jwt/jwt"
@@ -25,13 +28,28 @@ var (
 	ErrTokenInvalid           = errors.New("请求令牌无效")
 	ErrHeaderEmpty            = errors.New("需要认证才能访问！")
 	ErrHeaderMalformed        = errors.New("请求头中令牌格式有误")
+	ErrTokenUnsupported       = errors.New("令牌不支持解析")
 )
 
-// JWT 定义一个jwt对象
+// Driver JWT 驱动接口
+type Driver interface {
+	// PreParserToken 预处理令牌
+	PreParserToken(tokenString string, context interface{}) (string, error)
+}
+
+// driver JWT 驱动实例
+var driver Driver
+
+// SetDriver 设置 JWT 驱动
+func SetDriver(_driver Driver) {
+	driver = _driver
+}
+
+// JWT 定义一个 jwt 对象
 type JWT struct {
 	// 秘钥，用以加密 JWT，读取配置信息 app.secret
 	SignKey []byte
-	// 刷新 Token 的最大过期时间
+	// 刷新 token 的最大过期时间
 	MaxRefresh time.Duration
 }
 
@@ -60,7 +78,7 @@ func NewJWT() *JWT {
 	}
 }
 
-// ParserToken 解析 Token，中间件中调用
+// ParserToken 解析 token，中间件中调用
 func (jwt *JWT) ParserToken(c *gin.Context) (*JWTCustomClaims, error) {
 
 	tokenString, parseErr := jwt.getTokenFromRequest(c)
@@ -68,7 +86,13 @@ func (jwt *JWT) ParserToken(c *gin.Context) (*JWTCustomClaims, error) {
 		return nil, parseErr
 	}
 
-	// 1. 调用 jwt 库解析用户传参的 Token
+	// 预处理令牌
+	tokenString, parseErr = driver.PreParserToken(tokenString, c)
+	if parseErr != nil {
+		return nil, parseErr
+	}
+
+	// 1. 调用 jwt 库解析用户传参的 token
 	token, err := jwt.parseTokenString(tokenString)
 
 	// 2. 解析出错
@@ -86,13 +110,17 @@ func (jwt *JWT) ParserToken(c *gin.Context) (*JWTCustomClaims, error) {
 
 	// 3. 将 token 中的 claims 信息解析出来和 JWTCustomClaims 数据结构进行校验
 	if claims, ok := token.Claims.(*JWTCustomClaims); ok && token.Valid {
+		// 判断 token 是否已在黑名单，这种 token 也属于已失效 token
+		if redis.Connection("jwt").Has(jwt.generateTokenKey(tokenString)) {
+			return nil, ErrTokenInvalid
+		}
 		return claims, nil
 	}
 
 	return nil, ErrTokenInvalid
 }
 
-// RefreshToken 更新 Token，用以提供 refresh token 接口
+// RefreshToken 更新 token，用以提供 refresh token 接口
 func (jwt *JWT) RefreshToken(c *gin.Context) (string, error) {
 
 	// 1. 从 Header 里获取 token
@@ -101,10 +129,10 @@ func (jwt *JWT) RefreshToken(c *gin.Context) (string, error) {
 		return "", parseErr
 	}
 
-	// 2. 调用 jwt 库解析用户传参的 Token
+	// 2. 调用 jwt 库解析用户传参的 token
 	token, err := jwt.parseTokenString(tokenString)
 
-	// 3. 解析出错，未报错证明是合法的 Token（甚至未到过期时间）
+	// 3. 解析出错，未报错证明是合法的 token（甚至未到过期时间）
 	if err != nil {
 		validationErr, ok := err.(*jwtpkg.ValidationError)
 		// 满足 refresh 的条件：只是单一的报错 ValidationErrorExpired
@@ -127,7 +155,7 @@ func (jwt *JWT) RefreshToken(c *gin.Context) (string, error) {
 	return "", ErrTokenExpiredMaxRefresh
 }
 
-// MakeToken 生成 Token
+// MakeToken 生成 token
 func (jwt *JWT) MakeToken(userID uint64, userName string) string {
 
 	// 1. 构造用户 claims 信息(负荷)
@@ -138,13 +166,13 @@ func (jwt *JWT) MakeToken(userID uint64, userName string) string {
 		expireAtTime,
 		jwtpkg.StandardClaims{
 			NotBefore: app.TimeNowInTimezone().Unix(), // 签名生效时间
-			IssuedAt:  app.TimeNowInTimezone().Unix(), // 首次签名时间（后续刷新 Token 不会更新）
+			IssuedAt:  app.TimeNowInTimezone().Unix(), // 首次签名时间（后续刷新 token 不会更新）
 			ExpiresAt: expireAtTime,                   // 签名过期时间
 			Issuer:    config.GetString("app.name"),   // 签名颁发者
 		},
 	}
 
-	// 2. 根据 claims 生成token对象
+	// 2. 根据 claims 生成 token 对象
 	token, err := jwt.createToken(claims)
 	if err != nil {
 		logger.LogIf(err)
@@ -154,16 +182,17 @@ func (jwt *JWT) MakeToken(userID uint64, userName string) string {
 	return token
 }
 
-// createToken 创建 Token，内部使用，外部请调用 MakeToken
+// createToken 创建 token，内部使用，外部请调用 MakeToken
 func (jwt *JWT) createToken(claims JWTCustomClaims) (string, error) {
-	// 使用HS256算法进行token生成
+	// 使用 HS256 算法进行 token 生成
 	token := jwtpkg.NewWithClaims(jwtpkg.SigningMethodHS256, claims)
 	return token.SignedString(jwt.SignKey)
 }
 
 // expireAtTime 过期时间
 func (jwt *JWT) expireAtTime() int64 {
-	timenow := app.TimeNowInTimezone()
+
+	timeNow := app.TimeNowInTimezone()
 
 	var expireTime int64
 	if config.GetBool("app.debug") {
@@ -173,17 +202,17 @@ func (jwt *JWT) expireAtTime() int64 {
 	}
 
 	expire := time.Duration(expireTime) * time.Minute
-	return timenow.Add(expire).Unix()
+	return timeNow.Add(expire).Unix()
 }
 
-// parseTokenString 使用 jwtpkg.ParseWithClaims 解析 Token
+// parseTokenString 使用 jwtpkg.ParseWithClaims 解析 token
 func (jwt *JWT) parseTokenString(tokenString string) (*jwtpkg.Token, error) {
 	return jwtpkg.ParseWithClaims(tokenString, &JWTCustomClaims{}, func(token *jwtpkg.Token) (interface{}, error) {
 		return jwt.SignKey, nil
 	})
 }
 
-// getTokenFromHeader 使用 jwtpkg.ParseWithClaims 解析 Token
+// getTokenFromHeader 使用 jwtpkg.ParseWithClaims 解析 token
 // 优先提取 token
 // 其次提取 Authorization:Bearer xxxxx
 func (jwt *JWT) getTokenFromHeader(c *gin.Context) (string, error) {
@@ -215,4 +244,21 @@ func (jwt *JWT) getTokenFromRequest(c *gin.Context) (string, error) {
 		return authHeader, nil
 	}
 	return tokenStr, nil
+}
+
+// Invalidate 使用 token 失效
+func (jwt *JWT) Invalidate(token string, expireAtTime int64) bool {
+	// 将 token 放入黑名单
+	return redis.
+		Connection("jwt").
+		Set(
+			jwt.generateTokenKey(token),
+			0,
+			time.Unix(expireAtTime, 0).Sub(app.TimeNowInTimezone()),
+		)
+}
+
+// generateTokenKey 生成 token 对应的 key
+func (jwt *JWT) generateTokenKey(token string) string {
+	return config.GetString("app.name") + ":invalid-token:" + hash.Md5(token)
 }

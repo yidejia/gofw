@@ -7,11 +7,12 @@ package hash
 import (
 	"crypto/md5"
 	"encoding/hex"
+
 	"github.com/yidejia/gofw/pkg/logger"
 	"golang.org/x/crypto/bcrypt"
 )
 
-// Md5 返回一个32位md5加密后的字符串
+// Md5 返回一个 32 位 md5 加密后的字符串
 func Md5(str string) string {
 	h := md5.New()
 	h.Write([]byte(str))
