@@ -9,8 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/yidejia/gofw/pkg/hash"
-
 	"github.com/yidejia/gofw/pkg/app"
 	"github.com/yidejia/gofw/pkg/config"
 	"github.com/yidejia/gofw/pkg/logger"
@@ -35,6 +33,12 @@ var (
 type Driver interface {
 	// PreParserToken 预处理 token
 	PreParserToken(tokenString string, context interface{}) (string, error)
+	// NewTokenID 生成新的 token id
+	NewTokenID(claims *JWTCustomClaims) (string, error)
+	// SaveToken 保存 token
+	SaveToken(tokenStr string, claims *JWTCustomClaims) error
+	// InvalidateToken 使 token 失效
+	InvalidateToken(claims *JWTCustomClaims) error
 }
 
 // driver JWT 驱动实例
@@ -111,7 +115,7 @@ func (jwt *JWT) ParserToken(c *gin.Context) (*JWTCustomClaims, error) {
 	// 3. 将 token 中的 claims 信息解析出来和 JWTCustomClaims 数据结构进行校验
 	if claims, ok := token.Claims.(*JWTCustomClaims); ok && token.Valid {
 		// 判断 token 是否已在黑名单，这种 token 也属于已失效 token
-		if redis.Connection("jwt").Has(jwt.generateTokenKey(tokenString)) {
+		if redis.Connection("jwt").Has(jwt.generateTokenKey(claims)) {
 			return nil, ErrTokenInvalid
 		}
 		return claims, nil
@@ -172,9 +176,23 @@ func (jwt *JWT) MakeToken(userID uint64, userName string) string {
 		},
 	}
 
-	// 2. 根据 claims 生成 token 对象
+	// 2. 设置新 token id
+	id, err := driver.NewTokenID(&claims)
+	if err != nil {
+		logger.LogIf(err)
+		return ""
+	}
+	claims.Id = id
+
+	// 3. 根据 claims 生成 token 对象
 	token, err := jwt.createToken(claims)
 	if err != nil {
+		logger.LogIf(err)
+		return ""
+	}
+
+	// 4. 保存 token
+	if err = driver.SaveToken(token, &claims); err != nil {
 		logger.LogIf(err)
 		return ""
 	}
@@ -246,19 +264,26 @@ func (jwt *JWT) getTokenFromRequest(c *gin.Context) (string, error) {
 	return tokenStr, nil
 }
 
-// Invalidate 使用 token 失效
-func (jwt *JWT) Invalidate(token string, expireAtTime int64) bool {
+// Invalidate 使 token 失效
+func (jwt *JWT) Invalidate(claims *JWTCustomClaims) bool {
+
+	// 标记 token 失效
+	if err := driver.InvalidateToken(claims); err != nil {
+		logger.LogIf(err)
+		return false
+	}
+
 	// 将 token 放入黑名单
 	return redis.
 		Connection("jwt").
 		Set(
-			jwt.generateTokenKey(token),
+			jwt.generateTokenKey(claims),
 			0,
-			time.Unix(expireAtTime, 0).Sub(app.TimeNowInTimezone()),
+			time.Unix(claims.ExpireAtTime, 0).Sub(app.TimeNowInTimezone()),
 		)
 }
 
-// generateTokenKey 生成 token 对应的 key
-func (jwt *JWT) generateTokenKey(token string) string {
-	return config.GetString("app.name") + ":invalid-token:" + hash.Md5(token)
+// generateTokenKey 生成缓存 token 的 key
+func (jwt *JWT) generateTokenKey(claims *JWTCustomClaims) string {
+	return config.GetString("app.name") + ":invalid-token:" + claims.Id
 }
