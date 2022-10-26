@@ -39,6 +39,8 @@ type Driver interface {
 	SaveToken(tokenStr string, claims *JWTCustomClaims) error
 	// InvalidateToken 使 token 失效
 	InvalidateToken(claims *JWTCustomClaims) error
+	// TraverseInvalidTokensNotExpired 遍历未过期的失效令牌
+	TraverseInvalidTokensNotExpired(handler func(claims *JWTCustomClaims) error) error
 }
 
 // driver JWT 驱动实例
@@ -80,6 +82,16 @@ func NewJWT() *JWT {
 		SignKey:    []byte(config.GetString("jwt.sign_key")),
 		MaxRefresh: time.Duration(config.GetInt64("jwt.max_refresh_time")) * time.Minute,
 	}
+}
+
+// InitTokenBlacklist 初始化 token 黑名单
+func InitTokenBlacklist() {
+	jwt := NewJWT()
+	err := driver.TraverseInvalidTokensNotExpired(func(claims *JWTCustomClaims) error {
+		jwt.putTokenInBlacklist(claims)
+		return nil
+	})
+	logger.LogIf(err)
 }
 
 // ParserToken 解析 token，中间件中调用
@@ -274,6 +286,11 @@ func (jwt *JWT) Invalidate(claims *JWTCustomClaims) bool {
 	}
 
 	// 将 token 放入黑名单
+	return jwt.putTokenInBlacklist(claims)
+}
+
+// PutTokenInBlacklist 将 token 放入黑名单
+func (jwt *JWT) putTokenInBlacklist(claims *JWTCustomClaims) bool {
 	return redis.
 		Connection("jwt").
 		Set(
