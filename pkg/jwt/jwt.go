@@ -39,7 +39,7 @@ type Driver interface {
 	SaveToken(tokenStr string, claims *JWTCustomClaims) error
 	// InvalidateToken 使 token 失效
 	InvalidateToken(claims *JWTCustomClaims) error
-	// TraverseInvalidTokensNotExpired 遍历未过期的失效令牌
+	// TraverseInvalidTokensNotExpired 遍历未过期的失效 token
 	TraverseInvalidTokensNotExpired(handler func(claims *JWTCustomClaims) error) error
 }
 
@@ -97,22 +97,23 @@ func InitTokenBlacklist() {
 // ParserToken 解析 token，中间件中调用
 func (jwt *JWT) ParserToken(c *gin.Context) (*JWTCustomClaims, error) {
 
+	// 1. 从请求中获取 token
 	tokenString, parseErr := jwt.getTokenFromRequest(c)
 	if parseErr != nil {
 		return nil, parseErr
 	}
 
-	// 预处理令牌
+	// 2. 预处理 token
 	tokenString, parseErr = driver.PreParserToken(tokenString, c)
 	if parseErr != nil {
 		return nil, parseErr
 	}
 
-	// 1. 调用 jwt 库解析用户传参的 token
+	// 3. 调用 jwt 库解析 token
 	token, err := jwt.parseTokenString(tokenString)
-
-	// 2. 解析出错
+	// 解析出错
 	if err != nil {
+		// 判断具体错误
 		validationErr, ok := err.(*jwtpkg.ValidationError)
 		if ok {
 			if validationErr.Errors == jwtpkg.ValidationErrorMalformed {
@@ -121,37 +122,45 @@ func (jwt *JWT) ParserToken(c *gin.Context) (*JWTCustomClaims, error) {
 				return nil, ErrTokenExpired
 			}
 		}
+		// 解析失败，token 失效
 		return nil, ErrTokenInvalid
 	}
 
-	// 3. 将 token 中的 claims 信息解析出来和 JWTCustomClaims 数据结构进行校验
+	// 4. 将 token 中的 claims 信息解析出来和 JWTCustomClaims 数据结构进行校验
 	if claims, ok := token.Claims.(*JWTCustomClaims); ok && token.Valid {
 		// 判断 token 是否已在黑名单，这种 token 也属于已失效 token
-		if redis.Connection("jwt").Has(jwt.generateTokenKey(claims)) {
+		if jwt.tokenInBlacklist(claims) {
 			return nil, ErrTokenInvalid
 		}
+		// 解析成功，返回载荷数据
 		return claims, nil
 	}
 
+	// 解析失败
 	return nil, ErrTokenInvalid
 }
 
 // RefreshToken 更新 token，用以提供 refresh token 接口
 func (jwt *JWT) RefreshToken(c *gin.Context) (string, error) {
 
-	// 1. 从 Header 里获取 token
+	// 1. 从请求中获取 token
 	tokenString, parseErr := jwt.getTokenFromRequest(c)
 	if parseErr != nil {
 		return "", parseErr
 	}
 
-	// 2. 调用 jwt 库解析用户传参的 token
-	token, err := jwt.parseTokenString(tokenString)
+	// 2. 预处理 token
+	tokenString, parseErr = driver.PreParserToken(tokenString, c)
+	if parseErr != nil {
+		return "", parseErr
+	}
 
-	// 3. 解析出错，未报错证明是合法的 token（甚至未到过期时间）
+	// 3. 调用 jwt 库解析token
+	token, err := jwt.parseTokenString(tokenString)
+	// 解析出错
 	if err != nil {
 		validationErr, ok := err.(*jwtpkg.ValidationError)
-		// 满足 refresh 的条件：只是单一的报错 ValidationErrorExpired
+		// token 已过期时仍可以尝试刷新 token，发生其它错误时不能刷新 token
 		if !ok || validationErr.Errors != jwtpkg.ValidationErrorExpired {
 			return "", err
 		}
@@ -161,14 +170,43 @@ func (jwt *JWT) RefreshToken(c *gin.Context) (string, error) {
 	claims := token.Claims.(*JWTCustomClaims)
 
 	// 5. 检查是否过了『最大允许刷新的时间』
-	x := app.TimeNowInTimezone().Add(-jwt.MaxRefresh).Unix()
-	if claims.IssuedAt > x {
-		// 修改过期时间
-		claims.StandardClaims.ExpiresAt = jwt.expireAtTime()
-		return jwt.createToken(*claims)
+	if x := app.TimeNowInTimezone().Add(-jwt.MaxRefresh).Unix(); claims.IssuedAt <= x {
+		// 刷新 token 失败，最大可刷新时间已过期
+		return "", ErrTokenExpiredMaxRefresh
 	}
 
-	return "", ErrTokenExpiredMaxRefresh
+	// 6. 判断 token 是否已在黑名单，这种 token 也属于已失效 token
+	if jwt.tokenInBlacklist(claims) {
+		return "", ErrTokenInvalid
+	}
+
+	// 7. 设置新 token 过期时间
+	expireAtTime := jwt.expireAtTime()
+	claims.ExpireAtTime = expireAtTime
+	claims.StandardClaims.ExpiresAt = expireAtTime
+
+	// 8. 设置新 token id
+	var id string
+	id, err = driver.NewTokenID(claims)
+	if err != nil {
+		return "", err
+	}
+	claims.Id = id
+
+	// 9. 生成新 token
+	var newToken string
+	newToken, err = jwt.createToken(*claims)
+	if err != nil {
+		return "", err
+	}
+
+	// 10. 保存新 token
+	if err = driver.SaveToken(newToken, claims); err != nil {
+		return "", err
+	}
+
+	// 返回新 token
+	return newToken, nil
 }
 
 // MakeToken 生成 token
@@ -303,4 +341,9 @@ func (jwt *JWT) putTokenInBlacklist(claims *JWTCustomClaims) bool {
 // generateTokenKey 生成缓存 token 的 key
 func (jwt *JWT) generateTokenKey(claims *JWTCustomClaims) string {
 	return config.GetString("app.name") + ":invalid-token:" + claims.Id
+}
+
+// tokenInBlacklist token 在黑名单里
+func (jwt *JWT) tokenInBlacklist(claims *JWTCustomClaims) bool {
+	return redis.Connection("jwt").Has(jwt.generateTokenKey(claims))
 }
