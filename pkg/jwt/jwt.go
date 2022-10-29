@@ -280,7 +280,7 @@ func (jwt *JWT) parseTokenString(tokenString string) (*jwtpkg.Token, error) {
 	})
 }
 
-// getTokenFromHeader 使用 jwtpkg.ParseWithClaims 解析 token
+// getTokenFromHeader 从请求头中获取 token
 // 优先提取 token
 // 其次提取 Authorization:Bearer xxxxx
 func (jwt *JWT) getTokenFromHeader(c *gin.Context) (string, error) {
