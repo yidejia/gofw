@@ -1,9 +1,11 @@
 package requests
 
 import (
-	"errors"
 	"fmt"
+	"sort"
 	"time"
+
+	"github.com/yidejia/gofw/pkg/helpers"
 
 	"github.com/thedevsaddam/govalidator"
 
@@ -13,27 +15,30 @@ import (
 	"github.com/yidejia/gofw/pkg/app"
 	"github.com/yidejia/gofw/pkg/config"
 	"github.com/yidejia/gofw/pkg/hash"
-	"github.com/yidejia/gofw/pkg/helpers"
-	"github.com/yidejia/gofw/pkg/maptool"
 )
 
-// Signable 请求可签名接口
-type Signable interface {
+// SignAble 可签名请求接口
+type SignAble interface {
 	// ParamsToSign 返回用于签名验证的请求参数
 	ParamsToSign() map[string]interface{}
 }
 
-// SignSecretFunc 根据应用 key 获取签名密钥函数
-type SignSecretFunc func(appKey string) (string, error)
+// AppSecretFunc 根据应用 key 获取应用密钥函数
+type AppSecretFunc func(appKey string) (string, error)
 
 // SignOptions 签名选项
 type SignOptions struct {
-	Secret              string         // 签名密钥
-	SecretFunc          SignSecretFunc // 根据应用 key 获取签名密码函数
-	ErrorMessage        string         // 签名操作内部错误信息
-	InvalidErrorMessage string         // 签名无效错误信息
-	ExpireTime          int64          // 签名有效期，单位分钟
-	ExpiredErrorMessage string         // 签名过期错误信息
+	AppKey              string        // 应用 key
+	AppSecret           string        // 签名密钥
+	AppSecretFunc       AppSecretFunc // 根据应用 key 获取应用密码函数
+	Timestamp           int64         // 时间戳
+	RandomStr           string        // 随机字符串
+	ErrorMessage        string        // 签名操作内部错误信息
+	InvalidErrorMessage string        // 签名无效错误信息
+	ExpireTime          int64         // 签名有效期，单位分钟
+	ExpiredErrorMessage string        // 签名过期错误信息
+	Lazy                bool          // 延迟初始化
+	LazyOptions         []SignOption  // 延迟初始化的选项
 }
 
 // SignOption 签名选项设置函数
@@ -43,13 +48,14 @@ type SignOption func(*SignOptions)
 type SignRequest struct {
 	Request
 	AppKey    string `json:"app_key" form:"app_key" valid:"app_key"`          // 应用 key
-	RandomStr string `json:"random_str" form:"random_str" valid:"random_str"` // 随机字符串
 	Timestamp int64  `json:"timestamp" form:"timestamp" valid:"timestamp"`    // 时间戳
+	TS        int64  `json:"ts" form:"ts" valid:"ts"`                         // 兼容的时间戳字段
+	RandomStr string `json:"random_str" form:"random_str" valid:"random_str"` // 随机字符串
 	Sign      string `json:"sign" form:"sign" valid:"sign"`                   // 签名
 }
 
-// signSecretFunc 获取请求签名密钥的函数
-var signSecretFunc = func(appKey string) (string, error) {
+// appSecretFunc 获取应用密钥的函数
+var appSecretFunc = func(appKey string) (string, error) {
 	// 是当前应用就返回自己的密钥
 	if appKey == config.Get("app.key") {
 		return config.Get("app.secret"), nil
@@ -57,18 +63,23 @@ var signSecretFunc = func(appKey string) (string, error) {
 	return "", nil
 }
 
-// SetSignSecretFunc 设置获取请求签名密钥的函数
-func SetSignSecretFunc(f SignSecretFunc) {
-	signSecretFunc = f
+// SetAppSecretFunc 设置获取应用密钥的函数
+func SetAppSecretFunc(f AppSecretFunc) {
+	appSecretFunc = f
 }
 
 // Validate 验证请求
 func (req *SignRequest) Validate(extra ...interface{}) map[string][]string {
 
+	// 时间戳进行参数名兼容处理
+	if req.Timestamp == 0 && req.TS > 0 {
+		req.Timestamp = req.TS
+	}
+
 	rules := govalidator.MapData{
 		"app_key":    []string{"required", "min:2"},
-		"random_str": []string{"required", "len:10"},
 		"timestamp":  []string{"required", "digits:10"},
+		"random_str": []string{"required", "len:10"},
 		"sign":       []string{"required", "len:32"},
 	}
 
@@ -77,13 +88,13 @@ func (req *SignRequest) Validate(extra ...interface{}) map[string][]string {
 			"required:应用 key 为必填项",
 			"min:应用 key 长度需大于 2",
 		},
-		"random_str": []string{
-			"required:随机字符串为必填项",
-			"len:随机字符串长度需等于 10",
-		},
 		"timestamp": []string{
 			"required:时间戳为必填项",
 			"digits:时间戳需为10位整数",
+		},
+		"random_str": []string{
+			"required:随机字符串为必填项",
+			"len:随机字符串长度需等于 10",
 		},
 		"sign": []string{
 			"required:请求签名为必填项",
@@ -98,209 +109,249 @@ func (req *SignRequest) Validate(extra ...interface{}) map[string][]string {
 func (req *SignRequest) ParamsToSign() map[string]interface{} {
 	return map[string]interface{}{
 		"app_key":    req.AppKey,
-		"random_str": req.RandomStr,
 		"timestamp":  req.Timestamp,
+		"random_str": req.RandomStr,
 	}
 }
 
-// NewSignRequest 新建签名请求
-func NewSignRequest() *SignRequest {
-	return &SignRequest{}
+// NewLazySignOptions 新建延迟初始化的签名选项
+func NewLazySignOptions(options ...SignOption) *SignOptions {
+	return &SignOptions{
+		Lazy:        true,
+		LazyOptions: options,
+	}
 }
 
 // NewSignOptions 新建签名选项
-func (req *SignRequest) NewSignOptions(options ...SignOption) *SignOptions {
-	signOptions := &SignOptions{
-		Secret:              config.Get("app.secret"), // 默认使用当前应用自己的密钥进行签名
-		SecretFunc:          signSecretFunc,
-		ErrorMessage:        "",                                                       // 默认直接返回内部错误信息，可能过于技术语言，信息要直达普通用户时最好自定义
-		InvalidErrorMessage: "请求签名无效",                                                 // 默认签名无效时的请求信息，可能过于技术语言，信息要直达普通用户时最好自定义
-		ExpireTime:          cast.ToInt64(config.Get("app.api_sign_expire_time", 15)), // 签名有效期默认15分钟
-		ExpiredErrorMessage: "请求签名已过期",                                                // 使用默认错误信息
-	}
+func NewSignOptions(options ...SignOption) *SignOptions {
+
+	signOptions := &SignOptions{}
+
 	// 调用选项函数设置各个选项
 	for _, option := range options {
 		option(signOptions)
 	}
+
+	// 设置默认时间戳
+	if signOptions.Timestamp == 0 {
+		signOptions.Timestamp = app.TimeNowInTimezone().Unix()
+	}
+
+	// 设置默认随机字符串
+	if signOptions.RandomStr == "" {
+		signOptions.RandomStr = helpers.RandomString(10)
+	}
+
+	// 设置默认应用 key
+	if signOptions.AppKey == "" {
+		signOptions.AppKey = config.Get("app.key")
+	}
+
+	// 设置默认应用密钥
+	if signOptions.AppSecret == "" && signOptions.AppKey != "" {
+		var err error
+		// 使用选项设置的函数
+		if signOptions.AppSecretFunc != nil {
+			if signOptions.AppSecret, err = signOptions.AppSecretFunc(signOptions.AppKey); err != nil {
+				logger.ErrorString("新建签名选项", "设置默认应用密钥(signOptions.AppSecretFunc)", err.Error())
+			}
+		} else if appSecretFunc != nil {
+			// 使用应用默认的函数
+			if signOptions.AppSecret, err = appSecretFunc(signOptions.AppKey); err != nil {
+				logger.ErrorString("新建签名选项", "设置默认应用密钥(appSecretFunc)", err.Error())
+			}
+		} else {
+			// 默认直接返回当前应用密钥
+			signOptions.AppSecret = config.Get("app.secret")
+		}
+	}
+
+	// 设置签名无效时的默认提示信息，可能过于技术语言，信息要直达普通用户时最好自定义
+	if signOptions.InvalidErrorMessage == "" {
+		signOptions.InvalidErrorMessage = "请求签名无效"
+	}
+
+	// 签名有效期默认15分钟
+	if signOptions.ExpireTime == 0 {
+		signOptions.ExpireTime = cast.ToInt64(config.Get("app.api_sign_expire_time", 15))
+	}
+
+	// 设置签名已过期默认提示信息
+	if signOptions.ExpiredErrorMessage == "" {
+		signOptions.ExpiredErrorMessage = "请求签名已过期"
+	}
+
 	return signOptions
 }
 
-// WithSecret 设置签名密钥
-func (req *SignRequest) WithSecret(secret string) SignOption {
+// WithAppKey 设置应用 key
+func WithAppKey(appKey string) SignOption {
 	return func(options *SignOptions) {
-		options.Secret = secret
+		options.AppKey = appKey
 	}
 }
 
-// WithSecretFunc 设置根据应用 key 获取签名密钥函数
-func (req *SignRequest) WithSecretFunc(secretFunc SignSecretFunc) SignOption {
+// WithAppSecret 设置应用密钥
+func WithAppSecret(appSecret string) SignOption {
 	return func(options *SignOptions) {
-		options.SecretFunc = secretFunc
+		options.AppSecret = appSecret
+	}
+}
+
+// WithAppSecretFunc 设置根据应用 key 获取应用密钥函数
+func WithAppSecretFunc(appSecretFunc AppSecretFunc) SignOption {
+	return func(options *SignOptions) {
+		options.AppSecretFunc = appSecretFunc
+	}
+}
+
+// WithTimestamp 设置时间戳
+func WithTimestamp(timestamp int64) SignOption {
+	return func(options *SignOptions) {
+		options.Timestamp = timestamp
+	}
+}
+
+// WithRandomStr 设置随机字符串
+func WithRandomStr(randomStr string) SignOption {
+	return func(options *SignOptions) {
+		options.RandomStr = randomStr
 	}
 }
 
 // WithErrorMessage 设置签名操作内部错误信息
-func (req *SignRequest) WithErrorMessage(message string) SignOption {
+func WithErrorMessage(message string) SignOption {
 	return func(options *SignOptions) {
 		options.ErrorMessage = message
 	}
 }
 
 // WithInvalidErrorMessage 设置签名无效时的错误信息
-func (req *SignRequest) WithInvalidErrorMessage(message string) SignOption {
+func WithInvalidErrorMessage(message string) SignOption {
 	return func(options *SignOptions) {
 		options.InvalidErrorMessage = message
 	}
 }
 
 // WithExpireTime 设置签名有效期，单位分钟
-func (req *SignRequest) WithExpireTime(expireTime int64) SignOption {
+func WithExpireTime(expireTime int64) SignOption {
 	return func(options *SignOptions) {
 		options.ExpireTime = expireTime
 	}
 }
 
 // WithExpiredErrorMessage 设置签名过期错误信息
-func (req *SignRequest) WithExpiredErrorMessage(message string) SignOption {
+func WithExpiredErrorMessage(message string) SignOption {
 	return func(options *SignOptions) {
 		options.ExpiredErrorMessage = message
 	}
 }
 
 // ValidateSign 验证请求签名
-func (req *SignRequest) ValidateSign(params map[string]interface{}, sign string, errs map[string][]string, options *SignOptions, extra ...interface{}) map[string][]string {
+func (req *SignRequest) ValidateSign(params map[string]interface{}, sign string, options *SignOptions, errs map[string][]string, extra ...interface{}) map[string][]string {
 	// 验证签名标准参数
 	errs = req.MergeValidateErrors(errs, req.Validate(extra...))
-	return ValidateSign(params, sign, errs, options)
+	return ValidateSign(params, sign, options, errs)
 }
 
 // makeParamString 生成参数字符串
-func makeParamString(params map[string]interface{}, options *SignOptions) (paramString string, newParams map[string]interface{}, err error) {
+func makeParamString(params map[string]interface{}) (paramString string) {
 
-	// 按顺序拼接参数名和参数值
-	paramString = ""
-	// 对参数名按字典序排序
-	paramNames := maptool.SortIndictOrder(params)
+	// 对映射键按字典序排序
+	keys := make([]string, len(params))
+	for k := range params {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
 
-	if len(paramNames) > 0 {
+	for _, k := range keys {
 
-		appKey, ok := params["app_key"]
-		if !ok || appKey == "" {
-			// 未设置应用 key，说明是当前应用发起的签名，默认读取应用配置里的数据
-			appKey = config.Get("app.key")
+		// 签名预设字段不参与拼接，它们将固定在字符串前缀部分
+		if k == "app_key" || k == "app_secret" || k == "timestamp" || k == "random_str" || k == "sign" {
+			continue
 		}
 
-		var appSecret string
-		// 设置了获取签名密钥函数
-		if options.SecretFunc != nil {
-			if appSecret, err = options.SecretFunc(cast.ToString(appKey)); err != nil {
-				return
+		v := params[k]
+		m, isMap := v.(map[string]interface{})
+		s, isSlice := v.([]interface{})
+
+		// 映射值是映射，递归处理
+		if isMap {
+			if len(m) > 0 {
+				newParams := make(map[string]interface{}, len(m))
+				for nk, mv := range m {
+					newParams[fmt.Sprintf("%s:%s", k, nk)] = mv
+				}
+				paramString += makeParamString(newParams)
 			}
-		} else if len(options.Secret) > 0 {
-			// 设置了签名密钥
-			appSecret = options.Secret
-		} else if appKey == config.Get("app.key") {
-			// 是当前应用时，可以使用自己的密钥
-			appSecret = config.Get("app.secret")
+		} else if isSlice {
+			// 映射值是切片，将切片转换成映射后，递归处理
+			if len(s) > 0 {
+				newParams := make(map[string]interface{}, len(s))
+				for i, sv := range s {
+					newParams[fmt.Sprintf("%s:%d", k, i)] = sv
+				}
+				paramString += makeParamString(newParams)
+			}
 		} else {
-			err = errors.New("没有设置签名密钥")
-			return
-		}
-
-		randomStr, ok := params["random_str"]
-		if !ok || randomStr == "" {
-			// 未设置随机字符串，说明是当前应用发起的签名，随机生成一个10位字符串
-			randomStr = helpers.RandomString(10)
-		}
-
-		timestamp, ok := params["timestamp"]
-		if !ok || cast.ToInt64(timestamp) <= 0 {
-			// 未设置时间戳，说明是当前应用发起的签名，获取当前时间戳
-			timestamp = app.TimeNowInTimezone().Unix()
-		}
-
-		// 填充标准参数
-		newParams = map[string]interface{}{
-			"app_key":    appKey,
-			"random_str": randomStr,
-			"timestamp":  timestamp,
-		}
-
-		paramString = fmt.Sprintf("app_key=%s&app_secret=%s&random_str=%s&timestamp=%d", appKey, appSecret, randomStr, timestamp)
-
-		for _, paramName := range paramNames {
-			// 收集原来的请求参数
-			newParams[paramName] = params[paramName]
-			// 过滤已经完成拼接的参数
-			if paramName != "app_key" && paramName != "app_secret" && paramName != "random_str" && paramName != "timestamp" {
-				paramString = paramString + fmt.Sprintf("&%s=%s", paramName, cast.ToString(params[paramName]))
+			// 拼接映射键和值
+			if k != "" && v != nil {
+				paramString += fmt.Sprintf("&%s=%v", k, v)
 			}
 		}
 	}
 
+	return
+}
+
+// createSign 内部生成参数签名
+func createSign(params map[string]interface{}, timestamp int64, randomStr, appKey, appSecret string) (sign string) {
+	sign = hash.Md5(
+		hash.Md5(
+			fmt.Sprintf("app_key=%s&app_secret=%s&ts=%d&random_str=%s", appKey, appSecret, timestamp, randomStr) + makeParamString(params),
+		),
+	)
 	return
 }
 
 // MakeSign 生成请求签名
-func MakeSign(params map[string]interface{}, options *SignOptions) (sign string, newParams map[string]interface{}, err error) {
-
-	sign = ""
-
-	var paramString string
-	paramString, newParams, err = makeParamString(params, options)
-	if err != nil {
-		return
-	}
-
-	if paramString != "" {
-		sign = hash.Md5(hash.Md5(paramString))
-		newParams["sign"] = sign
-	}
-
+func MakeSign(params map[string]interface{}, options *SignOptions) (sign string) {
+	sign = createSign(params, options.Timestamp, options.RandomStr, options.AppKey, options.AppSecret)
+	params["app_key"] = options.AppKey
+	params["timestamp"] = options.Timestamp
+	params["random_str"] = options.RandomStr
+	params["sign"] = sign
 	return
 }
 
 // CheckSign 检查请求签名
-func CheckSign(params map[string]interface{}, sign string, options *SignOptions) (ok bool, newParams map[string]interface{}, err error) {
+func CheckSign(params map[string]interface{}, sign string, options *SignOptions) bool {
 
-	if len(params) == 0 {
-		ok = false
-		err = errors.New("请求参数不能为空")
-		return
+	// 当前签名选项启用了延迟初始化，这个机制方便于自动从请求参数中提取签名所需参数
+	if options.Lazy {
+		// 从参数中提取签名选项
+		options.LazyOptions = append(options.LazyOptions, WithTimestamp(cast.ToInt64(params["timestamp"])))
+		options.LazyOptions = append(options.LazyOptions, WithRandomStr(cast.ToString(params["random_str"])))
+		options.LazyOptions = append(options.LazyOptions, WithAppKey(cast.ToString(params["app_key"])))
+		// 真正初始化签名选项
+		*options = *NewSignOptions(options.LazyOptions...)
 	}
 
-	paramString, newParams, err := makeParamString(params, options)
-	if err != nil {
-		ok = false
-		return
-	}
-
-	if paramString == "" {
-		ok = false
-		err = errors.New("检查请求签名失败")
-		return
-	}
-
-	return hash.Md5(hash.Md5(paramString)) == sign, newParams, err
+	return MakeSign(params, options) == sign
 }
 
 // ValidateSign 验证请求签名
-func ValidateSign(params map[string]interface{}, sign string, errs map[string][]string, options *SignOptions) map[string][]string {
-	ok, _, err := CheckSign(params, sign, options)
-	if err != nil {
-		if len(options.ErrorMessage) > 0 {
-			logger.ErrorString("请求签名", "验证请求签名", err.Error())
-			errs["sign"] = append(errs["sign"], options.ErrorMessage)
-		} else {
-			errs["sign"] = append(errs["sign"], err.Error())
-		}
-	}
-	if !ok {
+func ValidateSign(params map[string]interface{}, sign string, options *SignOptions, errs map[string][]string) map[string][]string {
+
+	// 签名无效
+	if ok := CheckSign(params, sign, options); !ok {
 		errs["sign"] = append(errs["sign"], options.InvalidErrorMessage)
 	}
-	// 请求签名 15 分钟内有效
+
+	// 签名已过期
 	if cast.ToInt64(params["timestamp"]) < app.TimeNowInTimezone().Add(-(time.Duration(options.ExpireTime) * time.Minute)).Unix() {
 		errs["sign"] = append(errs["sign"], options.ExpiredErrorMessage)
 	}
+
 	return errs
 }

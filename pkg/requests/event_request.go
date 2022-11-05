@@ -9,15 +9,15 @@ import (
 	"github.com/yidejia/gofw/pkg/response"
 )
 
-// Dispatchable 可分发事件接口
-type Dispatchable interface {
+// DispatchAble 可分发事件接口
+type DispatchAble interface {
 	Dispatch() events.Event
 }
 
 type IEventRequest interface {
 	Validatable
-	Signable
-	Dispatchable
+	SignAble
+	DispatchAble
 }
 
 type NewEventRequestFunc func() IEventRequest
