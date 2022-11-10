@@ -15,7 +15,7 @@ import (
 	"github.com/yidejia/gofw/pkg/redis"
 
 	"github.com/gin-gonic/gin"
-	jwtpkg "github.com/golang-jwt/jwt"
+	jwtPkg "github.com/golang-jwt/jwt"
 )
 
 var (
@@ -74,7 +74,7 @@ type JWTCustomClaims struct {
 	// - aud (audience)：观众，相当于接受者
 	// - nbf (Not Before)：生效时间
 	// - jti (JWT ID)：编号
-	jwtpkg.StandardClaims
+	jwtPkg.StandardClaims
 }
 
 func NewJWT() *JWT {
@@ -114,11 +114,11 @@ func (jwt *JWT) ParserToken(c *gin.Context) (*JWTCustomClaims, error) {
 	// 解析出错
 	if err != nil {
 		// 判断具体错误
-		validationErr, ok := err.(*jwtpkg.ValidationError)
+		validationErr, ok := err.(*jwtPkg.ValidationError)
 		if ok {
-			if validationErr.Errors == jwtpkg.ValidationErrorMalformed {
+			if validationErr.Errors == jwtPkg.ValidationErrorMalformed {
 				return nil, ErrTokenMalformed
-			} else if validationErr.Errors == jwtpkg.ValidationErrorExpired {
+			} else if validationErr.Errors == jwtPkg.ValidationErrorExpired {
 				return nil, ErrTokenExpired
 			}
 		}
@@ -159,9 +159,9 @@ func (jwt *JWT) RefreshToken(c *gin.Context) (string, error) {
 	token, err := jwt.parseTokenString(tokenString)
 	// 解析出错
 	if err != nil {
-		validationErr, ok := err.(*jwtpkg.ValidationError)
+		validationErr, ok := err.(*jwtPkg.ValidationError)
 		// token 已过期时仍可以尝试刷新 token，发生其它错误时不能刷新 token
-		if !ok || validationErr.Errors != jwtpkg.ValidationErrorExpired {
+		if !ok || validationErr.Errors != jwtPkg.ValidationErrorExpired {
 			return "", err
 		}
 	}
@@ -218,7 +218,7 @@ func (jwt *JWT) MakeToken(userID uint64, userName string) string {
 		userID,
 		userName,
 		expireAtTime,
-		jwtpkg.StandardClaims{
+		jwtPkg.StandardClaims{
 			NotBefore: app.TimeNowInTimezone().Unix(), // 签名生效时间
 			IssuedAt:  app.TimeNowInTimezone().Unix(), // 首次签名时间（后续刷新 token 不会更新）
 			ExpiresAt: expireAtTime,                   // 签名过期时间
@@ -253,7 +253,7 @@ func (jwt *JWT) MakeToken(userID uint64, userName string) string {
 // createToken 创建 token，内部使用，外部请调用 MakeToken
 func (jwt *JWT) createToken(claims JWTCustomClaims) (string, error) {
 	// 使用 HS256 算法进行 token 生成
-	token := jwtpkg.NewWithClaims(jwtpkg.SigningMethodHS256, claims)
+	token := jwtPkg.NewWithClaims(jwtPkg.SigningMethodHS256, claims)
 	return token.SignedString(jwt.SignKey)
 }
 
@@ -274,8 +274,8 @@ func (jwt *JWT) expireAtTime() int64 {
 }
 
 // parseTokenString 使用 jwtpkg.ParseWithClaims 解析 token
-func (jwt *JWT) parseTokenString(tokenString string) (*jwtpkg.Token, error) {
-	return jwtpkg.ParseWithClaims(tokenString, &JWTCustomClaims{}, func(token *jwtpkg.Token) (interface{}, error) {
+func (jwt *JWT) parseTokenString(tokenString string) (*jwtPkg.Token, error) {
+	return jwtPkg.ParseWithClaims(tokenString, &JWTCustomClaims{}, func(token *jwtPkg.Token) (interface{}, error) {
 		return jwt.SignKey, nil
 	})
 }
