@@ -121,7 +121,7 @@ func Data(c *gin.Context, data interface{}) {
 }
 
 // AbortWithError 中断处理并返回错误
-func AbortWithError(c *gin.Context, err gfErrs.ResponsiveError) {
+func AbortWithError(c *gin.Context, err gfErrs.ResponsiveError, meta ...gin.H) {
 	jsonData := gin.H{
 		"success": false,
 		"message": err.Message(),
@@ -142,6 +142,9 @@ func AbortWithError(c *gin.Context, err gfErrs.ResponsiveError) {
 				}
 			}
 		}
+	}
+	if len(meta) > 0 {
+		jsonData["meta"] = meta[0]
 	}
 	c.AbortWithStatusJSON(err.HttpStatus(), jsonData)
 }
