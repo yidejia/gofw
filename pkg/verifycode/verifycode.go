@@ -54,15 +54,17 @@ func (vc *VerifyCode) SendSMS(phone, content string, scene ...uint8) bool {
 		code = vc.generateVerifyCode(phone)
 	}
 
+	// 将验证码填充到短信内容中
+	content = strings.ReplaceAll(content, "{{code}}", code)
+
+	logger.DebugString("验证码", "发送短信验证码内容", content)
+
 	// 方便本地和 API 自动测试
 	if !app.IsProduction() &&
 		(config.GetBool("verifycode.debug_mode") ||
 			strings.HasPrefix(phone, config.GetString("verifycode.debug_phone_prefix"))) {
 		return true
 	}
-
-	// 将验证码填充到短信内容中
-	content = strings.ReplaceAll(content, "{{code}}", code)
 
 	// 发送短信
 	_sms := sms.NewSMS()
@@ -95,8 +97,8 @@ func (vc *VerifyCode) generateVerifyCode(key string) string {
 	// 生成随机码
 	code := helpers.RandomNumber(config.GetInt("verifycode.code_length"))
 
-	// 为方便开发，本地环境使用固定验证码
-	if app.IsLocal() {
+	// 调试模式下，使用固定验证码
+	if !app.IsProduction() && config.GetBool("verifycode.debug_mode") {
 		code = config.GetString("verifycode.debug_code")
 	}
 
@@ -104,6 +106,7 @@ func (vc *VerifyCode) generateVerifyCode(key string) string {
 
 	// 将验证码及 KEY（邮箱或手机号）存放到 Redis 中并设置过期时间
 	vc.Store.Set(key, code)
+
 	return code
 }
 
