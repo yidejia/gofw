@@ -31,7 +31,10 @@ func Md5To16(str string) string {
 func BcryptHash(password string) string {
 	// 先将密码转换成固定32位的的字符串，避免超出 Bcrypt 算法的长度限制
 	// 通常为50～72字符，准确的长度限制取决于具体的 Bcrypt 实现。超过最大长度的密码将被截断
-	password = Md5(password)
+	// 前面的处理环节没有做过 Md5 处理
+	if len(password) != 32 {
+		password = Md5(password)
+	}
 	// GenerateFromPassword 的第二个参数是 cost 值。建议大于 12，数值越大耗费时间越长
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
 	logger.LogIf(err)
@@ -43,7 +46,10 @@ func BcryptHash(password string) string {
 func BcryptCheck(password, hash string) bool {
 	// 先将密码转换成固定32位的的字符串，避免超出 Bcrypt 算法的长度限制
 	// 通常为50～72字符，准确的长度限制取决于具体的 Bcrypt 实现。超过最大长度的密码将被截断
-	password = Md5(password)
+	// 前面的处理环节没有做过 Md5 处理
+	if len(password) != 32 {
+		password = Md5(password)
+	}
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err == nil
 }
