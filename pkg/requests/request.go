@@ -10,6 +10,7 @@ import (
 	"github.com/thedevsaddam/govalidator"
 	"github.com/yidejia/gofw/pkg/auth"
 	"github.com/yidejia/gofw/pkg/db"
+	"github.com/yidejia/gofw/pkg/maptool"
 	"github.com/yidejia/gofw/pkg/response"
 )
 
@@ -74,6 +75,57 @@ func (req *Request) MergeValidateErrors(errs map[string][]string, moreErrs ...ma
 // MergeParams 合并请求参数
 func (req *Request) MergeParams(params map[string]interface{}, moreParams ...map[string]interface{}) map[string]interface{} {
 	return MergeParams(params, moreParams...)
+}
+
+// ToMap 将请求结构体转换成映射
+func (req *Request) ToMap(data interface{}) map[string]interface{} {
+	return maptool.StructToMap(data)
+}
+
+// ToMapOnly 将请求结构体转换成映射并只返回指定的键值对
+func (req *Request) ToMapOnly(data interface{}, keys ...string) map[string]interface{} {
+
+	m := req.ToMap(data)
+
+	if len(keys) > 0 {
+
+		nm := map[string]interface{}{}
+
+		for _, key := range keys {
+			for k, v := range m {
+				if k == key {
+					nm[k] = v
+				}
+			}
+		}
+
+		m = nm
+	}
+
+	return m
+}
+
+// ToMapExcept 将请求结构体转换成映射并排除指定的键值对
+func (req *Request) ToMapExcept(data interface{}, keys ...string) map[string]interface{} {
+
+	m := req.ToMap(data)
+
+	if len(keys) > 0 {
+
+		nm := map[string]interface{}{}
+
+		for _, key := range keys {
+			for k, v := range m {
+				if k != key {
+					nm[k] = v
+				}
+			}
+		}
+
+		m = nm
+	}
+
+	return m
 }
 
 // Bind 绑定请求数据到结构体

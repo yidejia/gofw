@@ -5,6 +5,7 @@
 package maptool
 
 import (
+	"encoding/json"
 	"sort"
 	"strings"
 
@@ -87,4 +88,24 @@ func SortIndictOrder(mapData map[string]interface{}) (keys []string) {
 	}
 	sort.Strings(keys)
 	return
+}
+
+// Merge 合并映射
+func Merge(_map map[string]interface{}, moreMaps ...map[string]interface{}) map[string]interface{} {
+	if len(moreMaps) > 0 {
+		for _, m := range moreMaps {
+			for k, v := range m {
+				_map[k] = v
+			}
+		}
+	}
+	return _map
+}
+
+// StructToMap 将结构体转换成映射
+func StructToMap(s interface{}) map[string]interface{} {
+	j, _ := json.Marshal(s)
+	m := map[string]interface{}{}
+	_ = json.Unmarshal(j, &m)
+	return m
 }
