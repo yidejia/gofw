@@ -258,7 +258,7 @@ func (req *SignRequest) ValidateSign(params map[string]interface{}, sign string,
 func makeParamString(params map[string]interface{}) (paramString string) {
 
 	// 对映射键按字典序排序
-	keys := make([]string, len(params))
+	keys := make([]string, 0)
 	for k := range params {
 		keys = append(keys, k)
 	}
@@ -267,32 +267,60 @@ func makeParamString(params map[string]interface{}) (paramString string) {
 	for _, k := range keys {
 
 		// 签名预设字段不参与拼接，它们将固定在字符串前缀部分
-		if k == "app_key" || k == "app_secret" || k == "timestamp" || k == "random_str" || k == "sign" {
+		if k == "app_key" || k == "app_secret" || k == "timestamp" || k == "ts" || k == "random_str" || k == "sign" {
 			continue
 		}
 
 		v := params[k]
-		m, isMap := v.(map[string]interface{})
-		s, isSlice := v.([]interface{})
+		s := make([]interface{}, 0)
+		m := make(map[string]interface{})
+		// 判断参数值类型
+		switch vt := v.(type) {
+		// 参数值是切片
+		case []uint64:
+			for _, vtv := range vt {
+				s = append(s, vtv)
+			}
+		case []uint:
+			for _, vtv := range vt {
+				s = append(s, vtv)
+			}
+		case []uint8:
+			for _, vtv := range vt {
+				s = append(s, vtv)
+			}
+		case []string:
+			for _, vtv := range vt {
+				s = append(s, vtv)
+			}
+		// 参数值是映射
+		case map[string]interface{}:
+			for vtk, vtv := range vt {
+				m[vtk] = vtv
+			}
+		// 参数值是布尔值
+		case bool:
+			if vt {
+				v = "true"
+			} else {
+				v = "false"
+			}
+		}
 
-		// 映射值是映射，递归处理
-		if isMap {
-			if len(m) > 0 {
-				newParams := make(map[string]interface{}, len(m))
-				for nk, mv := range m {
-					newParams[fmt.Sprintf("%s:%s", k, nk)] = mv
-				}
-				paramString += makeParamString(newParams)
+		// 参数值是切片，将切片转换成映射后，递归处理
+		if len(s) > 0 {
+			newParams := make(map[string]interface{}, len(s))
+			for si, sv := range s {
+				newParams[fmt.Sprintf("%s:%d", k, si)] = sv
 			}
-		} else if isSlice {
-			// 映射值是切片，将切片转换成映射后，递归处理
-			if len(s) > 0 {
-				newParams := make(map[string]interface{}, len(s))
-				for i, sv := range s {
-					newParams[fmt.Sprintf("%s:%d", k, i)] = sv
-				}
-				paramString += makeParamString(newParams)
+			paramString += makeParamString(newParams)
+		} else if len(m) > 0 {
+			// 参数值是映射，递归处理
+			newParams := make(map[string]interface{}, len(m))
+			for mk, mv := range m {
+				newParams[fmt.Sprintf("%s:%s", k, mk)] = mv
 			}
+			paramString += makeParamString(newParams)
 		} else {
 			// 拼接映射键和值
 			if k != "" && v != nil {
