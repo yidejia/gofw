@@ -7,13 +7,14 @@ package db
 import (
 	"errors"
 	"fmt"
+	"strings"
+	"sync"
+	"time"
+
 	"github.com/yidejia/gofw/pkg/config"
 	"github.com/yidejia/gofw/pkg/logger"
 	"gorm.io/gorm"
 	"gorm.io/plugin/dbresolver"
-	"strings"
-	"sync"
-	"time"
 )
 
 // Connector 数据库连接器接口
@@ -146,6 +147,20 @@ func Connection(name ...string) *gorm.DB {
 	}
 
 	return db.(*gorm.DB)
+}
+
+// DisconnectAll 断开所有连接
+func DisconnectAll() {
+	connections.Range(func(key, value interface{}) bool {
+		if _db, ok := value.(*gorm.DB); ok {
+			if sqlDB, err := _db.DB(); err != nil {
+				logger.ErrorString("db", "DisconnectAll _db.DB()", err.Error())
+			} else if err = sqlDB.Close(); err != nil {
+				logger.ErrorString("db", "DisconnectAll sqlDB.Close()", err.Error())
+			}
+		}
+		return true
+	})
 }
 
 // DB 通过实现数据库连接器接口的对象获取数据库连接实例
