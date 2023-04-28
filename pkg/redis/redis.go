@@ -80,8 +80,8 @@ func Connection(name ...string) *RedisClient {
 // DisconnectAll 断开所有连接
 func DisconnectAll() {
 	connections.Range(func(key, value interface{}) bool {
-		if rds, ok := value.(*redis.Client); ok {
-			if err := rds.Close(); err != nil {
+		if rds, ok := value.(*RedisClient); ok {
+			if err := rds.Client.Close(); err != nil {
 				logger.ErrorString("redis", "DisconnectAll rds.Close()", err.Error())
 			} else {
 				logger.InfoString("redis", fmt.Sprintf("disconnect %s", key), "success")
