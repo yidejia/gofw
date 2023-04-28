@@ -77,6 +77,20 @@ func Connection(name ...string) *RedisClient {
 	return redisClient.(*RedisClient)
 }
 
+// DisconnectAll 断开所有连接
+func DisconnectAll() {
+	connections.Range(func(key, value interface{}) bool {
+		if rds, ok := value.(*redis.Client); ok {
+			if err := rds.Close(); err != nil {
+				logger.ErrorString("redis", "DisconnectAll rds.Close()", err.Error())
+			} else {
+				logger.InfoString("redis", fmt.Sprintf("disconnect %s", key), "success")
+			}
+		}
+		return true
+	})
+}
+
 // Ping 用以测试 redis 连接是否正常
 func (rds *RedisClient) Ping() error {
 	_, err := rds.Client.Ping(rds.Context).Result()

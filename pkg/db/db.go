@@ -158,7 +158,7 @@ func DisconnectAll() {
 			} else if err = sqlDB.Close(); err != nil {
 				logger.ErrorString("db", "DisconnectAll sqlDB.Close()", err.Error())
 			} else {
-				logger.InfoString("db", fmt.Sprintf("Disconnect %s", key), "success")
+				logger.InfoString("db", fmt.Sprintf("disconnect %s", key), "success")
 			}
 		}
 		return true
