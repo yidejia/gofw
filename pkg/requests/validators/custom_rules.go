@@ -8,11 +8,12 @@ package validators
 import (
 	"errors"
 	"fmt"
-	"github.com/yidejia/gofw/pkg/db"
 	"regexp"
 	"strconv"
 	"strings"
 	"unicode/utf8"
+
+	"github.com/yidejia/gofw/pkg/db"
 
 	"github.com/thedevsaddam/govalidator"
 )
@@ -156,7 +157,7 @@ func init() {
 		// 用户请求过来的数据
 		requestValue := value.(string)
 
-		if ok, _ := regexp.MatchString("^1[345789]\\d{9}$", requestValue); !ok {
+		if ok, _ := regexp.MatchString("^((86)[\\+-]?)?^1\\d{10}$", requestValue); !ok {
 			// 如果有自定义错误消息的话，使用自定义消息
 			if message != "" {
 				return errors.New(message)
