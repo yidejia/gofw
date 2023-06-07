@@ -2,6 +2,7 @@ package sms
 
 import (
 	"encoding/json"
+
 	aliyunsmsclient "github.com/KenmyZhang/aliyun-communicate"
 	"github.com/yidejia/gofw/pkg/config"
 	"github.com/yidejia/gofw/pkg/logger"
@@ -32,8 +33,12 @@ func (s *Aliyun) HandleVerifyCode(code string) map[string]string {
 	return map[string]string{"code": code}
 }
 
+// BeforeSend 发送短信前
+func (s *Aliyun) BeforeSend(phone string, message *Message, config map[string]string) {
+}
+
 // Send 实现 sms.Driver interface 的 Send 方法
-func (s *Aliyun) Send(phone string, message Message, config map[string]string) bool {
+func (s *Aliyun) Send(phone string, message *Message, config map[string]string) bool {
 
 	smsClient := aliyunsmsclient.New("http://dysmsapi.aliyuncs.com/")
 

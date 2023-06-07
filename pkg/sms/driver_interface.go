@@ -12,8 +12,10 @@ type Driver interface {
 	GetMessageTemplate() string
 	// HandleVerifyCode 处理验证码，不支持的短信驱动直接返回空映射即可
 	HandleVerifyCode(code string) map[string]string
+	// BeforeSend 发送短信前
+	BeforeSend(phone string, message *Message, config map[string]string)
 	// Send 发送短信
-	Send(phone string, message Message, config map[string]string) bool
+	Send(phone string, message *Message, config map[string]string) bool
 }
 
 // DriverFunc 返回短信驱动的函数

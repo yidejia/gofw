@@ -41,21 +41,93 @@ func NewVerifyCode() *VerifyCode {
 	return internalVerifyCode
 }
 
+// Option 验证码选项
+type Option struct {
+	Scene       uint8             `json:"scene"`        // 验证码场景码
+	AppKey      string            `json:"app_key"`      // 使用验证码的应用
+	SMSTemplate string            `json:"sms_template"` // 短信模板
+	SMSData     map[string]string `json:"sms_data"`     // 短信数据
+}
+
+// OptionFunc 验证码选项设置函数
+type OptionFunc func(option *Option)
+
+// SendWithScene 设置验证码的场景码
+func SendWithScene(scene uint8) OptionFunc {
+	return func(option *Option) {
+		option.Scene = scene
+	}
+}
+
+// SendWithAppKey 设置使用验证码的应用
+func SendWithAppKey(appKey string) OptionFunc {
+	return func(option *Option) {
+		option.AppKey = appKey
+	}
+}
+
+// SendWithSMSTemplate 设置短信模板
+func SendWithSMSTemplate(template string) OptionFunc {
+	return func(option *Option) {
+		option.SMSTemplate = template
+	}
+}
+
+// SendWithSMSData 设置短信数据
+func SendWithSMSData(data map[string]string) OptionFunc {
+	return func(option *Option) {
+		option.SMSData = data
+	}
+}
+
+// NewOption 新建验证码选项
+func NewOption(optionFunS ...OptionFunc) *Option {
+	option := &Option{}
+	for _, optionFun := range optionFunS {
+		optionFun(option)
+	}
+	return option
+}
+
 // SendSMS 发送短信验证码
 // 调用示例：
 // verifycode.NewVerifyCode().SendSMS(request.Phone, request.Content)
-func (vc *VerifyCode) SendSMS(phone, content string, scene ...uint8) bool {
+func (vc *VerifyCode) SendSMS(phone, content string, options ...*Option) bool {
+
+	// 获取验证码选项
+	var option *Option
+	if len(options) > 0 {
+		// 设置了验证码选项
+		option = options[0]
+	} else {
+		// 生成默认验证码选项
+		option = NewOption()
+	}
 
 	// 生成验证码
 	var code string
-	if len(scene) > 0 {
-		code = vc.generateVerifyCode(fmt.Sprintf("%d:%s", scene[0], phone))
+	// 设置了验证码的使用场景
+	if option.Scene > 0 {
+		// 设置了使用验证码的应用
+		if len(option.AppKey) > 0 {
+			// 生成只能用于某个应用某个场景的验证码
+			code = vc.generateVerifyCode(fmt.Sprintf("%s:%d:%s", option.AppKey, option.Scene, phone))
+		} else {
+			// 生成只能用于某个场景的验证码
+			code = vc.generateVerifyCode(fmt.Sprintf("%d:%s", option.Scene, phone))
+		}
 	} else {
+		// 生成通用型验证码
 		code = vc.generateVerifyCode(phone)
 	}
 
-	// 将验证码填充到短信内容中
-	content = strings.ReplaceAll(content, "{{code}}", code)
+	// 设置了短信模板时，将验证码填充到短信模板中
+	if len(option.SMSTemplate) > 0 {
+		option.SMSTemplate = strings.ReplaceAll(option.SMSTemplate, "{{code}}", code)
+	} else {
+		// 默认将验证码填充到短信内容中
+		content = strings.ReplaceAll(content, "{{code}}", code)
+	}
 
 	logger.DebugString("验证码", "发送短信验证码内容", content)
 
@@ -66,13 +138,31 @@ func (vc *VerifyCode) SendSMS(phone, content string, scene ...uint8) bool {
 		return true
 	}
 
-	// 发送短信
 	_sms := sms.NewSMS()
-	return _sms.Send(phone, sms.Message{
-		Template: _sms.GetMessageTemplate(),
-		Data:     _sms.HandleVerifyCode(code),
-		Content:  content,
-	})
+	// 短信消息体
+	smsMessage := &sms.Message{}
+
+	// 设置了短信模板
+	if len(option.SMSTemplate) > 0 {
+		smsMessage.Template = option.SMSTemplate
+	} else {
+		// 默认由短信驱动提供短信模板
+		smsMessage.Template = _sms.GetMessageTemplate()
+	}
+
+	// 设置了短信数据
+	if len(option.SMSData) > 0 {
+		smsMessage.Data = option.SMSData
+	} else {
+		// 默认由短信驱动提供短信数据
+		smsMessage.Data = _sms.HandleVerifyCode(code)
+	}
+
+	// 设置短信内容
+	smsMessage.Content = content
+
+	// 发送短信
+	return _sms.Send(phone, smsMessage)
 }
 
 // CheckAnswer 检查用户提交的验证码是否正确，key 可以是手机号或者 Email
