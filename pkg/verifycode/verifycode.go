@@ -153,6 +153,8 @@ func (vc *VerifyCode) SendSMS(phone, content string, options ...*Option) bool {
 	// 设置了短信数据
 	if len(option.SMSData) > 0 {
 		smsMessage.Data = option.SMSData
+		// 将验证码放进短信数据中传递给短信驱动处理
+		smsMessage.Data["code"] = code
 	} else {
 		// 默认由短信驱动提供短信数据
 		smsMessage.Data = _sms.HandleVerifyCode(code)
