@@ -132,7 +132,7 @@ func MergeMaps(_map map[string]interface{}, moreMaps ...map[string]interface{}) 
 	return _map
 }
 
-// SearchStringInSlice 在切片在查找字符串
+// SearchStringInSlice 在切片中查找字符串
 func SearchStringInSlice(_slice []string, str string) int {
 	// sort 包使用二分查找算法，为了提高查找效率，需要先进行排序
 	if !sort.StringsAreSorted(_slice) {
