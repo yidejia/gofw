@@ -6,10 +6,13 @@
 package requests
 
 import (
+	"io/ioutil"
+
 	"github.com/gin-gonic/gin"
 	"github.com/thedevsaddam/govalidator"
 	"github.com/yidejia/gofw/pkg/auth"
 	"github.com/yidejia/gofw/pkg/db"
+	gfJSON "github.com/yidejia/gofw/pkg/json"
 	"github.com/yidejia/gofw/pkg/maptool"
 	"github.com/yidejia/gofw/pkg/response"
 )
@@ -45,6 +48,11 @@ func (req *Request) CurrentUser(c *gin.Context) (user auth.Authenticate) {
 // Bind 绑定请求数据到结构体
 func (req *Request) Bind(c *gin.Context, data interface{}) bool {
 	return Bind(c, data)
+}
+
+// BindMap 绑定请求数据到映射
+func (req *Request) BindMap(c *gin.Context, data map[string]interface{}) bool {
+	return BindMap(c, data)
 }
 
 // Validate 数据验证
@@ -135,6 +143,28 @@ func Bind(c *gin.Context, data interface{}) bool {
 		response.BadRequest(c, err, "请求解析错误，请确认请求格式是否正确。上传文件请使用 multipart 标头，参数请使用 JSON 格式。")
 		return false
 	}
+	// 绑定成功
+	return true
+}
+
+// BindMap 绑定请求数据到映射
+func BindMap(c *gin.Context, data map[string]interface{}) bool {
+
+	// 读取请求正文内容并转换为字符串类型
+	reqBody, err := ioutil.ReadAll(c.Request.Body)
+	if err != nil {
+		response.BadRequest(c, err, "读取请求正文内容错误，请确认请求格式是否正确。上传文件请使用 multipart 标头，参数请使用 JSON 格式。")
+		return false
+	}
+
+	// 解析请求，只支持 JSON 数据
+	err = gfJSON.BindMap(string(reqBody), data)
+	if err != nil {
+		response.BadRequest(c, err, "请求解析错误，请确认请求格式是否正确。上传文件请使用 multipart 标头，参数请使用 JSON 格式。")
+		return false
+	}
+
+	// 绑定成功
 	return true
 }
 
