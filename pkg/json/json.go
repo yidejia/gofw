@@ -11,11 +11,11 @@ import (
 )
 
 // BindMap 解析 json 字符串并绑定到 map 结构上
-func BindMap(jsonStr string, _map map[string]interface{}) error {
+func BindMap(jsonStr string, _map *map[string]interface{}) error {
 	m, ok := gjson.Parse(jsonStr).Value().(map[string]interface{})
 	if !ok {
 		return errors.New("json can't bind to a map")
 	}
-	_map = m
+	*_map = m
 	return nil
 }
