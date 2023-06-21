@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	gfErrs "github.com/yidejia/gofw/pkg/errors"
 	"github.com/yidejia/gofw/pkg/limiter"
 	"github.com/yidejia/gofw/pkg/logger"
 	"github.com/yidejia/gofw/pkg/response"
@@ -19,11 +20,11 @@ import (
 // * 10 reqs/minute: "10-M"
 // * 1000 reqs/hour: "1000-H"
 // * 2000 reqs/day: "2000-D"
-func LimitIP(limit string, message ...string) gin.HandlerFunc {
+func LimitIP(limit string, variables ...interface{}) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// 针对 IP 限流
 		key := limiter.GetKeyIP(c)
-		if ok := limitHandler(c, key, limit, message...); !ok {
+		if ok := limitHandler(c, key, limit, variables...); !ok {
 			return
 		}
 		c.Next()
@@ -40,13 +41,13 @@ func LimitIP(limit string, message ...string) gin.HandlerFunc {
 // * 10 reqs/minute: "10-M"
 // * 1000 reqs/hour: "1000-H"
 // * 2000 reqs/day: "2000-D"
-func LimitRoute(limit string, message ...string) gin.HandlerFunc {
+func LimitRoute(limit string, variables ...interface{}) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// 针对单个路由，增加访问次数
 		c.Set("limiter-once", false)
 		// 针对 IP + 路由进行限流
 		key := limiter.GetKeyRouteWithIP(c)
-		if ok := limitHandler(c, key, limit, message...); !ok {
+		if ok := limitHandler(c, key, limit, variables...); !ok {
 			return
 		}
 		c.Next()
@@ -63,19 +64,19 @@ func LimitRoute(limit string, message ...string) gin.HandlerFunc {
 // * 10 reqs/minute: "10-M"
 // * 1000 reqs/hour: "1000-H"
 // * 2000 reqs/day: "2000-D"
-func LimitKey(c *gin.Context, key string, limit string, message ...string) bool {
+func LimitKey(c *gin.Context, key string, limit string, variables ...interface{}) bool {
 	c.Set("limiter-once", false)
-	return limitHandler(c, key, limit, message...)
+	return limitHandler(c, key, limit, variables...)
 }
 
 // limitHandler 对请求进行限流处理
-func limitHandler(c *gin.Context, key string, limit string, message ...string) bool {
+func limitHandler(c *gin.Context, key string, limit string, variables ...interface{}) bool {
 
 	// 获取超额的情况
-	rate, err := limiter.CheckRate(c, key, limit)
-	if err != nil {
-		logger.LogIf(err)
-		response.InternalError(c, err)
+	rate, _err := limiter.CheckRate(c, key, limit)
+	if _err != nil {
+		logger.LogIf(_err)
+		response.InternalError(c, _err)
 		return false
 	}
 
@@ -87,17 +88,26 @@ func limitHandler(c *gin.Context, key string, limit string, message ...string) b
 	c.Header("X-RateLimit-Remaining", cast.ToString(rate.Remaining))
 	c.Header("X-RateLimit-Reset", cast.ToString(rate.Reset))
 
-	msg := "接口请求太频繁"
-	// 设置了自定义消息
-	if len(message) > 0 {
-		msg = message[0]
-	}
 	// 超额
 	if rate.Reached {
+
 		// 请求上下文标记请求频率已超标
 		c.Set("limiter-reached", true)
-		// 提示用户超额了
-		response.TooManyRequests(c, msg)
+
+		if len(variables) > 1 {
+			// 调用方同时设置了错误和元数据
+			err := variables[0].(gfErrs.ResponsiveError)
+			meta := variables[1].(map[string]interface{})
+			response.AbortWithError(c, err, meta)
+		} else if len(variables) > 0 {
+			// 调用方只设置了错误
+			err := variables[0].(gfErrs.ResponsiveError)
+			response.AbortWithError(c, err)
+		} else {
+			// 默认只返回调用超额了错误
+			response.TooManyRequests(c, "接口请求太频繁")
+		}
+
 		return false
 	}
 
