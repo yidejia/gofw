@@ -174,7 +174,9 @@ func (vc *VerifyCode) CheckAnswer(key string, answer string) bool {
 
 	// 方便开发，在非生产环境下，具备特殊前缀的手机号和特殊 Email 后缀，直接验证成功
 	if !app.IsProduction() &&
-		(config.Get("verifycode.debug_mode") == answer ||
+		// 开启调试模式下不会真正发送验证码，直接通过验证码检查
+		(config.GetBool("verifycode.debug_mode") ||
+			config.Get("verifycode.debug_code") == answer ||
 			strings.HasPrefix(key, config.GetString("verifycode.debug_phone_prefix")) ||
 			strings.HasSuffix(key, config.GetString("verifycode.debug_email_suffix"))) {
 		return true
