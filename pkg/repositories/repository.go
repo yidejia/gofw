@@ -8,6 +8,7 @@ package repositories
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/yidejia/gofw/pkg/db"
 	gfErrs "github.com/yidejia/gofw/pkg/errors"
@@ -32,8 +33,8 @@ func (repo *Repository) NewErrorInternal(err error, message ...string) gfErrs.Re
 // NewError 自动生成合适的错误
 // 一般用于获取单个模块的场景，自动判断是模型不存在还是查询出错
 func (repo *Repository) NewError(err error, iModel db.IModel, message ...string) gfErrs.ResponsiveError {
-	// 模型不存在
-	if errors.Is(err, gorm.ErrRecordNotFound) {
+	// 模型或数据表记录不存在
+	if errors.Is(err, gorm.ErrRecordNotFound) || strings.Contains(err.Error(), "no rows in result set") {
 		if iModel != nil {
 			return repo.NewErrorNotFound(iModel.ModelName() + "不存在")
 		} else {
