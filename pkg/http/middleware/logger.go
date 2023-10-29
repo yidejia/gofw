@@ -27,8 +27,39 @@ func (r responseBodyWriter) Write(b []byte) (int, error) {
 	return r.ResponseWriter.Write(b)
 }
 
+// RequestLog 请求日志
+type RequestLog struct {
+	UserID    uint64 `json:"user_id,omitempty" gorm:"type:bigint unsigned;not null;index:user_id;comment:用户id"`
+	UserName  string `json:"user_name,omitempty" gorm:"type:varchar(30);not null;index:user_name;comment:登录时的名称"`
+	IP        string `json:"ip,omitempty" gorm:"type:varchar(60);not null;index:ip;comment:IP地址"`
+	UserAgent string `json:"user_agent,omitempty" gorm:"type:varchar(191);not null;comment:用户代理"`
+	Method    string `json:"method,omitempty" gorm:"type:varchar(10);not null;index:method;comment:请求方法"`
+	URL       string `json:"url,omitempty" gorm:"type:varchar(191);not null;index:url;comment:请求URL"`
+	Query     string `json:"query,omitempty" gorm:"type:varchar(191);not null;comment:查询参数"`
+	Status    int    `json:"status,omitempty" gorm:"type:int unsigned;not null;index:status;comment:响应状态"`
+	Request   string `json:"request,omitempty" gorm:"type:mediumtext;not null;comment:请求体"`
+	Response  string `json:"response,omitempty" gorm:"type:mediumtext;not null;comment:响应体"`
+	Errors    string `json:"errors,omitempty" gorm:"type:varchar(1000);not null;comment:错误"`
+	TakeTime  string `json:"take_time,omitempty" gorm:"type:varchar(30);not null;comment:消耗时间(毫秒)"`
+}
+
+// RequestLogHandler 请求日志处理器接口
+type RequestLogHandler interface {
+	// HandleRequestLog 处理请求日志
+	HandleRequestLog(log RequestLog)
+}
+
+// 请求日志处理器列表
+var requestLogHandlers = make([]RequestLogHandler, 0)
+
+// RegisterRequestLogHandler 注册请求日志处理器
+func RegisterRequestLogHandler(handler RequestLogHandler) {
+	requestLogHandlers = append(requestLogHandlers, handler)
+}
+
 // Logger 记录请求日志
 func Logger() gin.HandlerFunc {
+
 	return func(c *gin.Context) {
 
 		// 获取 response 内容
@@ -46,37 +77,59 @@ func Logger() gin.HandlerFunc {
 
 		// 设置开始时间
 		start := time.Now()
+
 		c.Next()
 
-		// 开始记录日志的逻辑
-		cost := time.Since(start)
-		responStatus := c.Writer.Status()
+		// 计算请求消耗时间
+		takeTime := time.Since(start)
 
+		// 记录请求关键信息
+		requestLog := RequestLog{
+			IP:        c.ClientIP(),
+			UserAgent: c.Request.UserAgent(),
+			Method:    c.Request.Method,
+			URL:       c.Request.URL.String(),
+			Query:     c.Request.URL.RawQuery,
+			Status:    c.Writer.Status(),
+			Request:   string(requestBody),
+			Response:  w.body.String(),
+			Errors:    c.Errors.ByType(gin.ErrorTypePrivate).String(),
+			TakeTime:  helpers.MicrosecondsStr(takeTime),
+		}
+
+		// 日志字段
 		logFields := []zap.Field{
-			zap.Int("status", responStatus),
-			zap.String("request", c.Request.Method+" "+c.Request.URL.String()),
-			zap.String("query", c.Request.URL.RawQuery),
-			zap.String("ip", c.ClientIP()),
-			zap.String("user-agent", c.Request.UserAgent()),
-			zap.String("errors", c.Errors.ByType(gin.ErrorTypePrivate).String()),
-			zap.String("time", helpers.MicrosecondsStr(cost)),
-		}
-		if c.Request.Method == "POST" || c.Request.Method == "PUT" || c.Request.Method == "DELETE" {
-			// 请求的内容
-			logFields = append(logFields, zap.String("Request Body", string(requestBody)))
-
-			// 响应的内容
-			logFields = append(logFields, zap.String("Response Body", w.body.String()))
+			zap.Int("status", requestLog.Status),
+			zap.String("request", requestLog.Method+" "+requestLog.URL),
+			zap.String("query", requestLog.Query),
+			zap.String("ip", requestLog.IP),
+			zap.String("user-agent", requestLog.UserAgent),
+			zap.String("errors", requestLog.Errors),
+			zap.String("time", requestLog.TakeTime),
 		}
 
-		if responStatus > 400 && responStatus <= 499 {
+		// 异常请求才记录请求体和响应体
+		if !(requestLog.Method == "GET" && requestLog.Status < 400) {
+			// 请求体
+			logFields = append(logFields, zap.String("Request Body", requestLog.Request))
+			// 响应体
+			logFields = append(logFields, zap.String("Response Body", requestLog.Response))
+		}
+
+		if requestLog.Status > 400 && requestLog.Status <= 499 {
 			// 除了 StatusBadRequest 以外，warning 提示一下，常见的有 403 404，开发时都要注意
-			logger.Warn("HTTP Warning "+cast.ToString(responStatus), logFields...)
-		} else if responStatus >= 500 && responStatus <= 599 {
+			logger.Warn("HTTP Warning "+cast.ToString(requestLog.Status), logFields...)
+		} else if requestLog.Status >= 500 && requestLog.Status <= 599 {
 			// 除了内部错误，记录 error
-			logger.Error("HTTP Error "+cast.ToString(responStatus), logFields...)
+			logger.Error("HTTP Error "+cast.ToString(requestLog.Status), logFields...)
 		} else {
+			// 常规调试
 			logger.Debug("HTTP Access Log", logFields...)
+		}
+
+		// 调用请求日志处理器对日志进行额外处理
+		for _, handler := range requestLogHandlers {
+			go handler.HandleRequestLog(requestLog)
 		}
 	}
 }
