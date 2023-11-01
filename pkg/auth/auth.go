@@ -5,11 +5,8 @@
 package auth
 
 import (
-	"errors"
-
 	"github.com/gin-gonic/gin"
 	gfErrs "github.com/yidejia/gofw/pkg/errors"
-	"github.com/yidejia/gofw/pkg/logger"
 )
 
 // userResolver 获取用户模型的函数
@@ -34,11 +31,17 @@ func CurrentUID(c *gin.Context) string {
 }
 
 // CurrentUser 获取当前登录用户
-func CurrentUser(c *gin.Context) (user Authenticate) {
-	user, ok := c.MustGet("user").(Authenticate)
+func CurrentUser(c *gin.Context) Authenticate {
+
+	_user, ok := c.Get("user")
 	if !ok {
-		logger.LogIf(errors.New("无法获取用户"))
-		return user
+		return nil
 	}
-	return user
+
+	authUser, ok := _user.(Authenticate)
+	if !ok {
+		return nil
+	}
+
+	return authUser
 }

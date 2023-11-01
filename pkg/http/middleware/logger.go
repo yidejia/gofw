@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"time"
 
+	"github.com/yidejia/gofw/pkg/auth"
 	"github.com/yidejia/gofw/pkg/helpers"
 	"github.com/yidejia/gofw/pkg/logger"
 
@@ -49,12 +50,12 @@ type RequestLogHandler interface {
 	HandleRequestLog(log RequestLog)
 }
 
-// 请求日志处理器列表
-var requestLogHandlers = make([]RequestLogHandler, 0)
+// requestLogHandler 请求日志处理器
+var requestLogHandler RequestLogHandler
 
 // RegisterRequestLogHandler 注册请求日志处理器
 func RegisterRequestLogHandler(handler RequestLogHandler) {
-	requestLogHandlers = append(requestLogHandlers, handler)
+	requestLogHandler = handler
 }
 
 // Logger 记录请求日志
@@ -97,6 +98,13 @@ func Logger() gin.HandlerFunc {
 			TakeTime:  helpers.MicrosecondsStr(takeTime),
 		}
 
+		// 记录请求用户信息
+		authUser := auth.CurrentUser(c)
+		if authUser != nil {
+			requestLog.UserID = authUser.AuthId()
+			requestLog.UserName = authUser.AuthName()
+		}
+
 		// 日志字段
 		logFields := []zap.Field{
 			zap.Int("status", requestLog.Status),
@@ -128,8 +136,8 @@ func Logger() gin.HandlerFunc {
 		}
 
 		// 调用请求日志处理器对日志进行额外处理
-		for _, handler := range requestLogHandlers {
-			go handler.HandleRequestLog(requestLog)
+		if requestLogHandler != nil {
+			go requestLogHandler.HandleRequestLog(requestLog)
 		}
 	}
 }
