@@ -12,6 +12,7 @@ import (
 	"github.com/yidejia/gofw/pkg/auth"
 	"github.com/yidejia/gofw/pkg/helpers"
 	"github.com/yidejia/gofw/pkg/logger"
+	gfReqs "github.com/yidejia/gofw/pkg/requests"
 
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/cast"
@@ -92,10 +93,26 @@ func Logger() gin.HandlerFunc {
 			URL:       c.Request.URL.String(),
 			Query:     c.Request.URL.RawQuery,
 			Status:    c.Writer.Status(),
-			Request:   string(requestBody),
-			Response:  w.body.String(),
 			Errors:    c.Errors.ByType(gin.ErrorTypePrivate).String(),
 			TakeTime:  helpers.MicrosecondsStr(takeTime),
+		}
+
+		// 接口对当前请求进行过自定义处理后，会缓存在请求上下文中，一般是对请求进行了脱敏处理，例如登录接口一般需要隐藏登录密码
+		reqLog := gfReqs.GetRequestLog(c)
+		if len(reqLog) > 0 {
+			requestLog.Request = reqLog
+		} else {
+			// 默认记录原始请求数据
+			requestLog.Request = string(requestBody)
+		}
+
+		// 接口对当前响应进行过自定义处理后，会缓存在请求上下文中，一般是对响应进行了脱敏处理，例如登录接口一般需要隐藏响应中的访问令牌
+		respLog := gfReqs.GetResponseLog(c)
+		if len(respLog) > 0 {
+			requestLog.Response = respLog
+		} else {
+			// 默认记录原始响应数据
+			requestLog.Response = w.body.String()
 		}
 
 		// 记录请求用户信息

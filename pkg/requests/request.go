@@ -7,6 +7,8 @@ package requests
 
 import (
 	"bytes"
+	"encoding/json"
+	"errors"
 	"io"
 	"io/ioutil"
 
@@ -136,6 +138,26 @@ func (req *Request) ToMapExcept(data interface{}, keys ...string) map[string]int
 	}
 
 	return m
+}
+
+// LogRequest 记录请求日志
+func (req *Request) LogRequest(c *gin.Context, reqData interface{}) error {
+	return LogRequest(c, reqData)
+}
+
+// GetRequestLog 获取请求日志
+func (req *Request) GetRequestLog(c *gin.Context) string {
+	return GetRequestLog(c)
+}
+
+// LogResponse 记录响应日志
+func (req *Request) LogResponse(c *gin.Context, respData interface{}) error {
+	return LogResponse(c, respData)
+}
+
+// GetResponseLog 获取响应日志
+func (req *Request) GetResponseLog(c *gin.Context) string {
+	return GetResponseLog(c)
 }
 
 // Bind 绑定请求数据到结构体
@@ -281,4 +303,40 @@ func MergeParams(params map[string]interface{}, moreParams ...map[string]interfa
 	}
 
 	return params
+}
+
+// LogRequest 记录请求日志
+func LogRequest(c *gin.Context, reqData interface{}) error {
+
+	jsonBytes, err := json.Marshal(reqData)
+	if err != nil {
+		return errors.New("记录请求日志错误：" + err.Error())
+	}
+
+	c.Set("request_log", string(jsonBytes))
+
+	return nil
+}
+
+// GetRequestLog 获取请求日志
+func GetRequestLog(c *gin.Context) string {
+	return c.GetString("request_log")
+}
+
+// LogResponse 记录响应日志
+func LogResponse(c *gin.Context, respData interface{}) error {
+
+	jsonBytes, err := json.Marshal(respData)
+	if err != nil {
+		return errors.New("记录响应日志错误：" + err.Error())
+	}
+
+	c.Set("response_log", string(jsonBytes))
+
+	return nil
+}
+
+// GetResponseLog 获取响应日志
+func GetResponseLog(c *gin.Context) string {
+	return c.GetString("response_log")
 }
