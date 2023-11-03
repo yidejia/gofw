@@ -9,7 +9,6 @@ import (
 	"io/ioutil"
 	"time"
 
-	"github.com/yidejia/gofw/pkg/auth"
 	"github.com/yidejia/gofw/pkg/helpers"
 	"github.com/yidejia/gofw/pkg/logger"
 	gfReqs "github.com/yidejia/gofw/pkg/requests"
@@ -116,11 +115,8 @@ func Logger() gin.HandlerFunc {
 		}
 
 		// 记录请求用户信息
-		authUser := auth.CurrentUser(c)
-		if authUser != nil {
-			requestLog.UserID = authUser.AuthId()
-			requestLog.UserName = authUser.AuthName()
-		}
+		requestLog.UserID = c.GetUint64("user_id")
+		requestLog.UserName = c.GetString("user_name")
 
 		// 日志字段
 		logFields := []zap.Field{
