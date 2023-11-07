@@ -140,24 +140,81 @@ func (req *Request) ToMapExcept(data interface{}, keys ...string) map[string]int
 	return m
 }
 
-// LogRequest 记录请求日志
+// LogRequest 记录请求日志到请求上下文中
+// 传递给下游环节处理
 func (req *Request) LogRequest(c *gin.Context, reqData interface{}) error {
 	return LogRequest(c, reqData)
 }
 
-// GetRequestLog 获取请求日志
+// GetRequestLog 从请求上下文中获取缓存的请求日志
 func (req *Request) GetRequestLog(c *gin.Context) string {
 	return GetRequestLog(c)
 }
 
-// LogResponse 记录响应日志
+// LogResponse 记录响应日志到请求上下文中
+// 传递给下游环节处理
 func (req *Request) LogResponse(c *gin.Context, respData interface{}) error {
 	return LogResponse(c, respData)
 }
 
-// GetResponseLog 获取响应日志
+// GetResponseLog 从请求上下文中获取缓存的响应日志
 func (req *Request) GetResponseLog(c *gin.Context) string {
 	return GetResponseLog(c)
+}
+
+// SetUserID 缓存用户 ID 到请求上下文中
+// 传递给下游环节处理
+func (req *Request) SetUserID(c *gin.Context, userID uint64) {
+	SetUserID(c, userID)
+}
+
+// GetUserID 从请求上下文获取缓存的用户 ID
+func (req *Request) GetUserID(c *gin.Context) uint64 {
+	return GetUserID(c)
+}
+
+// SetUserName 缓存用户名到请求上下文中
+// 传递给下游环节处理
+func (req *Request) SetUserName(c *gin.Context, userName string) {
+	SetUserName(c, userName)
+}
+
+// GetUserName 从请求上下文中获取缓存的用户名
+func (req *Request) GetUserName(c *gin.Context) string {
+	return GetUserName(c)
+}
+
+// ClearRequestLog 清除请求日志
+// 通完缓存请求日志已清除的标志到请求上下文中，通知下游处理环节不再处理请求日志，例如不记录请求日志到数据库中
+func (req *Request) ClearRequestLog(c *gin.Context) {
+	ClearRequestLog(c)
+}
+
+// RequestLogIsCleared 请求日志已清除
+func (req *Request) RequestLogIsCleared(c *gin.Context) bool {
+	return RequestLogIsCleared(c)
+}
+
+// LogRequestURL 记录请求 URL 到请求上下文中
+// 传递给下游环节处理
+func (req *Request) LogRequestURL(c *gin.Context, url string) {
+	LogRequestURL(c, url)
+}
+
+// GetRequestURLLog 从请求上下文中获取缓存的请求 URL
+func (req *Request) GetRequestURLLog(c *gin.Context) string {
+	return GetRequestURLLog(c)
+}
+
+// LogRequestQuery 请求查询参数到请求上下文中
+// 传递给下游环节处理
+func (req *Request) LogRequestQuery(c *gin.Context, query string) {
+	LogRequestQuery(c, query)
+}
+
+// GetRequestQueryLog 从请求上下文中获取缓存的查询参数
+func (req *Request) GetRequestQueryLog(c *gin.Context) string {
+	return GetRequestQueryLog(c)
 }
 
 // Bind 绑定请求数据到结构体
@@ -305,7 +362,8 @@ func MergeParams(params map[string]interface{}, moreParams ...map[string]interfa
 	return params
 }
 
-// LogRequest 记录请求日志
+// LogRequest 记录请求日志到请求上下文中
+// 传递给下游环节处理
 func LogRequest(c *gin.Context, reqData interface{}) error {
 
 	jsonBytes, err := json.Marshal(reqData)
@@ -318,12 +376,35 @@ func LogRequest(c *gin.Context, reqData interface{}) error {
 	return nil
 }
 
-// GetRequestLog 获取请求日志
+// GetRequestLog 从请求上下文中获取缓存的请求日志
 func GetRequestLog(c *gin.Context) string {
 	return c.GetString("request_log")
 }
 
-// LogResponse 记录响应日志
+// LogRequestURL 记录请求 URL 到请求上下文中
+// 传递给下游环节处理
+func LogRequestURL(c *gin.Context, url string) {
+	c.Set("request_url_log", url)
+}
+
+// GetRequestURLLog 从请求上下文中获取缓存的请求 URL
+func GetRequestURLLog(c *gin.Context) string {
+	return c.GetString("request_url_log")
+}
+
+// LogRequestQuery 请求查询参数到请求上下文中
+// 传递给下游环节处理
+func LogRequestQuery(c *gin.Context, query string) {
+	c.Set("request_query_log", query)
+}
+
+// GetRequestQueryLog 从请求上下文中获取缓存的查询参数
+func GetRequestQueryLog(c *gin.Context) string {
+	return c.GetString("request_query_log")
+}
+
+// LogResponse 记录响应日志到请求上下文中
+// 传递给下游环节处理
 func LogResponse(c *gin.Context, respData interface{}) error {
 
 	jsonBytes, err := json.Marshal(respData)
@@ -336,7 +417,40 @@ func LogResponse(c *gin.Context, respData interface{}) error {
 	return nil
 }
 
-// GetResponseLog 获取响应日志
+// GetResponseLog 从请求上下文中获取缓存的响应日志
 func GetResponseLog(c *gin.Context) string {
 	return c.GetString("response_log")
+}
+
+// SetUserID 缓存用户 ID 到请求上下文中
+// 传递给下游环节处理
+func SetUserID(c *gin.Context, userID uint64) {
+	c.Set("user_id", userID)
+}
+
+// GetUserID 从请求上下文获取缓存的用户 ID
+func GetUserID(c *gin.Context) uint64 {
+	return c.GetUint64("user_id")
+}
+
+// SetUserName 缓存用户名到请求上下文中
+// 传递给下游环节处理
+func SetUserName(c *gin.Context, userName string) {
+	c.Set("user_name", userName)
+}
+
+// GetUserName 从请求上下文中获取缓存的用户名
+func GetUserName(c *gin.Context) string {
+	return c.GetString("user_name")
+}
+
+// ClearRequestLog 清除请求日志
+// 通完缓存请求日志已清除的标志到请求上下文中，通知下游处理环节不再处理请求日志，例如不记录请求日志到数据库中
+func ClearRequestLog(c *gin.Context) {
+	c.Set("request_log_cleared", true)
+}
+
+// RequestLogIsCleared 请求日志已清除
+func RequestLogIsCleared(c *gin.Context) bool {
+	return c.GetBool("request_log_cleared")
 }

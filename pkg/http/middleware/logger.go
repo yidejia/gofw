@@ -89,11 +89,27 @@ func Logger() gin.HandlerFunc {
 			IP:        c.ClientIP(),
 			UserAgent: c.Request.UserAgent(),
 			Method:    c.Request.Method,
-			URL:       c.Request.URL.String(),
-			Query:     c.Request.URL.RawQuery,
 			Status:    c.Writer.Status(),
 			Errors:    c.Errors.ByType(gin.ErrorTypePrivate).String(),
 			TakeTime:  helpers.MicrosecondsStr(takeTime),
+		}
+
+		// 接口对当前请求 URL 进行过自定义处理后，会缓存在请求上下文中，一般是对请求查询参数进行了脱敏处理，例如需要隐藏 URL 中的 token
+		reqURL := gfReqs.GetRequestURLLog(c)
+		if len(reqURL) > 0 {
+			requestLog.URL = reqURL
+		} else {
+			// 默认记录原始请求 URL
+			requestLog.URL = c.Request.URL.String()
+		}
+
+		// 接口对当前请求查询参数进行过自定义处理后，会缓存在请求上下文中，一般是对请求查询参数进行了脱敏处理，例如需要隐藏查询参数中的 token
+		reqQuery := gfReqs.GetRequestQueryLog(c)
+		if len(reqQuery) > 0 {
+			requestLog.Query = reqQuery
+		} else {
+			// 默认记录原始请求查询参数
+			requestLog.Query = c.Request.URL.RawQuery
 		}
 
 		// 接口对当前请求进行过自定义处理后，会缓存在请求上下文中，一般是对请求进行了脱敏处理，例如登录接口一般需要隐藏登录密码
@@ -115,8 +131,8 @@ func Logger() gin.HandlerFunc {
 		}
 
 		// 记录请求用户信息
-		requestLog.UserID = c.GetUint64("user_id")
-		requestLog.UserName = c.GetString("user_name")
+		requestLog.UserID = gfReqs.GetUserID(c)
+		requestLog.UserName = gfReqs.GetUserName(c)
 
 		// 日志字段
 		logFields := []zap.Field{
@@ -149,7 +165,7 @@ func Logger() gin.HandlerFunc {
 		}
 
 		// 调用请求日志处理器对日志进行额外处理
-		if requestLogHandler != nil {
+		if !gfReqs.RequestLogIsCleared(c) && requestLogHandler != nil {
 			go requestLogHandler.HandleRequestLog(requestLog)
 		}
 	}
