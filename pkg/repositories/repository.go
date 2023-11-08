@@ -34,7 +34,9 @@ func (repo *Repository) NewErrorInternal(err error, message ...string) gfErrs.Re
 // 一般用于获取单个模块的场景，自动判断是模型不存在还是查询出错
 func (repo *Repository) NewError(err error, iModel db.IModel, message ...string) gfErrs.ResponsiveError {
 	// 模型或数据表记录不存在
-	if errors.Is(err, gorm.ErrRecordNotFound) || strings.Contains(err.Error(), "no rows in result set") {
+	if errors.Is(err, gorm.ErrRecordNotFound) ||
+		strings.Contains(err.Error(), "no rows in result set") ||
+		strings.Contains(err.Error(), "record not found") {
 		if iModel != nil {
 			return repo.NewErrorNotFound(iModel.ModelName() + "不存在")
 		} else {
