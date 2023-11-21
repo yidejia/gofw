@@ -16,7 +16,7 @@ import (
 	"github.com/go-redsync/redsync"
 
 	"github.com/gomodule/redigo/redis"
-	cronPkg "github.com/robfig/cron/v3"
+	cronPKG "github.com/robfig/cron/v3"
 	"github.com/yidejia/gofw/pkg/config"
 )
 
@@ -28,8 +28,8 @@ type MutexConfig struct {
 
 // Cron 定时任务调度器
 type Cron struct {
-	runner      *cronPkg.Cron    // 定时任务调度器实例
-	parser      *cronPkg.Parser  // 时间格式解析器
+	runner      *cronPKG.Cron    // 定时任务调度器实例
+	parser      *cronPKG.Parser  // 时间格式解析器
 	sync        *redsync.Redsync // 分布式锁
 	mutexConfig *MutexConfig     // 分布式锁配置
 }
@@ -48,13 +48,13 @@ func InitWithConfig() {
 			panic("init cron with timezone failed:" + err.Error())
 		}
 		// 创建时间格式解析器，启用秒计时单位，秒可选
-		_parser := cronPkg.NewParser(
-			cronPkg.SecondOptional | cronPkg.Minute | cronPkg.Hour | cronPkg.Dom | cronPkg.Month | cronPkg.Dow | cronPkg.Descriptor,
+		_parser := cronPKG.NewParser(
+			cronPKG.SecondOptional | cronPKG.Minute | cronPKG.Hour | cronPKG.Dom | cronPKG.Month | cronPKG.Dow | cronPKG.Descriptor,
 		)
 		internalCron = &Cron{
-			runner: cronPkg.New(
-				cronPkg.WithLocation(timezone), // 指定时区
-				cronPkg.WithParser(_parser),    // 指定时间格式解析器
+			runner: cronPKG.New(
+				cronPKG.WithLocation(timezone), // 指定时区
+				cronPKG.WithParser(_parser),    // 指定时间格式解析器
 			),
 			parser: &_parser,
 		}
