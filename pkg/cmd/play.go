@@ -16,5 +16,5 @@ var CmdPlay = &cobra.Command{
 func runPlay(cmd *cobra.Command, args []string) {
 	// TODO 可以在这里输入代码，在终端进行验证
 	console.Success("Hello " + config.Get("app.name") + ", Application was initialized successfully.")
-	console.Warning("Next, Gofw expect you to use code to change the world.")
+	console.Warning("Next, GoFW expect you to use code to change the world.")
 }

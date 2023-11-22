@@ -7,10 +7,11 @@ package logger
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/yidejia/gofw/pkg/app"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/yidejia/gofw/pkg/app"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -38,7 +39,7 @@ func InitLogger(filename string, maxSize, maxBackup, maxAge int, compress bool, 
 	// 初始化 Logger
 	Logger = zap.New(core,
 		zap.AddCaller(),                   // 调用文件和行号，内部使用 runtime.Caller
-		zap.AddCallerSkip(1),         // 封装了一层，调用文件去除一层(runtime.Caller(1))
+		zap.AddCallerSkip(1),              // 封装了一层，调用文件去除一层(runtime.Caller(1))
 		zap.AddStacktrace(zap.ErrorLevel), // Error 时才会显示 stacktrace
 	)
 
@@ -83,13 +84,13 @@ func customTimeEncoder(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
 	enc.AppendString(t.Format("2006-01-02 15:04:05"))
 }
 
-// getLogWriter 日志记录介质。Gohub 中使用了两种介质，os.Stdout 和文件
+// getLogWriter 日志记录介质。GoFW 中使用了两种介质，os.Stdout 和文件
 func getLogWriter(filename string, maxSize, maxBackup, maxAge int, compress bool, logType string) zapcore.WriteSyncer {
 
 	// 如果配置了按照日期记录日志文件
 	if logType == "daily" {
-		logname := time.Now().Format("2006-01-02.log")
-		filename = strings.ReplaceAll(filename, "logs.log", logname)
+		logName := time.Now().Format("2006-01-02.log")
+		filename = strings.ReplaceAll(filename, "logs.log", logName)
 	}
 
 	// 滚动日志，详见 config/log.go
