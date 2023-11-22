@@ -28,7 +28,7 @@ type Lock struct {
 
 // Mutex 资源访问互斥体
 type Mutex struct {
-	Mutex *redsync.Mutex
+	mutex *redsync.Mutex
 }
 
 var once sync.Once
@@ -45,7 +45,7 @@ func InitWithConfig() {
 			MaxIdle:     5,
 			IdleTimeout: 30 * time.Second,
 			Dial: func() (redis.Conn, error) {
-				if config.Get("redis.cron.password") == "" {
+				if config.Get("redis.lock.password") == "" {
 					return redis.Dial("tcp", fmt.Sprintf("%s:%s", config.Get("redis.lock.host"), config.Get("redis.lock.port")))
 				} else {
 					return redis.Dial("tcp", fmt.Sprintf("%s:%s", config.Get("redis.lock.host"), config.Get("redis.lock.port")), redis.DialPassword(config.Get("redis.lock.password")))
@@ -67,10 +67,10 @@ func Acquire(name string, expireTime time.Duration, tries int) (*Mutex, error) {
 	if err := mutex.Lock(); err != nil {
 		return nil, err
 	}
-	return &Mutex{Mutex: mutex}, nil
+	return &Mutex{mutex: mutex}, nil
 }
 
 // Release 释放锁
 func Release(mutex *Mutex) (bool, error) {
-	return mutex.Mutex.Unlock()
+	return mutex.mutex.Unlock()
 }
