@@ -31,3 +31,11 @@ func Dispatch(event Event) {
 		go listener.Handle(event)
 	}
 }
+
+// DispatchSync 同步分发事件
+func DispatchSync(event Event) {
+	code := event.EventCode()
+	for _, listener := range listen[code] {
+		listener.Handle(event)
+	}
+}

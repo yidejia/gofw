@@ -22,25 +22,25 @@ import (
 
 // Job 队列任务接口
 type Job interface {
-	// Name 返回队列任务名称
-	Name() string
-	// OnQueue 执行任务的队列
-	OnQueue() string
+	// JobName 返回队列任务名称
+	JobName() string
+	// OnJobQueue 执行任务的队列
+	OnJobQueue() string
 	// NewJob 新建任务
 	NewJob() Job
-	// Handle 处理任务
-	Handle(job Job) error
+	// HandleJob 处理任务
+	HandleJob(job Job) error
 }
 
-// jobs 已注册的任务
+// jobs 已注册的队列任务
 var jobs = make(map[string]Job)
 
-// RegisterJob 注册任务
+// RegisterJob 注册队列任务
 func RegisterJob(job Job) {
-	jobs[job.Name()] = job
+	jobs[job.JobName()] = job
 }
 
-// GetJob 根据任务名获取任务
+// GetJob 根据任务名获取队列任务
 func GetJob(name string) Job {
 	if job, ok := jobs[name]; ok {
 		return job
@@ -48,7 +48,7 @@ func GetJob(name string) Job {
 	return nil
 }
 
-// dispatchJob 内部分发任务
+// dispatchJob 内部分发队列任务
 func dispatchJob(job Job) (topic, message string, err error) {
 
 	// 以 JSON 格式序列化任务
@@ -60,14 +60,14 @@ func dispatchJob(job Job) (topic, message string, err error) {
 	}
 
 	// 发布消息的 topic
-	topic = fmt.Sprintf("%s_queue_%s", config.Get("app.name"), job.OnQueue())
+	topic = fmt.Sprintf("%s_queue_%s", config.Get("app.name"), job.OnJobQueue())
 	// 发布的消息，使用『@@』分割任务名和任务消息
-	message = fmt.Sprintf("%s@@%s", job.Name(), string(messageByte))
+	message = fmt.Sprintf("%s@@%s", job.JobName(), string(messageByte))
 
 	return
 }
 
-// DispatchJob 分发任务
+// DispatchJob 分发队列任务
 func DispatchJob(job Job) error {
 
 	topic, message, err := dispatchJob(job)
@@ -83,7 +83,7 @@ func DispatchJob(job Job) error {
 	return nil
 }
 
-// DispatchJobDelay 延迟分发任务
+// DispatchJobDelay 延迟分发队列任务
 func DispatchJobDelay(job Job, delay time.Duration) error {
 
 	topic, message, err := dispatchJob(job)
@@ -140,7 +140,7 @@ func (h *JobHandler) HandleMessage(message *nsqPKG.Message) error {
 	}
 
 	// 处理任务
-	return job.Handle(_job)
+	return job.HandleJob(_job)
 }
 
 // InitWithConfig 加载配置初始化队列
