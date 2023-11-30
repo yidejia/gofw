@@ -26,7 +26,7 @@ type Job interface {
 	JobName() string
 	// OnJobQueue 执行任务的队列
 	OnJobQueue() string
-	// NewJob 新建任务
+	// NewJob 新建任务用于将消息绑定到结构体上
 	NewJob() Job
 	// HandleJob 处理任务
 	HandleJob(job Job) error
