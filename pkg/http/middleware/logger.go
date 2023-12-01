@@ -166,7 +166,7 @@ func Logger() gin.HandlerFunc {
 
 		// 调用请求日志处理器对日志进行额外处理
 		if !gfReqs.RequestLogIsCleared(c) && requestLogHandler != nil {
-			go requestLogHandler.HandleRequestLog(requestLog)
+			requestLogHandler.HandleRequestLog(requestLog)
 		}
 	}
 }
