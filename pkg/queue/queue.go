@@ -149,21 +149,52 @@ func (h *JobHandler) HandleMessage(message *nsqPKG.Message) error {
 // producers 消息生产者映射表
 var producers sync.Map
 
+// getNSQConsumerAddr 根据队列名获取消费者节点地址
+func getNSQConsumerAddr(queueName string) (addr string) {
+
+	// 获取队列消息生产者名称
+	producerName := config.GetString(fmt.Sprintf("queue.job.%s.producer", queueName))
+	if len(producerName) == 0 {
+		return
+	}
+
+	// 根据消息生产者名称获取其节点地址
+	_addr := config.GetStringMap(fmt.Sprintf("queue.nsq.producers.%s", producerName))
+	addr = fmt.Sprintf("%s:%d", cast.ToString(_addr["host"]), cast.ToInt(_addr["port"]))
+
+	return
+}
+
 // InitWithConfig 加载配置初始化队列
 func InitWithConfig() {
 	// 注册队列消息消费者
 	if consumers := config.GetStringMap("queue.job"); len(consumers) > 0 {
+
 		appName := config.Get("app.name")
 		var topic string
 		jobHandler := &JobHandler{}
+
 		for _queue, _consumer := range consumers {
+
 			consumer := cast.ToStringMap(_consumer)
+
 			// 获取队列的消息生产者
 			producer := nsq.ConnectProducer(cast.ToString(consumer["producer"]))
 			// 缓存消息生产者，方便通过队列名快捷获取
 			producers.Store(_queue, producer)
+
 			topic = fmt.Sprintf("%s_queue_%s", appName, _queue)
-			nsq.RegisterConsumer(topic, "1", jobHandler, cast.ToInt(consumer["processes"]))
+
+			consumerAddr := ""
+			// 不启用 NSQ lookupd 节点时，需要根据队列名获取对应的消费者节点地址
+			if !config.GetBool("queue.nsq.enable_lookupd") {
+				consumerAddr = getNSQConsumerAddr(_queue)
+				if len(consumerAddr) == 0 {
+					panic(fmt.Sprintf("queue %s can not lookup consumer addr", _queue))
+				}
+			}
+
+			nsq.RegisterConsumer(consumerAddr, topic, "1", jobHandler, cast.ToInt(consumer["processes"]))
 		}
 	}
 }
