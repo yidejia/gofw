@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/yidejia/gofw/pkg/nsq"
@@ -49,7 +50,7 @@ func GetJob(name string) Job {
 }
 
 // dispatchJob 内部分发队列任务
-func dispatchJob(job Job) (topic, message string, err error) {
+func dispatchJob(job Job) (producer *nsq.Producer, topic, message string, err error) {
 
 	// 以 JSON 格式序列化任务
 	var messageByte []byte
@@ -59,6 +60,8 @@ func dispatchJob(job Job) (topic, message string, err error) {
 		return
 	}
 
+	// 发布消息的生产者
+	producer = ConnectProducer(job.OnJobQueue())
 	// 发布消息的 topic
 	topic = fmt.Sprintf("%s_queue_%s", config.Get("app.name"), job.OnJobQueue())
 	// 发布的消息，使用『@@』分割任务名和任务消息
@@ -70,13 +73,13 @@ func dispatchJob(job Job) (topic, message string, err error) {
 // DispatchJob 分发队列任务
 func DispatchJob(job Job) error {
 
-	topic, message, err := dispatchJob(job)
+	producer, topic, message, err := dispatchJob(job)
 	if err != nil {
 		return err
 	}
 
 	// 发布消息到队列
-	if err = nsq.Publish(topic, message); err != nil {
+	if err = producer.Publish(topic, message); err != nil {
 		return errors.New("发布消息到队列失败：" + err.Error())
 	}
 
@@ -86,13 +89,13 @@ func DispatchJob(job Job) error {
 // DispatchJobDelay 延迟分发队列任务
 func DispatchJobDelay(job Job, delay time.Duration) error {
 
-	topic, message, err := dispatchJob(job)
+	producer, topic, message, err := dispatchJob(job)
 	if err != nil {
 		return err
 	}
 
 	// 延迟发布消息到队列
-	if err = nsq.DeferredPublish(topic, message, delay); err != nil {
+	if err = producer.DeferredPublish(topic, message, delay); err != nil {
 		return errors.New("延迟发布消息到队列失败：" + err.Error())
 	}
 
@@ -143,6 +146,9 @@ func (h *JobHandler) HandleMessage(message *nsqPKG.Message) error {
 	return job.HandleJob(_job)
 }
 
+// producers 消息生产者映射表
+var producers sync.Map
+
 // InitWithConfig 加载配置初始化队列
 func InitWithConfig() {
 	// 注册队列消息消费者
@@ -152,8 +158,30 @@ func InitWithConfig() {
 		jobHandler := &JobHandler{}
 		for _queue, _consumer := range consumers {
 			consumer := cast.ToStringMap(_consumer)
+			// 获取队列的消息生产者
+			producer := nsq.ConnectProducer(cast.ToString(consumer["producer"]))
+			// 缓存消息生产者，方便通过队列名快捷获取
+			producers.Store(_queue, producer)
 			topic = fmt.Sprintf("%s_queue_%s", appName, _queue)
 			nsq.RegisterConsumer(topic, "1", jobHandler, cast.ToInt(consumer["processes"]))
 		}
 	}
+}
+
+// ConnectProducer 连接消息生产者
+func ConnectProducer(name ...string) *nsq.Producer {
+
+	var _name string
+	if len(name) > 0 {
+		_name = name[0]
+	} else {
+		_name = "default"
+	}
+
+	producer, ok := producers.Load(_name)
+	if !ok {
+		panic(fmt.Sprintf("[Queue] NSQ producer %s not exists", _name))
+	}
+
+	return producer.(*nsq.Producer)
 }

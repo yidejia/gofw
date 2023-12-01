@@ -56,7 +56,7 @@ func InitWithConfig() {
 	var driver Driver
 
 	// 遍历数据库连接配置建立数据库连接池
-	for connection, _ := range config.GetStringMap("database.connections") {
+	for connection := range config.GetStringMap("database.connections") {
 
 		driverName = config.Get(fmt.Sprintf("database.connections.%v.driver", connection))
 		driver = NewDriver(connection, driverName)
