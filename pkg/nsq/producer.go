@@ -25,15 +25,14 @@ func InitProducerWithConfig() {
 
 		var err error
 
-		internalProducer, err = nsq.NewProducer(
+		if internalProducer, err = nsq.NewProducer(
 			fmt.Sprintf(
 				"%s:%d",
 				config.Get("queue.nsq.host"),
 				config.GetInt("queue.nsq.port"),
 			),
 			nsq.NewConfig(),
-		)
-		if err != nil {
+		); err != nil {
 			panic("init nsq producer failed:" + err.Error())
 		}
 
