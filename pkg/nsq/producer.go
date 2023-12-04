@@ -9,8 +9,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/spf13/cast"
-
 	"github.com/nsqio/go-nsq"
 	"github.com/yidejia/gofw/pkg/config"
 )
@@ -35,18 +33,12 @@ func InitProducersWithConfig() {
 	once.Do(func() {
 
 		// 初始化消息生产者并缓存
-		for name, conf := range config.GetStringMap("queue.nsq.producers") {
+		for name := range config.GetStringMap("queue.nsq.producers") {
 
-			_conf := cast.ToStringMap(conf)
 			producer, err := nsq.NewProducer(
-				fmt.Sprintf(
-					"%s:%d",
-					cast.ToString(_conf["host"]),
-					cast.ToInt(_conf["port"]),
-				),
+				config.Get(fmt.Sprintf("queue.nsq.producers.%s.addr", name)),
 				nsq.NewConfig(),
 			)
-
 			if err != nil {
 				panic(fmt.Sprintf("init NSQ producer %s failed: %s", name, err.Error()))
 			}

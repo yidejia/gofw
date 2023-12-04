@@ -45,7 +45,7 @@ func RegisterConsumer(addr, topic, channel string, handler nsq.Handler, concurre
 	lookupds := config.GetInterface("queue.nsq.lookupds")
 	if _lookupds, ok := lookupds.([]map[string]interface{}); ok {
 		for _, lookupd := range _lookupds {
-			addresses = append(addresses, fmt.Sprintf("%s:%d", cast.ToString(lookupd["host"]), cast.ToInt(lookupd["port"])))
+			addresses = append(addresses, cast.ToString(lookupd["addr"]))
 		}
 	}
 	if len(addresses) == 0 {

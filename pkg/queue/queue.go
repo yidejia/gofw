@@ -14,8 +14,6 @@ import (
 
 	"github.com/yidejia/gofw/pkg/nsq"
 
-	"github.com/spf13/cast"
-
 	nsqPKG "github.com/nsqio/go-nsq"
 	"github.com/yidejia/gofw/pkg/config"
 	"github.com/yidejia/gofw/pkg/logger"
@@ -149,22 +147,6 @@ func (h *JobHandler) HandleMessage(message *nsqPKG.Message) error {
 // producers 消息生产者映射表
 var producers sync.Map
 
-// getNSQConsumerAddr 根据队列名获取消费者节点地址
-func getNSQConsumerAddr(queueName string) (addr string) {
-
-	// 获取队列消息生产者名称
-	producerName := config.GetString(fmt.Sprintf("queue.job.%s.producer", queueName))
-	if len(producerName) == 0 {
-		return
-	}
-
-	// 根据消息生产者名称获取其节点地址
-	_addr := config.GetStringMap(fmt.Sprintf("queue.nsq.producers.%s", producerName))
-	addr = fmt.Sprintf("%s:%d", cast.ToString(_addr["host"]), cast.ToInt(_addr["port"]))
-
-	return
-}
-
 // InitWithConfig 加载配置初始化队列
 func InitWithConfig() {
 	// 注册队列消息消费者
@@ -174,27 +156,25 @@ func InitWithConfig() {
 		var topic string
 		jobHandler := &JobHandler{}
 
-		for _queue, _consumer := range consumers {
-
-			consumer := cast.ToStringMap(_consumer)
+		for _queue := range consumers {
 
 			// 获取队列的消息生产者
-			producer := nsq.ConnectProducer(cast.ToString(consumer["producer"]))
+			producer := nsq.ConnectProducer(config.Get(fmt.Sprintf("queue.job.%s.producer", _queue)))
 			// 缓存消息生产者，方便通过队列名快捷获取
 			producers.Store(_queue, producer)
 
 			topic = fmt.Sprintf("%s_queue_%s", appName, _queue)
 
 			consumerAddr := ""
-			// 不启用 NSQ lookupd 节点时，需要根据队列名获取对应的消费者节点地址
+			// 不启用 NSQ lookupd 节点时，只能直连消费者节点
 			if !config.GetBool("queue.nsq.enable_lookupd") {
-				consumerAddr = getNSQConsumerAddr(_queue)
+				consumerAddr = config.Get(fmt.Sprintf("queue.job.%s.consumer.addr", _queue))
 				if len(consumerAddr) == 0 {
 					panic(fmt.Sprintf("queue %s can not lookup consumer addr", _queue))
 				}
 			}
 
-			nsq.RegisterConsumer(consumerAddr, topic, "1", jobHandler, cast.ToInt(consumer["processes"]))
+			nsq.RegisterConsumer(consumerAddr, topic, "1", jobHandler, config.GetInt(fmt.Sprintf("queue.job.%s.processes", _queue)))
 		}
 	}
 }
