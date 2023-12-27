@@ -34,6 +34,11 @@ type Job interface {
 // jobs 已注册的队列任务
 var jobs = make(map[string]Job)
 
+// Enable 启用队列
+func Enable() bool {
+	return config.GetBool("queue.enable", true)
+}
+
 // RegisterJob 注册队列任务
 func RegisterJob(job Job) {
 	jobs[job.JobName()] = job
@@ -71,6 +76,16 @@ func dispatchJob(job Job) (producer *nsq.Producer, topic, message string, err er
 // DispatchJob 分发队列任务
 func DispatchJob(job Job) error {
 
+	// 不启用队列时，直接在新线程中执行任务
+	if !Enable() {
+		go func(_job Job) {
+			if err := _job.HandleJob(_job); err != nil {
+				logger.ErrorString("", "未启用队列时，在新线程中执行任务", err.Error())
+			}
+		}(job)
+		return nil
+	}
+
 	producer, topic, message, err := dispatchJob(job)
 	if err != nil {
 		return err
@@ -86,6 +101,18 @@ func DispatchJob(job Job) error {
 
 // DispatchJobDelay 延迟分发队列任务
 func DispatchJobDelay(job Job, delay time.Duration) error {
+
+	// 不启用队列时，直接在新线程中延迟执行任务
+	if !Enable() {
+		go func(_job Job, _delay time.Duration) {
+			timer := time.NewTimer(_delay)
+			<-timer.C
+			if err := _job.HandleJob(_job); err != nil {
+				logger.ErrorString("", "未启用队列时，在新线程中延迟执行任务", err.Error())
+			}
+		}(job, delay)
+		return nil
+	}
 
 	producer, topic, message, err := dispatchJob(job)
 	if err != nil {
