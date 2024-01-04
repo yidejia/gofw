@@ -153,12 +153,12 @@ func NewSignOptions(options ...SignOption) *SignOptions {
 		// 使用选项设置的函数
 		if signOptions.AppSecretFunc != nil {
 			if signOptions.AppSecret, err = signOptions.AppSecretFunc(signOptions.AppKey); err != nil {
-				logger.ErrorString("新建签名选项", "设置默认应用密钥(signOptions.AppSecretFunc)", err.Error())
+				logger.ErrorString("请求包", "新建签名选项-设置默认应用密钥(signOptions.AppSecretFunc)", err.Error())
 			}
 		} else if appSecretFunc != nil {
 			// 使用应用默认的函数
 			if signOptions.AppSecret, err = appSecretFunc(signOptions.AppKey); err != nil {
-				logger.ErrorString("新建签名选项", "设置默认应用密钥(appSecretFunc)", err.Error())
+				logger.ErrorString("请求包", "新建签名选项-设置默认应用密钥(appSecretFunc)", err.Error())
 			}
 		} else {
 			// 默认直接返回当前应用密钥

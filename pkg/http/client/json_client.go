@@ -30,7 +30,7 @@ func (c *JSONClient) Request(method, url string, params map[string]interface{}, 
 
 	// 解码响应字符串
 	if err = json.Unmarshal([]byte(resp), &result); err != nil {
-		logger.ErrorString("返回 json 数据格式的 http 客户端", "发送请求", "Request 发送请求错误："+err.Error())
+		logger.ErrorString("http 包 JSON 响应客户端", "发送请求", "Request 发送请求错误："+err.Error())
 		err = errors.New("发送请求失败")
 		return
 	}

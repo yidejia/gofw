@@ -80,7 +80,7 @@ func DispatchJob(job Job) error {
 	if !Enable() {
 		go func(_job Job) {
 			if err := _job.HandleJob(_job); err != nil {
-				logger.ErrorString("", "未启用队列时，在新线程中执行任务", err.Error())
+				logger.ErrorString("队列包", "未启用队列时，在新线程中执行任务", err.Error())
 			}
 		}(job)
 		return nil
@@ -108,7 +108,7 @@ func DispatchJobDelay(job Job, delay time.Duration) error {
 			timer := time.NewTimer(_delay)
 			<-timer.C
 			if err := _job.HandleJob(_job); err != nil {
-				logger.ErrorString("", "未启用队列时，在新线程中延迟执行任务", err.Error())
+				logger.ErrorString("队列包", "未启用队列时，在新线程中延迟执行任务", err.Error())
 			}
 		}(job, delay)
 		return nil
@@ -147,14 +147,14 @@ func (h *JobHandler) HandleMessage(message *nsqPKG.Message) error {
 	messages := strings.Split(_message, "@@")
 	// 消息格式不正确，只记录日志
 	if len(messages) < 2 {
-		logger.ErrorString("队列任务", "处理 NSQ 队列消息-分割任务名和任务参数", fmt.Sprintf("消息格式不正确：%s", _message))
+		logger.ErrorString("队列包-队列任务处理器", "处理 NSQ 队列消息-分割任务名和任务参数", fmt.Sprintf("消息格式不正确：%s", _message))
 		return nil
 	}
 
 	job := GetJob(messages[0])
 	// 任务不存在，只记录日志
 	if job == nil {
-		logger.ErrorString("队列任务", "处理 NSQ 队列消息-根据任务名获取任务", fmt.Sprintf("任务[%s]不存在", messages[0]))
+		logger.ErrorString("队列包-队列任务处理器", "处理 NSQ 队列消息-根据任务名获取任务", fmt.Sprintf("任务[%s]不存在", messages[0]))
 		return nil
 	}
 
@@ -163,7 +163,7 @@ func (h *JobHandler) HandleMessage(message *nsqPKG.Message) error {
 	err := json.Unmarshal([]byte(messages[1]), _job)
 	// 反序列化消息失败
 	if err != nil {
-		logger.ErrorString("队列任务", "处理 NSQ 队列消息-反序列化消息", fmt.Sprintf("反序列化消息 %s 失败", messages[1]))
+		logger.ErrorString("队列包-队列任务处理器", "处理 NSQ 队列消息-反序列化消息", fmt.Sprintf("反序列化消息 %s 失败", messages[1]))
 		return nil
 	}
 

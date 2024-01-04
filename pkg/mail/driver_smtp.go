@@ -2,8 +2,9 @@ package mail
 
 import (
 	"fmt"
-	"github.com/yidejia/gofw/pkg/logger"
 	"net/smtp"
+
+	"github.com/yidejia/gofw/pkg/logger"
 
 	emailPKG "github.com/jordan-wright/email"
 )
@@ -24,7 +25,7 @@ func (s *SMTP) Send(email Email, config map[string]string) bool {
 	e.Text = email.Text
 	e.HTML = email.HTML
 
-	logger.DebugJSON("发送邮件", "发件详情", e)
+	logger.DebugJSON("邮件包", "发送邮件-发件详情", e)
 
 	err := e.Send(
 		fmt.Sprintf("%v:%v", config["host"], config["port"]),
@@ -37,10 +38,10 @@ func (s *SMTP) Send(email Email, config map[string]string) bool {
 		),
 	)
 	if err != nil {
-		logger.ErrorString("发送邮件", "发件出错", err.Error())
+		logger.ErrorString("邮件包", "发送邮件-发件出错", err.Error())
 		return false
 	}
 
-	logger.DebugString("发送邮件", "发件成功", "")
+	logger.DebugString("邮件包", "发送邮件-发件成功", "发件成功")
 	return true
 }
