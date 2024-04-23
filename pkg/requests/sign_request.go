@@ -289,7 +289,23 @@ func makeParamString(params map[string]interface{}) (paramString string) {
 			for _, vtv := range vt {
 				s = append(s, vtv)
 			}
+		case []uint32:
+			for _, vtv := range vt {
+				s = append(s, vtv)
+			}
+		case []uint16:
+			for _, vtv := range vt {
+				s = append(s, vtv)
+			}
 		case []string:
+			for _, vtv := range vt {
+				s = append(s, vtv)
+			}
+		case []interface{}:
+			for _, vtv := range vt {
+				s = append(s, vtv)
+			}
+		case []float64:
 			for _, vtv := range vt {
 				s = append(s, vtv)
 			}
