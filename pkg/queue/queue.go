@@ -151,7 +151,8 @@ type JobHandler struct {
 func (h *JobHandler) HandleMessage(message *nsqPKG.Message) error {
 
 	if len(message.Body) == 0 {
-		// 返回 nil 将自动发送一个 FIN 命令到 NSQ 标识消息已处理，以下返回 nil 都是基于这样的考虑，避免大量消息积压，正常情况下不应该大量出现错误
+		// 返回 nil 将自动发送一个 FIN 命令到 NSQ 标识消息已处理
+		// 以下发生错误时只记录日志后返回 nil 都是基于这样的考虑，避免大量消息积压，正常情况下不应该大量出现错误
 		return nil
 	}
 
@@ -186,6 +187,7 @@ func (h *JobHandler) HandleMessage(message *nsqPKG.Message) error {
 	// 任务实现了分发任务预处理器接口
 	if preDispatcher, ok := job.(JobPreDispatcher); ok {
 		if _err := preDispatcher.BeforeHandleJob(job); _err != nil {
+			logger.ErrorString("队列包-队列任务处理器", "处理任务前对任务进行预处理", fmt.Sprintf("处理任务前对任务进行预处理失败[%s]\njob:\n%+v", _err.Error(), job))
 			return nil
 		}
 	}
