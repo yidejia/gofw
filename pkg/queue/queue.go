@@ -52,8 +52,24 @@ func GetJob(name string) Job {
 	return nil
 }
 
+// JobPreDispatcher 分发任务预处理器接口
+type JobPreDispatcher interface {
+	// BeforeEncodeJSON 任务进行 JSON 编码前进行预处理
+	BeforeEncodeJSON(job Job) error
+	// BeforeHandleJob 处理任务前对任务进行预处理
+	BeforeHandleJob(job Job) error
+}
+
 // dispatchJob 内部分发队列任务
 func dispatchJob(job Job) (producer *nsq.Producer, topic, message string, err error) {
+
+	// 任务实现了分发任务预处理器接口
+	if preDispatcher, ok := job.(JobPreDispatcher); ok {
+		if err = preDispatcher.BeforeEncodeJSON(job); err != nil {
+			err = errors.New("任务进行 JSON 编码前进行预处理发生错误：" + err.Error())
+			return
+		}
+	}
 
 	// 以 JSON 格式序列化任务
 	var messageByte []byte
@@ -135,7 +151,7 @@ type JobHandler struct {
 func (h *JobHandler) HandleMessage(message *nsqPKG.Message) error {
 
 	if len(message.Body) == 0 {
-		// 返回 nil 将自动发送一个 FIN 命令到 NSQ 标识消息已处理
+		// 返回 nil 将自动发送一个 FIN 命令到 NSQ 标识消息已处理，以下返回 nil 都是基于这样的考虑，避免大量消息积压，正常情况下不应该大量出现错误
 		return nil
 	}
 
@@ -165,6 +181,13 @@ func (h *JobHandler) HandleMessage(message *nsqPKG.Message) error {
 	if err != nil {
 		logger.ErrorString("队列包-队列任务处理器", "处理 NSQ 队列消息-反序列化消息", fmt.Sprintf("反序列化消息 %s 失败", messages[1]))
 		return nil
+	}
+
+	// 任务实现了分发任务预处理器接口
+	if preDispatcher, ok := job.(JobPreDispatcher); ok {
+		if _err := preDispatcher.BeforeHandleJob(job); _err != nil {
+			return nil
+		}
 	}
 
 	// 处理任务
