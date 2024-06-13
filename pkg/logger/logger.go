@@ -193,6 +193,9 @@ func WarnString(moduleName, name, msg string) {
 
 func ErrorString(moduleName, name, msg string) {
 	Logger.Error(moduleName, zap.String(name, msg))
+	if logCollector != nil {
+		logCollector.CollectError(moduleName, name, msg)
+	}
 }
 
 func FatalString(moduleName, name, msg string) {
@@ -227,4 +230,21 @@ func jsonString(value interface{}) string {
 		Logger.Error("Logger", zap.String("JSON marshal error", err.Error()))
 	}
 	return string(b)
+}
+
+// LogCollector 日志收集器接口
+// @author 余海坚 haijianyu10@qq.com
+// @created 2024-06-13 17:56
+// @copyright © 2010-2024 广州伊的家网络科技有限公司
+type LogCollector interface {
+	// CollectError 收集错误日志
+	CollectError(moduleName, name, msg string)
+}
+
+// logCollector 日志收集器实例
+var logCollector LogCollector
+
+// SetLogCollector 设置日志收集器
+func SetLogCollector(_logCollector LogCollector) {
+	logCollector = _logCollector
 }
