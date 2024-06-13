@@ -153,7 +153,7 @@ func Debug(moduleName string, fields ...zap.Field) {
 	Logger.Debug(moduleName, fields...)
 }
 
-// Info 告知类日志
+// Info 通知类日志
 func Info(moduleName string, fields ...zap.Field) {
 	Logger.Info(moduleName, fields...)
 }
@@ -183,14 +183,17 @@ func DebugString(moduleName, name, msg string) {
 	Logger.Debug(moduleName, zap.String(name, msg))
 }
 
+// InfoString 记录一条字符串类型的通知日志
 func InfoString(moduleName, name, msg string) {
 	Logger.Info(moduleName, zap.String(name, msg))
 }
 
+// WarnString 记录一条字符串类型的警告日志
 func WarnString(moduleName, name, msg string) {
 	Logger.Warn(moduleName, zap.String(name, msg))
 }
 
+// ErrorString 记录一条字符串类型的错误日志
 func ErrorString(moduleName, name, msg string) {
 	Logger.Error(moduleName, zap.String(name, msg))
 	if logCollector != nil {
@@ -198,6 +201,7 @@ func ErrorString(moduleName, name, msg string) {
 	}
 }
 
+// FatalString 记录一条字符串类型的致命错误日志
 func FatalString(moduleName, name, msg string) {
 	Logger.Fatal(moduleName, zap.String(name, msg))
 }
@@ -208,22 +212,27 @@ func DebugJSON(moduleName, name string, value interface{}) {
 	Logger.Debug(moduleName, zap.String(name, jsonString(value)))
 }
 
+// InfoJSON 记录一条 JSON 类型的通知日志
 func InfoJSON(moduleName, name string, value interface{}) {
 	Logger.Info(moduleName, zap.String(name, jsonString(value)))
 }
 
+// WarnJSON 记录一条 JSON 类型的警告日志
 func WarnJSON(moduleName, name string, value interface{}) {
 	Logger.Warn(moduleName, zap.String(name, jsonString(value)))
 }
 
+// ErrorJSON 记录一条 JSON 类型的错误日志
 func ErrorJSON(moduleName, name string, value interface{}) {
 	Logger.Error(moduleName, zap.String(name, jsonString(value)))
 }
 
+// FatalJSON 记录一条 JSON 类型的致命错误日志
 func FatalJSON(moduleName, name string, value interface{}) {
 	Logger.Fatal(moduleName, zap.String(name, jsonString(value)))
 }
 
+// jsonString 将 JSON 值转换成字符串
 func jsonString(value interface{}) string {
 	b, err := json.Marshal(value)
 	if err != nil {
