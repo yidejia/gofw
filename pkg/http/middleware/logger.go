@@ -33,10 +33,10 @@ type RequestLog struct {
 	UserID    uint64 `json:"user_id,omitempty" gorm:"type:bigint unsigned;not null;index:user_id;comment:用户id"`
 	UserName  string `json:"user_name,omitempty" gorm:"type:varchar(30);not null;index:user_name;comment:登录时的名称"`
 	IP        string `json:"ip,omitempty" gorm:"type:varchar(60);not null;index:ip;comment:IP地址"`
-	UserAgent string `json:"user_agent,omitempty" gorm:"type:varchar(191);not null;comment:用户代理"`
+	UserAgent string `json:"user_agent,omitempty" gorm:"type:varchar(1000);not null;comment:用户代理"`
 	Method    string `json:"method,omitempty" gorm:"type:varchar(10);not null;index:method;comment:请求方法"`
-	URL       string `json:"url,omitempty" gorm:"type:varchar(191);not null;index:url;comment:请求URL"`
-	Query     string `json:"query,omitempty" gorm:"type:varchar(191);not null;comment:查询参数"`
+	URL       string `json:"url,omitempty" gorm:"type:varchar(1000);not null;index:url;comment:请求URL"`
+	Query     string `json:"query,omitempty" gorm:"type:varchar(1000);not null;comment:查询参数"`
 	Status    int    `json:"status,omitempty" gorm:"type:int unsigned;not null;index:status;comment:响应状态"`
 	Request   string `json:"request,omitempty" gorm:"type:mediumtext;not null;comment:请求体"`
 	Response  string `json:"response,omitempty" gorm:"type:mediumtext;not null;comment:响应体"`
